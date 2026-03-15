@@ -1488,6 +1488,7 @@ export default function VoiceSession({ childName, language, game, childId, child
 
           onerror: (e: unknown) => {
             const msg = e instanceof Error ? e.message : JSON.stringify(e);
+            console.error("[Ticha] Gemini onerror:", msg);
             log(`⚠️ Error: ${msg}`);
             setErrorMsg(`Connection error: ${msg}`);
             setStatus("error");
@@ -1496,6 +1497,7 @@ export default function VoiceSession({ childName, language, game, childId, child
 
           onclose: (e?: unknown) => {
             const ev = e as CloseEvent;
+            console.error("[Ticha] Gemini onclose — code:", ev?.code, "reason:", ev?.reason);
             log(`❌ Closed: code=${ev?.code} reason="${ev?.reason}"`);
             // If the session was active and not yet saved (e.g. Gemini dropped the
             // connection mid-lesson), run endSession so progress is saved and the
