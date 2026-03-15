@@ -1704,6 +1704,13 @@ export default function VoiceSession({ childName, language, game, childId, child
     status === "listening" && sessionStarted && pttActive ? "listening"  :
     "idle" as const;
 
+  // Ring colour driven by session state (Figma-inspired: coloured ring around avatar)
+  const ringColor =
+    !sessionStarted ? "#E5E7EB" :
+    isPaused        ? "#D1D5DB" :
+    status === "speaking" ? "#6366F1" :
+    pttActive       ? "#22C55E" : "#E5E7EB";
+
   return (
     <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Nunito', sans-serif", overflowX: "hidden" }}>
 
@@ -1711,30 +1718,29 @@ export default function VoiceSession({ childName, language, game, childId, child
       <header style={{ background: "white", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 0 rgba(0,0,0,0.06)", flexShrink: 0, zIndex: 10 }}>
         <button
           onClick={() => router.push(childId ? `/child/${childId}` : "/dashboard")}
-          style={{ width: "40px", height: "40px", borderRadius: "12px", border: "1.5px solid #E5E7EB", background: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}
+          style={{ width: "44px", height: "44px", borderRadius: "50%", border: "none", background: "#F3F4F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}
         >🏠</button>
 
-        <div style={{ background: GAME_COLORS[game] || "#FF8C00", borderRadius: "9999px", padding: "8px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "14px" }}>{GAME_EMOJIS[game]}</span>
-          <span style={{ color: "white", fontWeight: 800, fontSize: "13px", fontFamily: "'Baloo 2', cursive" }}>{GAME_SHORT[game]}</span>
+        <div style={{ background: GAME_COLORS[game] || "#FF8C00", borderRadius: "9999px", padding: "9px 22px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}>
+          <span style={{ fontSize: "15px" }}>{GAME_EMOJIS[game]}</span>
+          <span style={{ color: "white", fontWeight: 800, fontSize: "14px", fontFamily: "'Baloo 2', cursive" }}>{GAME_SHORT[game]}</span>
         </div>
 
-        <div style={{ background: starsFlash ? "#FF8C00" : "#F3F4F6", borderRadius: "9999px", padding: "6px 12px", transition: "background 0.3s", display: "flex", alignItems: "center", gap: "4px" }}>
-          <span style={{ fontSize: "12px" }}>⭐</span>
-          <span style={{ fontSize: "13px", fontWeight: 800, color: starsFlash ? "white" : "#374151", fontFamily: "'Baloo 2', cursive" }}>{stars}</span>
+        <div style={{ background: starsFlash ? "#FF8C00" : "#F3F4F6", borderRadius: "9999px", padding: "7px 14px", transition: "background 0.3s", display: "flex", alignItems: "center", gap: "5px" }}>
+          <span style={{ fontSize: "13px" }}>⭐</span>
+          <span style={{ fontSize: "14px", fontWeight: 800, color: starsFlash ? "white" : "#374151", fontFamily: "'Baloo 2', cursive" }}>{stars}</span>
         </div>
       </header>
 
       {/* ── Gradient Stage ── */}
-      <div style={{ background: "linear-gradient(160deg, #C4D8F8 0%, #D4C4F8 50%, #C4F0E8 100%)", padding: "20px 20px 52px", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+      <div style={{ background: "linear-gradient(160deg, #A8C8F8 0%, #C4B0F8 50%, #B0EEF4 100%)", padding: "20px 20px 52px", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
 
         {/* Name + level + word progress */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "400px", marginBottom: "14px" }}>
-          <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: "9999px", padding: "5px 14px" }}>
+          <div style={{ background: "rgba(255,255,255,0.75)", borderRadius: "9999px", padding: "6px 16px" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>👋 {childName}</span>
           </div>
 
-          {/* Word progress dots — shown once the lesson starts */}
           {sessionStarted && (
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               {lessonWords.map((_, i) => (
@@ -1748,28 +1754,50 @@ export default function VoiceSession({ childName, language, game, childId, child
             </div>
           )}
 
-          <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: "9999px", padding: "5px 14px" }}>
+          <div style={{ background: "rgba(255,255,255,0.75)", borderRadius: "9999px", padding: "6px 16px" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>{levelLabel}</span>
           </div>
         </div>
 
         {/* Status bubble */}
-        <div style={{ background: "white", borderRadius: "9999px", padding: "8px 22px", marginBottom: "16px", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
-          <span style={{ fontWeight: 700, fontSize: "14px", color: "#374151" }}>
-            {status === "connecting" ? "⏳ Connecting..." :
-             !sessionStarted ? "Ready to learn! 🎓" :
-             isPaused ? "⏸ Session paused" :
-             status === "speaking" ? "🔊 Ticha is talking..." :
-             pttActive ? "🎤 Your turn — just speak!" :
+        <div style={{ background: "white", borderRadius: "9999px", padding: "9px 24px", marginBottom: "18px", boxShadow: "0 3px 16px rgba(0,0,0,0.12)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <span style={{ fontSize: "16px" }}>
+            {status === "connecting" ? "⏳" : !sessionStarted ? "🎓" : isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🖐" : "⏳"}
+          </span>
+          <span style={{ fontWeight: 800, fontSize: "14px", color: "#374151" }}>
+            {status === "connecting" ? "Connecting..." :
+             !sessionStarted ? "Ready to learn!" :
+             isPaused ? "Session paused" :
+             status === "speaking" ? "Ticha is talking..." :
+             pttActive ? "Your turn to speak!" :
              "Getting ready..."}
           </span>
         </div>
 
-        {/* Ticha avatar */}
+        {/* Avatar inside white circle with coloured ring */}
         <div style={{ position: "relative" }}>
-          <TichaAvatar state={avatarState} size={250} />
+          {/* Pulsing rings behind the circle */}
+          {sessionStarted && !isPaused && (pttActive || status === "speaking") && (
+            <>
+              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "290px", height: "290px", borderRadius: "50%", background: ringColor, opacity: 0.18 }} />
+              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "270px", height: "270px", borderRadius: "50%", background: ringColor, opacity: 0.12, animationDelay: "0.35s" }} />
+            </>
+          )}
+          {/* White circle frame */}
+          <div style={{
+            width: "240px", height: "240px", borderRadius: "50%",
+            background: "white",
+            border: `5px solid ${ringColor}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 6px 32px rgba(0,0,0,0.14)",
+            transition: "border-color 0.35s",
+            overflow: "hidden",
+            position: "relative",
+          }}>
+            <TichaAvatar state={avatarState} size={200} />
+          </div>
           {isCameraOn && (
-            <div style={{ position: "absolute", bottom: "10px", right: "-10px", borderRadius: "10px", overflow: "hidden", border: "2px solid #22C55E", zIndex: 2 }}>
+            <div style={{ position: "absolute", bottom: "10px", right: "-8px", borderRadius: "10px", overflow: "hidden", border: "3px solid #22C55E", zIndex: 2 }}>
               <video ref={videoRef} autoPlay playsInline muted style={{ width: "72px", height: "54px", objectFit: "cover", display: "block" }} />
             </div>
           )}
@@ -1781,7 +1809,7 @@ export default function VoiceSession({ childName, language, game, childId, child
 
         {/* Hint */}
         <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
-          {!sessionStarted ? "🎤 Press the microphone to start your lesson" :
+          {!sessionStarted ? "👆 Press the microphone to start your lesson" :
            isPaused ? "⏸ Session paused — tap Resume" :
            status === "speaking" ? "🔊 Listen carefully to Ticha..." :
            pttActive ? "🎤 Your turn — just speak!" :
@@ -1794,24 +1822,20 @@ export default function VoiceSession({ childName, language, game, childId, child
             onClick={startSession}
             disabled={status === "connecting"}
             className={status !== "connecting" ? "btn-control" : ""}
-            style={{ width: "88px", height: "88px", borderRadius: "50%", background: status === "connecting" ? "#9CA3AF" : "#FF8C00", border: "none", cursor: status === "connecting" ? "default" : "pointer", fontSize: "36px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 24px rgba(255,140,0,0.4)" }}
+            style={{ width: "88px", height: "88px", borderRadius: "50%", background: status === "connecting" ? "#9CA3AF" : "#FF8C00", border: "none", cursor: status === "connecting" ? "default" : "pointer", fontSize: "36px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: status !== "connecting" ? "0 6px 0 #CC6A00, 0 10px 28px rgba(255,140,0,0.4)" : "none" }}
           >
             {status === "connecting" ? "⏳" : "🎤"}
           </button>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-
-            {/* ── Auto-VAD mic indicator — child just speaks, no button needed ── */}
             <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
               <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {/* Pulsing green rings when child's mic is open and active */}
                 {pttActive && !isPaused && (
                   <>
                     <div className="mic-ring" style={{ position: "absolute", width: "108px", height: "108px", borderRadius: "50%", background: "#22C55E", opacity: 0.22 }} />
                     <div className="mic-ring" style={{ position: "absolute", width: "96px", height: "96px", borderRadius: "50%", background: "#22C55E", opacity: 0.14 }} />
                   </>
                 )}
-                {/* Decorative status circle — not a button */}
                 <div style={{
                   width: "88px", height: "88px", borderRadius: "50%",
                   background: isPaused ? "#D1D5DB" :
@@ -1819,34 +1843,31 @@ export default function VoiceSession({ childName, language, game, childId, child
                                pttActive ? "#22C55E" : "#E5E7EB",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: "36px",
-                  boxShadow: status === "speaking" ? "0 6px 24px rgba(99,102,241,0.4)" :
-                             pttActive ? "0 6px 24px rgba(34,197,94,0.4)" :
+                  boxShadow: status === "speaking" && !isPaused ? "0 6px 0 #4338CA, 0 10px 28px rgba(99,102,241,0.4)" :
+                             pttActive && !isPaused ? "0 6px 0 #16A34A, 0 10px 28px rgba(34,197,94,0.4)" :
                              "0 2px 8px rgba(0,0,0,0.08)",
                   transition: "background 0.3s, box-shadow 0.3s",
                 }}>
                   {status === "speaking" ? "🔊" : pttActive ? "🎤" : "⏳"}
                 </div>
               </div>
-
-              {/* Status label */}
               <p style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "0.05em", margin: 0, textAlign: "center",
                 color: isPaused ? "#9CA3AF" : status === "speaking" ? "#6366F1" : pttActive ? "#22C55E" : "#9CA3AF" }}>
                 {isPaused ? "PAUSED" : status === "speaking" ? "TICHA IS TALKING" : pttActive ? "YOUR TURN — JUST SPEAK!" : "GETTING READY..."}
               </p>
             </div>
 
-            {/* Secondary controls */}
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <button onClick={toggleCamera} className="btn-control"
-                style={{ padding: "7px 14px", borderRadius: "9999px", border: `1.5px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FFF4" : "white", fontSize: "12px", fontWeight: 700, color: isCameraOn ? "#166534" : "#9CA3AF", cursor: "pointer" }}>
+                style={{ padding: "7px 16px", borderRadius: "9999px", border: `2px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FFF4" : "white", fontSize: "12px", fontWeight: 700, color: isCameraOn ? "#166534" : "#9CA3AF", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
                 📷 {isCameraOn ? "On" : "Off"}
               </button>
               <button onClick={togglePause} className="btn-control"
-                style={{ padding: "7px 14px", borderRadius: "9999px", border: `1.5px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "12px", fontWeight: 700, color: isPaused ? "#D97706" : "#9CA3AF", cursor: "pointer" }}>
+                style={{ padding: "7px 16px", borderRadius: "9999px", border: `2px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "12px", fontWeight: 700, color: isPaused ? "#D97706" : "#9CA3AF", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
                 {isPaused ? "▶ Resume" : "⏸ Pause"}
               </button>
               <button onClick={endSession} className="btn-control"
-                style={{ padding: "7px 14px", borderRadius: "9999px", border: "1.5px solid #FCA5A5", background: "white", fontSize: "12px", fontWeight: 700, color: "#EF4444", cursor: "pointer" }}>
+                style={{ padding: "7px 16px", borderRadius: "9999px", border: "2px solid #FCA5A5", background: "white", fontSize: "12px", fontWeight: 700, color: "#EF4444", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
                 ✕ End
               </button>
             </div>
@@ -1856,7 +1877,7 @@ export default function VoiceSession({ childName, language, game, childId, child
         {status === "error" && errorMsg && (
           <div style={{ background: "#FEE2E2", borderRadius: "12px", padding: "12px 16px", maxWidth: "300px", textAlign: "center", marginTop: "14px" }}>
             <p style={{ color: "#B91C1C", fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>{errorMsg}</p>
-            <button onClick={() => { setStatus("idle"); setErrorMsg(""); }} style={{ background: "#EF4444", color: "white", border: "none", borderRadius: "9999px", padding: "6px 18px", cursor: "pointer", fontSize: "12px", fontWeight: 700 }}>
+            <button onClick={() => { setStatus("idle"); setErrorMsg(""); }} style={{ background: "#EF4444", color: "white", border: "none", borderRadius: "9999px", padding: "6px 18px", cursor: "pointer", fontSize: "12px", fontWeight: 700, boxShadow: "0 3px 0 #B91C1C" }}>
               Try Again
             </button>
           </div>
