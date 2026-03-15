@@ -36,7 +36,7 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section style={{
-        background: "linear-gradient(145deg, #10B981 0%, #34D399 35%, #6EE7B7 65%, #FCD34D 100%)",
+        background: "linear-gradient(145deg, #047857 0%, #059669 40%, #10B981 100%)",
         padding: "64px 24px 80px",
         textAlign: "center",
         position: "relative",
@@ -48,13 +48,7 @@ export default function LandingPage() {
 
         <div style={{ maxWidth: "680px", margin: "0 auto", position: "relative" }}>
 
-          {/* Competition badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.25)", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: "9999px", padding: "6px 18px", marginBottom: "32px" }}>
-            <span style={{ fontSize: "14px" }}>🏆</span>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "white" }}>Google Gemini Live Agent Challenge 2026</span>
-          </div>
-
-          {/* Logo */}
+            {/* Logo */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
             <Image
               src="/images/ticha-logo.PNG"
@@ -71,11 +65,11 @@ export default function LandingPage() {
             <span style={{ color: "#FCD34D" }}>Through Real Conversation</span>
           </h1>
 
-          <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "rgba(255,255,255,0.92)", lineHeight: 1.75, marginBottom: "12px", maxWidth: "520px", margin: "0 auto 12px" }}>
+          <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "white", lineHeight: 1.75, marginBottom: "12px", maxWidth: "520px", margin: "0 auto 12px" }}>
             Ticha is an AI voice tutor built for African children. No reading, no typing — just talk.
           </p>
-          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.75)", marginBottom: "36px", fontStyle: "italic" }}>
-            🌍 Starting with <strong style={{ color: "white", fontStyle: "normal" }}>Swahili ↔ English</strong> — spoken by 200 million people across East Africa
+          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.88)", marginBottom: "36px", fontStyle: "italic" }}>
+            🌍 Starting with <strong style={{ color: "#FCD34D", fontStyle: "normal" }}>Swahili ↔ English</strong> — spoken by 200 million people across East Africa
           </p>
 
           {/* CTA */}
@@ -88,12 +82,12 @@ export default function LandingPage() {
 
           <p style={{ marginTop: "18px" }}>
             <button onClick={() => router.push("/login")}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.7)", fontSize: "14px", fontWeight: 600, textDecoration: "underline", fontFamily: "'Nunito', sans-serif" }}>
+              style={{ background: "none", border: "none", cursor: "pointer", color: "white", fontSize: "14px", fontWeight: 700, textDecoration: "underline", fontFamily: "'Nunito', sans-serif" }}>
               Already have an account? Log in →
             </button>
           </p>
 
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.55)", marginTop: "14px" }}>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", marginTop: "14px" }}>
             Free to start · No credit card · No reading required
           </p>
         </div>
@@ -115,7 +109,7 @@ export default function LandingPage() {
             }}>
               <div style={{ fontSize: "32px", marginBottom: "6px" }}>{card.emoji}</div>
               <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 800, color: "white", margin: "0 0 2px" }}>{card.word}</p>
-              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", margin: 0 }}>{card.sub}</p>
+              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.9)", margin: 0 }}>{card.sub}</p>
             </div>
           ))}
         </div>
@@ -241,7 +235,7 @@ export default function LandingPage() {
 
       {/* ── Final CTA ── */}
       <section style={{
-        background: "linear-gradient(145deg, #10B981 0%, #34D399 50%, #FCD34D 100%)",
+        background: "linear-gradient(145deg, #047857 0%, #059669 50%, #10B981 100%)",
         padding: "80px 24px",
         textAlign: "center",
         position: "relative",
@@ -264,7 +258,7 @@ export default function LandingPage() {
           </button>
           <p style={{ marginTop: "20px" }}>
             <button onClick={() => router.push("/login")}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.65)", fontSize: "14px", fontWeight: 600, fontFamily: "'Nunito', sans-serif" }}>
+              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.9)", fontSize: "14px", fontWeight: 700, fontFamily: "'Nunito', sans-serif" }}>
               Parent login →
             </button>
           </p>

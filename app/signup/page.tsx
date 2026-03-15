@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 function mapError(msg: string): string {
   if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("already been registered"))
@@ -132,7 +133,9 @@ export default function SignupPage() {
       <div style={{ width: "100%", maxWidth: "420px" }}>
 
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ width: "56px", height: "56px", background: "#2E8B2E", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", boxShadow: "0 4px 0 #1F6B1F", margin: "0 auto 12px" }}>🎓</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
+            <Image src="/images/ticha-logo.PNG" alt="Ticha" width={150} height={52} style={{ objectFit: "contain" }} />
+          </div>
           <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>Join Ticha</h1>
           <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>Create a free parent account</p>
         </div>
