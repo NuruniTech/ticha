@@ -196,20 +196,14 @@ body {
 .ticha-celebrate { animation: ticha-celebrate 0.5s ease-in-out infinite; }
 .ticha-idle      { animation: ticha-idle      3s ease-in-out infinite; }
 
-/* ── Responsive app container ── */
+/* ── App container — phone-width on all screens ── */
 .app-page {
   width: 100%;
-  max-width: 540px;
+  max-width: 480px;
   margin: 0 auto;
 }
-@media (min-width: 768px) {
-  .app-page { max-width: 680px; }
-}
-@media (min-width: 1024px) {
-  .app-page { max-width: 760px; }
-}
 
-/* ── Responsive avatar circle ── */
+/* ── Avatar circle ── */
 .avatar-circle {
   width: 240px;
   height: 240px;
@@ -222,14 +216,8 @@ body {
   position: relative;
   transition: border-color 0.35s;
 }
-@media (min-width: 768px) {
-  .avatar-circle { width: 280px; height: 280px; }
-}
-@media (min-width: 1024px) {
-  .avatar-circle { width: 310px; height: 310px; }
-}
 
-/* ── Session stage scales with viewport ── */
+/* ── Session stage ── */
 .session-stage {
   padding: 20px 20px 52px;
   display: flex;
@@ -238,9 +226,6 @@ body {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-}
-@media (min-width: 768px) {
-  .session-stage { padding: 28px 24px 64px; }
 }
 
 /* ── Floating background emoji ── */
