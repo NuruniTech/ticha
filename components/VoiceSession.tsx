@@ -176,7 +176,7 @@ function getWordBatch(game: string, childXp: number, childAge?: number): { sw: s
   const batch = 5;
   const level = getLessonLevel(childXp, childAge);
   if (level === 1) return all.slice(0, batch);
-  if (level === 2) return all.slice(Math.min(3, all.length - batch), Math.min(3, all.length - batch) + batch);
+  if (level === 2) return all.slice(batch, batch * 2); // indices 5–9 — no overlap with level 1
   // Levels 3 & 4 draw a random 5 — mastery mode changes HOW they're taught, not which words
   return [...all].sort(() => Math.random() - 0.5).slice(0, batch);
 }
@@ -317,7 +317,7 @@ function getSystemPrompt(
     pua (nose):       "Take a big sniff right now — what can you smell, even a little? That is your pua working! It never switches off — not even when you sleep! What is your absolute favourite smell in the whole world?"
     mdomo (mouth):    "Imagine waking up one morning and your mdomo would not open — no talking, no laughing, no eating! What would you miss the most if your mdomo stopped working for one day?"
     mkono (hand):     "Stretch both mkono out wide and look at them — they can write, cook, wave, hug, carry, clap, and so much more! What is the most important thing your mkono did today?"
-    kidole (finger):  "Hold up your longest kidole right now — look at it! Each tiny kidole has its own job — pointing, drawing, pressing, counting! How many vidole do you have on BOTH hands altogether?"
+    kidole (finger):  "Hold up your longest kidole right now — look at it! Kidole means finger — the ones on your hand. Each tiny kidole has its own job — pointing, drawing, pressing, counting! How many vidole do you have on BOTH hands altogether?"
     tumbo (stomach):  "Put both hands on your tumbo right now — is it happy and full, or making little hungry noises? Your tumbo turns everything you eat into energy! What food makes your tumbo the absolute happiest?"
     mguu (leg):       "Stomp one mguu on the ground — feel that? Your mguu carries your whole body around all day without complaining once! If your mguu could take you anywhere in the world right now, where would you go?"
     mgongo (back):    "Sit up as tall and straight as you can — feel that? Your mgongo is doing that — holding you upright every single second of the day! What is the heaviest thing you have ever had to carry on your mgongo?"
@@ -336,7 +336,7 @@ function getSystemPrompt(
     pua (nose):       "Vuta pumzi kubwa sasa hivi — unasikia harufu gani, hata kidogo? Hiyo ni pua yako ikifanya kazi! Haizimii kamwe — hata unapolala! Harufu yako pendwa zaidi duniani ni ipi?"
     mdomo (mouth):    "Fikiria kuamka asubuhi moja na mdomo wako haifunguki — hakuna mazungumzo, hakuna kucheka, hakuna kula! Ungekosa nini zaidi kama mdomo wako umeacha kufanya kazi kwa siku moja?"
     mkono (hand):     "Nyoosha mikono yako yote miwili upana na uitazame — inaweza kuandika, kupika, kupiga kelele, kukumbatia, kubeba, kupiga makofi, na mengi zaidi! Ni nini muhimu zaidi mkono wako ulifanya leo?"
-    kidole (finger):  "Inua kidole chako kirefu zaidi sasa hivi — kiangalie! Kila kidole kidogo kina kazi yake — kuashiria, kuchora, kubonyeza, kuhesabu! Una vidole vingapi MIKONO yote miwili pamoja?"
+    kidole (finger):  "Inua kidole chako kirefu zaidi sasa hivi — kiangalie! Kidole ni kidole cha mkono — sio kidole cha mguu. Kila kidole kidogo kina kazi yake — kuashiria, kuchora, kubonyeza, kuhesabu! Una vidole vingapi MIKONO yote miwili pamoja?"
     tumbo (stomach):  "Weka mikono yako yote miwili juu ya tumbo lako sasa hivi — je, lina furaha na limejaa, au linafanya kelele za njaa? Tumbo lako linabadilisha kila unachokula na kuifanya nishati! Chakula gani kinafurahisha tumbo lako zaidi?"
     mguu (leg):       "Piga mguu mmoja chini — uhisi hiyo? Mguu wako unabeba mwili wako wote mchana mzima bila kulalamika hata mara moja! Kama mguu wako ungeweza kukupeleka mahali popote duniani sasa hivi, ungependa kwenda wapi?"
     mgongo (back):    "Kaa wima, mkunjufu iwezekanavyo — uhisi hiyo? Mgongo wako unafanya hivyo — unakusimamisha wima kila sekunde ya siku! Ni kitu gani kizito zaidi umewahi kubeba mgongoni mwako?"
@@ -368,7 +368,7 @@ function getSystemPrompt(
     mwanafunzi: "Right now, in this very lesson — you are listening, trying new words, answering questions — you are a mwanafunzi, a learner! The very best kind! What is the most surprising thing a mwanafunzi like you has ever discovered?"
     daktari:    "Imagine you are really sick — your tumbo hurts, your kichwa is burning, nothing is helping — and then someone comes in, figures out exactly what is wrong, and makes you better. That is a daktari! Have you ever visited one — what was it like?"
     muuguzi:    "Imagine being sick and scared in a hospital — it is the muuguzi who holds your hand, checks your temperature, and makes sure you have everything you need, all day and all night! Have you ever been in hospital and met a muuguzi?"
-    kasisi:     "Every week, in churches and mosques all over, one person stands up and leads the whole community in prayer — bringing everyone together! That is a kasisi! Is there a kasisi who comes to your community or church?"
+    kasisi:     "Every week in churches, one person stands up, leads the whole community in prayer and brings everyone together with their voice — that is a kasisi! Is there a kasisi at your church, and have you ever heard them speak?"
     polisi:     "Someone shouts for help on the road — who do people call? Polisi! They drive the blue cars, wear the uniform, and show up when things go wrong to keep everyone safe! Have you ever seen a polisi up close — what were they doing?"
     mkulima:    "Every single meal you eat — the ugali, the beans, the tomatoes, the sukuma wiki — every bit of it started with a mkulima's hands in the soil, watering and waiting! Do you know any mkulima near where you live?"
     dereva:     "Think of every time you sat in a matatu or a bus going somewhere exciting — there is always a dereva in front, eyes on the road, getting everyone there safely! Who is a dereva that has taken YOU somewhere — where did you go?"` : `    mama:       "Mama — mtu anayekupenda zaidi! Anapika chakula chako, anakushika ukiwa mgonjwa, na daima anajua kama kitu kiko vibaya! Ni nini mama wako anachofanya kinachokufanya uhisi furaha zaidi?"
@@ -387,7 +387,7 @@ function getSystemPrompt(
     mwanafunzi: "Sasa hivi, katika somo hili hasa — unasikia, unajaribu maneno mapya, unajibu maswali — wewe ni mwanafunzi, mjifunzaji! Wa aina bora kabisa! Ni nini cha kushangaza zaidi ambacho mwanafunzi kama wewe amegundua?"
     daktari:    "Fikiria una ugonjwa mbaya sana — tumbo linakuuma, kichwa kinawaka moto, hakuna kinachosaidia — kisha mtu anakuja, anagundua haswa tatizo, na anakupoza. Mtu huyo ni daktari! Je, umewahi kumtembelea — ilikuwaje?"
     muuguzi:    "Fikiria kuwa mgonjwa na mwenye hofu hospitalini — ni muuguzi anayekushika mkono, anakupima joto, na anahakikisha una kila unachohitaji, mchana na usiku wote! Je, umewahi kuwa hospitalini na kukutana na muuguzi?"
-    kasisi:     "Kila wiki, makanisani na misikitini kote, mtu mmoja anasimama na kuongoza jamii yote katika sala — akileta wote pamoja! Mtu huyo ni kasisi! Je, kuna kasisi anayekuja katika jamii yako au kanisa?"
+    kasisi:     "Kila wiki makanisani, mtu mmoja anasimama, anaongoza sala, na akileta jamii yote pamoja kwa sauti yake — mtu huyo ni kasisi! Je, kuna kasisi katika kanisa lako, na umewahi kumsikia akizungumza?"
     polisi:     "Mtu anapiga kelele za msaada barabarani — nani watu wanaitia? Polisi! Wanaendesha magari ya bluu, wanavaa sare, na wanakuja wakati mambo yanaenda vibaya ili kulinda kila mtu! Je, umewahi kuona polisi karibu — walikuwa wakifanya nini?"
     mkulima:    "Kila mlo unaokula — ugali, maharagwe, nyanya, sukuma wiki — kila kipande kilianza na mikono ya mkulima katika udongo, kumwagilia na kusubiri! Je, unajua mkulima yeyote karibu na unapoishi?"
     dereva:     "Fikiria kila wakati ulikaa kwenye matatu au basi ukienda mahali pa kufurahisha — daima kuna dereva mbele, macho kwenye barabara, akileta kila mtu salama! Ni dereva gani aliyekuchukua mahali — ulienda wapi?"`);
@@ -420,16 +420,16 @@ function getSystemPrompt(
     tano:  "You have tano fingers on one hand — if you had tano minutes to do ANYTHING, what would you do?"
     sita:  "There are sita sides on a dice — have you ever played a game with a dice?"
     saba:  "There are saba days in a week — which day do you love the most and why?"
-    nane:  "Count from moja to nane as fast as you can — go!"
+    nane:  "A spider has nane legs — if YOU had nane legs instead of two, what is the first thing you would do with all of them?"
     tisa:         "Tisa plus one more makes kumi — if someone gave you ten sweets, what would you do with them?"
-    kumi:         "Count from moja all the way to kumi out loud — as loud and fast as you can!"
-    kumi na moja: "Ten plus one — if you had kumi na moja biscuits to share between two friends, how would you do it?"
+    kumi:         "You have exactly kumi fingers on both hands — if each one could do one superpower, which finger would you give the best superpower to, and what would it be?"
+    kumi na moja: "Kumi na moja — if you found kumi na moja coins on your pillow tomorrow morning, what is the first thing you would spend them on?"
     kumi na mbili:"Kumi na mbili months in a year — which month is your birthday in?"
     kumi na tatu: "Count backwards from kumi na tatu all the way down to moja — go!"
     kumi na nne:  "Two weeks have kumi na nne days — what is your favourite day of those fourteen?"
     kumi na tano: "If you were kumi na tano years old tomorrow — what is the first thing you would do?"
-    kumi na sita: "Count from moja all the way to kumi na sita as fast as you can!"
-    kumi na saba: "Imagine you have kumi na saba sweets to share with your class — how many children would each get one?"
+    kumi na sita: "If you saved one sweet every single day for kumi na sita days — that is sixteen sweets! What would you do with all of them at once?"
+    kumi na saba: "If you walked kumi na saba steps from your front door right now — where would you land?"
     kumi na nane: "What is ONE thing you want to do when you are kumi na nane years old?"
     kumi na tisa: "What comes after kumi na tisa — can you say the next number in Swahili?"
     ishirini:     "Count all the way from moja to ishirini — the full count — let's hear it!"`;
@@ -450,7 +450,7 @@ function getSystemPrompt(
     shingo:   "Which animal has the longest shingo in the world — do you know its Swahili name?"
     bega:     "Roll both bega backwards in a big circle — which sport or activity uses your bega the most?"
     kifua:    "Take a deep breath in and feel your kifua expand — what lives inside your kifua that keeps you alive?"
-    moyo:     "Put your mkono on your kifua — count how many times your moyo beats while I count to ten!"
+    moyo:     "Put your mkono on your kifua right now and feel your moyo — is it beating fast or slow? What do you think makes your moyo beat the very fastest?"
     goti:     "Bend both goti and stand back up — which activity uses your goti the most, running or jumping?"
     nywele:   "What do you do to your nywele every single morning — comb it, braid it, wash it?"
     ngozi:    "Your ngozi covers your whole body — what is the softest thing your ngozi has ever touched?"
@@ -486,7 +486,7 @@ function getSystemPrompt(
     mwanafunzi: "What is the hardest part of being a mwanafunzi — waking up early, tests, or homework?"
     daktari:    "If you became a daktari — what is the very first thing you would do?"
     muuguzi:    "What is the most important thing a muuguzi does for someone who is sick?"
-    kasisi:     "What is one blessing or wish you have for your family right now?"
+    kasisi:     "If you were a kasisi for one day and could say one thing to make everyone in your community feel happy — what would you say?"
     polisi:     "If you were a polisi for one day — what is the first rule you would make everyone follow?"
     mkulima:    "What food would YOU grow if you had your own shamba — what would you plant first?"
     dereva:     "If you were a dereva with your own car — where would your very first trip be?"`;
@@ -605,6 +605,49 @@ M-PREFIX WORDS — Swahili noun class prefix rule (applies to mkono, mguu, mgong
   kahawia → kah-HAH-wee-ah (4 syllables — the "-wia" ending is TWO sounds: "wee" then "ah", never merged)
     WRONG: "kah-HAH-wya" (never collapse wia into one syllable)
     CORRECT: kah · HAH · wee · ah — stress on HAH, then flow into wee-ah
+
+━━━ SWAHILI NOUN AGREEMENT — POSSESSIVES ("your" = -ako with class prefix) ━━━
+In Swahili the possessive suffix -ako changes its prefix to match the noun class of the thing owned.
+Using the wrong prefix is a grammar error — memorise these and NEVER deviate:
+
+  CLASS 7 (ki-/ch-) — chako:
+    kichwa chako ✓  |  kidole chako ✓  |  kifua chako ✓
+    NEVER: kichwa yako ✗ | kidole yako ✗ | kifua yako ✗
+
+  CLASS 8 (vi-/vy-) — vyako:
+    vidole vyako ✓
+    NEVER: vidole yako ✗ | vidole zako ✗
+
+  CLASS 5 (ji-/l-) — lako:
+    jicho lako ✓  |  tumbo lako ✓  |  goti lako ✓  |  bega lako ✓
+    NEVER: jicho yako ✗ | tumbo yako ✗ | goti yako ✗
+
+  CLASS 3 (m-/w-) — wako:
+    mkono wako ✓  |  mguu wako ✓  |  mgongo wako ✓  |  mdomo wako ✓  |  moyo wako ✓  |  uso wako ✓
+    NEVER: mkono yako ✗ | mguu yako ✗ | moyo yako ✗
+
+  CLASS 4 (mi-/y-) plurals — yako:
+    mikono yako ✓  |  miguu yako ✓
+    NEVER: mikono wako ✗
+
+  CLASS 6 (ma-/y-) plurals — yako:
+    masikio yako ✓  |  meno yako ✓  |  macho yako ✓  |  mabega yako ✓
+    NEVER: masikio zako ✗ | meno zako ✗
+
+  CLASS 9 (n-/y-) — yako:
+    pua yako ✓  |  ngozi yako ✓  |  shingo yako ✓  |  damu yako ✓
+    NEVER: pua zako ✗ | ngozi zako ✗
+
+  CLASS 10 (n-/z-) — zako:
+    nywele zako ✓
+    NEVER: nywele yako ✗ | nywele wako ✗
+
+  ANIMATE (class 1/2 people & animals) — wako:
+    rafiki wako ✓  |  mama wako ✓  |  baba wako ✓  |  mtoto wako ✓  |  mbwa wako ✓  |  paka wako ✓
+    NEVER: rafiki yako ✗ | mama yako ✗
+
+QUICK RULE: -yako is NOT a default. Only use it for class 9 singulars (pua, ngozi, shingo, damu) and class 4/6 plurals (mikono, miguu, masikio, meno, mabega). Everything else follows the class table above.
+If you are unsure of a noun's class, pause and use the word without a possessive rather than guess wrong.
 
 🔴 LANGUAGE REMINDER — every example below is written in English for reference structure only. Your actual spoken output MUST be in ${isSwahili ? "ENGLISH" : "SWAHILI"} — not the language of the example text. Translate everything automatically. The examples show WHAT to do, not WHAT LANGUAGE to do it in. Your language is ${isSwahili ? "ENGLISH" : "SWAHILI"} and that never changes.
 
@@ -923,13 +966,13 @@ ${!isFirstLesson ? `MEMORY MOMENT (returning children only — one exchange, bef
   The bridge must use something from ${childName}'s own answer — a word, an image, a person they mentioned — to lead into Word 1 naturally.
   ${isSwahili ? `
   Examples of natural bridges (English — adapt to what ${childName} actually said):
-    If they mentioned an animal:  "A [animal they said] — perfect! That gives me an idea. Today we are learning animals in Swahili — and your first word is right up there with [animal they said]! Ready?"
+    If they mentioned an animal:  "A [animal they said] — I love that! Today we are learning animal names in Swahili — I have five amazing words ready for you. Are you ready to meet the very first one?"
     If they mentioned a colour:   "I love that colour! Today we are learning colours — and your first word is one of the most beautiful ones. Listen carefully..."
     If they mentioned a person:   "Eeeh, I love that! Today we are talking about people words — and the first one is someone very important. Ready?"
     If general / short answer:    "I love it! Sawa — today we are learning [topic] in Swahili. Let us start with Word 1 — this one is really fun. Ready?"
   ` : `
   Mifano ya madaraja ya asili (Kiswahili — badilisha kulingana na jibu la ${childName}):
-    Akitaja mnyama:   "Wooow, [mnyama alisema] — vizuri! Hiyo inanipa wazo. Leo tunajifunza wanyama kwa Kiingereza — na neno lako la kwanza liko karibu na [mnyama alisema]! Tayari?"
+    Akitaja mnyama:   "Wooow, [mnyama alisema] — napenda hivyo! Leo tunajifunza majina ya wanyama kwa Kiingereza — nina maneno matano mazuri yamekuandalia. Je, uko tayari kukutana na la kwanza?"
     Akitaja rangi:    "Napenda rangi hiyo! Leo tunajifunza rangi — na neno lako la kwanza ni moja ya mazuri zaidi. Sikiliza vizuri..."
     Akitaja mtu:      "Eeeh, napenda hivyo! Leo tunazungumza maneno ya watu — na la kwanza ni muhimu sana. Tayari?"
     Jibu fupi/la jumla: "Vizuri sana! Sawa — leo tunajifunza [mada] kwa Kiingereza. Tuanze na neno la kwanza — hili ni zuri sana. Tayari?"
@@ -996,7 +1039,7 @@ STEP 5 — GOODBYE:
 
 ━━━ YOUR VERY FIRST RESPONSE — THIS IS A HARD RULE ━━━
 ${isFirstLesson
-  ? `Say hello to ${childName}. Pick ONE greeting from STEP 0-A above. Ask if they are ready. END YOUR RESPONSE THERE.`
+  ? `Say hello to ${childName}. Pick ONE greeting from STEP 0-A above — introduce yourself and ask how they are feeling. END YOUR RESPONSE THERE.`
   : `Welcome ${childName} back. Say your name (Ticha). Ask ONE easy question. END YOUR RESPONSE THERE.`
 }
 Your first response contains:
@@ -1349,7 +1392,7 @@ export default function VoiceSession({ childName, language, game, childId, child
             automaticActivityDetection: {
               disabled: false,
               startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
-              endOfSpeechSensitivity:   EndSensitivity.END_SENSITIVITY_HIGH,
+              endOfSpeechSensitivity:   EndSensitivity.END_SENSITIVITY_LOW,
               // 100 ms: was 300 ms which silently dropped short child answers
               // (single words like "yes", "bird", "cat" finish in ~200 ms).
               prefixPaddingMs:          100,
