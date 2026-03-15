@@ -1848,8 +1848,8 @@ export default function VoiceSession({ childName, language, game, childId, child
           {/* Pulsing rings behind the circle */}
           {sessionStarted && !isPaused && (pttActive || status === "speaking") && (
             <>
-              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "290px", height: "290px", borderRadius: "50%", background: ringColor, opacity: 0.18 }} />
-              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "270px", height: "270px", borderRadius: "50%", background: ringColor, opacity: 0.12, animationDelay: "0.35s" }} />
+              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "330px", height: "330px", borderRadius: "50%", background: ringColor, opacity: 0.18 }} />
+              <div className="mic-ring" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "305px", height: "305px", borderRadius: "50%", background: ringColor, opacity: 0.12, animationDelay: "0.35s" }} />
             </>
           )}
           {/* White circle frame */}
@@ -1860,8 +1860,8 @@ export default function VoiceSession({ childName, language, game, childId, child
             <Image
               src="/images/ticha-session.PNG"
               alt="Ticha"
-              width={220}
-              height={220}
+              width={260}
+              height={260}
               style={{
                 objectFit: "cover",
                 objectPosition: "top",

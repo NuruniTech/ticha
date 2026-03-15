@@ -53,8 +53,8 @@ export default function LandingPage() {
             <Image
               src="/images/ticha-hero.PNG"
               alt="Ticha teacher"
-              width={220}
-              height={220}
+              width={280}
+              height={280}
               style={{ objectFit: "contain", filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.2))" }}
               priority
             />
