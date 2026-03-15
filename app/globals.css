@@ -195,3 +195,67 @@ body {
 .ticha-speaking  { animation: ticha-speaking  0.9s ease-in-out infinite; }
 .ticha-celebrate { animation: ticha-celebrate 0.5s ease-in-out infinite; }
 .ticha-idle      { animation: ticha-idle      3s ease-in-out infinite; }
+
+/* ── Responsive app container ── */
+.app-page {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  .app-page { max-width: 680px; }
+}
+@media (min-width: 1024px) {
+  .app-page { max-width: 760px; }
+}
+
+/* ── Responsive avatar circle ── */
+.avatar-circle {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.35s;
+}
+@media (min-width: 768px) {
+  .avatar-circle { width: 280px; height: 280px; }
+}
+@media (min-width: 1024px) {
+  .avatar-circle { width: 310px; height: 310px; }
+}
+
+/* ── Session stage scales with viewport ── */
+.session-stage {
+  padding: 20px 20px 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .session-stage { padding: 28px 24px 64px; }
+}
+
+/* ── Floating background emoji ── */
+@keyframes bg-float-a {
+  0%, 100% { transform: translateY(0px)   rotate(-3deg) scale(1);    }
+  50%       { transform: translateY(-18px) rotate( 3deg) scale(1.06); }
+}
+@keyframes bg-float-b {
+  0%, 100% { transform: translateY(0px)   rotate( 2deg) scale(1);    }
+  50%       { transform: translateY(-14px) rotate(-4deg) scale(0.95); }
+}
+@keyframes bg-float-c {
+  0%, 100% { transform: translateY(0px)   rotate( 0deg) scale(1);    }
+  50%       { transform: translateY(-22px) rotate( 5deg) scale(1.04); }
+}
+.bg-emoji-a { animation: bg-float-a 4.2s ease-in-out infinite; }
+.bg-emoji-b { animation: bg-float-b 5.1s ease-in-out infinite; }
+.bg-emoji-c { animation: bg-float-c 3.8s ease-in-out infinite; }

@@ -142,7 +142,7 @@ export default function ChildPage() {
     return (
       <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Nunito', sans-serif" }}>
         <div style={{ background: "linear-gradient(160deg, #A4C4F8 0%, #D4B4F8 50%, #F8B4D4 100%)", padding: "20px 20px 44px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: "480px", margin: "0 auto", marginBottom: "16px" }}>
+          <div className="app-page" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
             <button onClick={() => setView("dashboard")} style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(255,255,255,0.8)", border: "none", cursor: "pointer", fontSize: "18px" }}>←</button>
             <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "20px", fontWeight: 800, color: "#1E3A8A" }}>Choose a Topic! ⭐</h1>
             <div style={{ width: "40px" }} />
@@ -155,7 +155,7 @@ export default function ChildPage() {
           </div>
         </div>
         <div style={{ background: "white", flex: 1, borderRadius: "28px 28px 0 0", marginTop: "-24px", padding: "24px 20px 40px", zIndex: 5, position: "relative" }}>
-          <div style={{ maxWidth: "480px", margin: "0 auto" }}>
+          <div className="app-page">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
               {GAMES.slice(0, 4).map((g) => (
                 <button key={g.id} onClick={() => setGame(g.id)} style={{
@@ -212,7 +212,7 @@ export default function ChildPage() {
     <main style={{ minHeight: "100vh", background: "linear-gradient(160deg, #A4C4F8 0%, #D4B4F8 50%, #F8B4D4 100%)", fontFamily: "'Nunito', sans-serif", overflowX: "hidden" }}>
 
       {/* Header */}
-      <div style={{ padding: "20px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
+      <div className="app-page" style={{ padding: "20px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => router.push("/dashboard")} style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "20px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
             🏠
@@ -227,7 +227,7 @@ export default function ChildPage() {
       </div>
 
       {/* Stats cards row */}
-      <div style={{ padding: "24px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
+      <div className="app-page" style={{ padding: "24px 20px 0" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
           {/* Day Streak */}
           <div style={{ background: "white", borderRadius: "20px", padding: "18px 12px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
@@ -260,7 +260,7 @@ export default function ChildPage() {
       </div>
 
       {/* Today's Mission banner */}
-      <div style={{ padding: "18px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
+      <div className="app-page" style={{ padding: "18px 20px 0" }}>
         <div style={{ background: "linear-gradient(135deg, #FF9500 0%, #FF3878 100%)", borderRadius: "24px", padding: "24px 22px 26px", boxShadow: "0 8px 28px rgba(255,80,100,0.35)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
             <div style={{ width: "40px", height: "40px", background: "rgba(255,255,255,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>✨</div>
@@ -283,7 +283,7 @@ export default function ChildPage() {
       </div>
 
       {/* Let's Play & Learn */}
-      <div style={{ padding: "22px 20px 48px", maxWidth: "640px", margin: "0 auto" }}>
+      <div className="app-page" style={{ padding: "22px 20px 48px" }}>
         <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "20px", fontWeight: 800, color: "white", marginBottom: "16px", textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
           Let&apos;s Play &amp; Learn!
         </p>

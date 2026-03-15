@@ -1698,6 +1698,57 @@ export default function VoiceSession({ childName, language, game, childId, child
   const GAME_EMOJIS: Record<string, string> = { animals: "🦁", numbers: "🔢", colors: "🎨", body: "🫀", people: "👨‍👩‍👧‍👦" };
   const GAME_SHORT:  Record<string, string> = { animals: "Animals / Wanyama", numbers: "Numbers / Nambari", colors: "Colors / Rangi", body: "Body Parts / Mwili", people: "People / Watu" };
 
+  // Cartoon background emojis — scattered around the stage per topic
+  type BgEmoji = { e: string; top?: string; bottom?: string; left?: string; right?: string; size: number; anim: string; delay: string };
+  const GAME_BG_EMOJIS: Record<string, BgEmoji[]> = {
+    animals: [
+      { e: "🦁", top: "7%",   left: "4%",   size: 54, anim: "bg-emoji-a", delay: "0s"   },
+      { e: "🐘", top: "9%",   right: "4%",  size: 58, anim: "bg-emoji-b", delay: "0.9s" },
+      { e: "🦒", top: "46%",  left: "2%",   size: 46, anim: "bg-emoji-c", delay: "1.7s" },
+      { e: "🐆", top: "42%",  right: "2%",  size: 44, anim: "bg-emoji-a", delay: "2.4s" },
+      { e: "🦋", bottom: "18%", left: "6%", size: 38, anim: "bg-emoji-b", delay: "0.5s" },
+      { e: "🦜", bottom: "15%", right: "5%",size: 40, anim: "bg-emoji-c", delay: "1.3s" },
+      { e: "🐊", top: "24%",  left: "8%",   size: 30, anim: "bg-emoji-b", delay: "2.0s" },
+    ],
+    numbers: [
+      { e: "1️⃣",  top: "8%",   left: "5%",   size: 50, anim: "bg-emoji-a", delay: "0s"   },
+      { e: "2️⃣",  top: "9%",   right: "5%",  size: 54, anim: "bg-emoji-b", delay: "0.8s" },
+      { e: "3️⃣",  top: "45%",  left: "2%",   size: 44, anim: "bg-emoji-c", delay: "1.6s" },
+      { e: "⭐",  top: "41%",  right: "3%",  size: 42, anim: "bg-emoji-a", delay: "2.2s" },
+      { e: "5️⃣",  bottom: "20%", left: "7%", size: 36, anim: "bg-emoji-b", delay: "0.4s" },
+      { e: "🔢",  bottom: "16%", right: "6%",size: 40, anim: "bg-emoji-c", delay: "1.2s" },
+      { e: "🎯",  top: "25%",  right: "9%",  size: 30, anim: "bg-emoji-a", delay: "1.9s" },
+    ],
+    colors: [
+      { e: "🌈", top: "7%",   left: "4%",   size: 56, anim: "bg-emoji-a", delay: "0s"   },
+      { e: "🎨", top: "9%",   right: "4%",  size: 52, anim: "bg-emoji-b", delay: "0.7s" },
+      { e: "🌺", top: "45%",  left: "2%",   size: 44, anim: "bg-emoji-c", delay: "1.5s" },
+      { e: "💜", top: "41%",  right: "2%",  size: 42, anim: "bg-emoji-a", delay: "2.1s" },
+      { e: "🖌️", bottom: "19%", left: "7%", size: 36, anim: "bg-emoji-b", delay: "0.5s" },
+      { e: "🌊", bottom: "16%", right: "5%",size: 38, anim: "bg-emoji-c", delay: "1.2s" },
+      { e: "🌻", top: "26%",  left: "10%",  size: 30, anim: "bg-emoji-a", delay: "2.0s" },
+    ],
+    body: [
+      { e: "💪", top: "8%",   left: "5%",   size: 50, anim: "bg-emoji-a", delay: "0s"   },
+      { e: "👁️", top: "9%",   right: "5%",  size: 54, anim: "bg-emoji-b", delay: "0.8s" },
+      { e: "👃", top: "45%",  left: "3%",   size: 44, anim: "bg-emoji-c", delay: "1.6s" },
+      { e: "👂", top: "41%",  right: "3%",  size: 42, anim: "bg-emoji-a", delay: "2.2s" },
+      { e: "🦷", bottom: "20%", left: "7%", size: 36, anim: "bg-emoji-b", delay: "0.4s" },
+      { e: "🦵", bottom: "17%", right: "6%",size: 38, anim: "bg-emoji-c", delay: "1.2s" },
+      { e: "🖐🏾", top: "26%", right: "10%", size: 30, anim: "bg-emoji-a", delay: "1.9s" },
+    ],
+    people: [
+      { e: "👨‍👩‍👧", top: "7%",  left: "3%",   size: 54, anim: "bg-emoji-a", delay: "0s"   },
+      { e: "🏠",  top: "9%",   right: "4%",  size: 50, anim: "bg-emoji-b", delay: "0.8s" },
+      { e: "🤝",  top: "45%",  left: "2%",   size: 44, anim: "bg-emoji-c", delay: "1.6s" },
+      { e: "💛",  top: "41%",  right: "2%",  size: 42, anim: "bg-emoji-a", delay: "2.2s" },
+      { e: "👶🏾", bottom: "20%", left: "7%",size: 36, anim: "bg-emoji-b", delay: "0.4s" },
+      { e: "🌍",  bottom: "17%", right: "5%",size: 40, anim: "bg-emoji-c", delay: "1.1s" },
+      { e: "🎓",  top: "26%",  right: "10%", size: 30, anim: "bg-emoji-a", delay: "1.8s" },
+    ],
+  };
+  const bgEmojis = GAME_BG_EMOJIS[game] || [];
+
   const avatarState =
     status === "connecting"                              ? "connecting"  :
     starsFlash                                           ? "celebrating" :
@@ -1734,10 +1785,27 @@ export default function VoiceSession({ childName, language, game, childId, child
       </header>
 
       {/* ── Gradient Stage ── */}
-      <div style={{ background: "linear-gradient(160deg, #A8C8F8 0%, #C4B0F8 50%, #B0EEF4 100%)", padding: "20px 20px 52px", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+      <div className="session-stage" style={{ background: "linear-gradient(160deg, #A8C8F8 0%, #C4B0F8 50%, #B0EEF4 100%)" }}>
+
+        {/* Topic cartoon background emojis */}
+        {bgEmojis.map((item, i) => (
+          <div key={i} className={item.anim} style={{
+            position: "absolute",
+            top: item.top, bottom: item.bottom, left: item.left, right: item.right,
+            fontSize: `${item.size}px`,
+            opacity: 0.16,
+            lineHeight: 1,
+            userSelect: "none",
+            pointerEvents: "none",
+            animationDelay: item.delay,
+            zIndex: 0,
+          }}>
+            {item.e}
+          </div>
+        ))}
 
         {/* Name + level + word progress */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "400px", marginBottom: "14px" }}>
+        <div className="app-page" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "14px", position: "relative", zIndex: 1 }}>
           <div style={{ background: "rgba(255,255,255,0.75)", borderRadius: "9999px", padding: "6px 16px" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>👋🏾 {childName}</span>
           </div>
@@ -1761,7 +1829,7 @@ export default function VoiceSession({ childName, language, game, childId, child
         </div>
 
         {/* Status bubble */}
-        <div style={{ background: "white", borderRadius: "9999px", padding: "9px 24px", marginBottom: "18px", boxShadow: "0 3px 16px rgba(0,0,0,0.12)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+        <div style={{ background: "white", borderRadius: "9999px", padding: "9px 24px", marginBottom: "18px", boxShadow: "0 3px 16px rgba(0,0,0,0.12)", display: "inline-flex", alignItems: "center", gap: "6px", position: "relative", zIndex: 1 }}>
           <span style={{ fontSize: "16px" }}>
             {status === "connecting" ? "⏳" : !sessionStarted ? "🎓" : isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🖐🏾" : "⏳"}
           </span>
@@ -1776,7 +1844,7 @@ export default function VoiceSession({ childName, language, game, childId, child
         </div>
 
         {/* Avatar inside white circle with coloured ring */}
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
           {/* Pulsing rings behind the circle */}
           {sessionStarted && !isPaused && (pttActive || status === "speaking") && (
             <>
@@ -1785,15 +1853,9 @@ export default function VoiceSession({ childName, language, game, childId, child
             </>
           )}
           {/* White circle frame */}
-          <div style={{
-            width: "240px", height: "240px", borderRadius: "50%",
-            background: "white",
+          <div className="avatar-circle" style={{
             border: `5px solid ${ringColor}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "0 6px 32px rgba(0,0,0,0.14)",
-            transition: "border-color 0.35s",
-            overflow: "hidden",
-            position: "relative",
           }}>
             <Image
               src="/images/ticha-session.PNG"
