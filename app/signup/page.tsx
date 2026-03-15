@@ -133,8 +133,8 @@ export default function SignupPage() {
       <div style={{ width: "100%", maxWidth: "420px" }}>
 
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
-            <Image src="/images/ticha-logo.PNG" alt="Ticha" width={150} height={52} style={{ objectFit: "contain" }} />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+            <Image src="/images/ticha-login.PNG" alt="Ticha" width={110} height={110} style={{ objectFit: "contain" }} />
           </div>
           <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>Join Ticha</h1>
           <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>Create a free parent account</p>

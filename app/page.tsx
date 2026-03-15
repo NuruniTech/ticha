@@ -18,7 +18,7 @@ export default function LandingPage() {
         backdropFilter: "blur(8px)",
       }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Image src="/images/ticha-logo.PNG" alt="Ticha" width={130} height={44} style={{ objectFit: "contain" }} priority />
+          <Image src="/images/ticha-logo.PNG" alt="Ticha" width={140} height={48} style={{ objectFit: "contain" }} priority />
           <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <button onClick={() => router.push("/login")}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: 700, color: "#6B7280", padding: "8px 16px", fontFamily: "'Nunito', sans-serif" }}>
@@ -48,14 +48,14 @@ export default function LandingPage() {
 
         <div style={{ maxWidth: "680px", margin: "0 auto", position: "relative" }}>
 
-            {/* Logo */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
+            {/* Hero character */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
             <Image
-              src="/images/ticha-logo.PNG"
-              alt="Ticha — Learn English & African Languages"
-              width={260}
-              height={90}
-              style={{ objectFit: "contain", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.15))" }}
+              src="/images/ticha-hero.PNG"
+              alt="Ticha teacher"
+              width={220}
+              height={220}
+              style={{ objectFit: "contain", filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.2))" }}
               priority
             />
           </div>

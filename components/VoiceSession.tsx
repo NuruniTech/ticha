@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import TichaAvatar from "./TichaAvatar";
 import QuizOverlay from "./QuizOverlay";
+import Image from "next/image";
 
 const GAME_LABELS: Record<string, string> = {
   animals: "Animals / Wanyama 🦁",
@@ -1666,7 +1667,7 @@ export default function VoiceSession({ childName, language, game, childId, child
   if (quizReady) {
     return (
       <main style={{ minHeight: "100vh", background: "linear-gradient(160deg, #1A7A50 0%, #0D9488 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px" }}>
-        <TichaAvatar state="celebrating" size={200} />
+        <Image src="/images/ticha-session.PNG" alt="Ticha" width={200} height={200} style={{ objectFit: "contain" }} />
         <div style={{ textAlign: "center", marginTop: "20px", maxWidth: "380px" }}>
           <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "white", marginBottom: "8px" }}>
             Great lesson! 🎉
@@ -1794,7 +1795,18 @@ export default function VoiceSession({ childName, language, game, childId, child
             overflow: "hidden",
             position: "relative",
           }}>
-            <TichaAvatar state={avatarState} size={200} />
+            <Image
+              src="/images/ticha-session.PNG"
+              alt="Ticha"
+              width={220}
+              height={220}
+              style={{
+                objectFit: "cover",
+                objectPosition: "top",
+                transform: starsFlash ? "scale(1.06)" : "scale(1)",
+                transition: "transform 0.3s ease",
+              }}
+            />
           </div>
           {isCameraOn && (
             <div style={{ position: "absolute", bottom: "10px", right: "-8px", borderRadius: "10px", overflow: "hidden", border: "3px solid #22C55E", zIndex: 2 }}>
