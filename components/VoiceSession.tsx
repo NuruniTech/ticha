@@ -271,10 +271,10 @@ function getSystemPrompt(
     kumi na nane (18): "Kumi na nane — eighteen! Some students in big school are kumi na nane years old! How many years away is kumi na nane from how old you are now?"
     kumi na tisa (19): "Kumi na tisa — nineteen — the very last step before ishirini! If I gave you kumi na tisa coins and you found one more on the ground, what number would you reach?"
     ishirini (20):     "ISHIRINI — twenty! The biggest number we have learned! Count all ten fingers AND all ten toes — every single one — that is exactly ishirini! Ready to count all the way there right now?"` : `    moja (one):        "Fikiria kitu kimoja tu — moja! Una pua moja tu, katikati ya uso wako — kamili, moja! Ni nini kingine mwilini mwako kipo katika moja tu?"
-    mbili (two):       "Inua vidole viwili! Mbili — viwili! Una macho mawili, masikio mawili, mikono miwili — kila kitu muhimu kipo mbili! Ni mkono gani wako wa mbili unaoitumia zaidi?"
+    mbili (two):       "Inua vidole viwili! Mbili — viwili! Una macho mawili, masikio mawili, mikono miwili — kila kitu muhimu kipo mbili! Ni mkono gani unaoitumia zaidi — mkono wa kulia au mkono wa kushoto?"
     tatu (three):      "Tatu! Pembetatu ina pande tatu, pembe tatu — tatu ya kila kitu! Unakula milo mingapi kila siku? Inaweza kuwa tatu?"
     nne (four):        "Magurudumu manne kwenye gari, miguu minne kwenye meza — nne! Kila kitu imara kina nne! Unaweza kutaja mnyama anayetembea kwa miguu minne?"
-    tano (five):       "Tandaza mkono mmoja upana — angalia vidole hivyo! Vihesabu — tano! Vidole vitano, kila kimoja tofauti na muhimu! Kidole gani kati ya tano yako kinatumika zaidi?"
+    tano (five):       "Tandaza mkono mmoja upana — angalia vidole hivyo! Vihesabu — tano! Vidole vitano, kila kimoja tofauti na muhimu! Kidole gani kati ya vidole vyako vitano kinatumika zaidi?"
     sita (six):        "Kasha la mayai lina safu nzuri ya mayai sita — yaliyopangwa vizuri! Kama ungelikuwa na pipi sita na rafiki mmoja bora, kila mmoja angepata ngapi?"
     saba (seven):      "Siku saba kwa wiki — Jumatatu hadi Jumapili — siku nzima saba! Ni siku gani kati ya saba hiyo inayopendeza zaidi, na kwa nini?"
     nane (eight):      "Je, unajua kwamba buibui ana miguu nane — nane yote — zikisogea wakati mmoja?! Je, umewahi kujaribu kuhesabu miguu ya buibui halisi? Ungekuwa jasiri wa kutosha?"
@@ -334,7 +334,7 @@ function getSystemPrompt(
     jicho (eye):      "Funga macho yote mawili — sasa fungua! Kwa kupiga kope moja tu, jicho lako liona chumba kizima! Kama ungeweza kuona rangi moja tu maishani mwote, ungechagua ipi?"
     masikio (ears):   "Shh — simama nausikilize kwa sekunde moja tu. Unasikia nini sasa hivi? Hiyo ni masikio yako yanayofanya kazi — bila hata kufikiria! Sauti nzuri zaidi waliyowahi kuisikia ni ipi?"
     pua (nose):       "Vuta pumzi kubwa sasa hivi — unasikia harufu gani, hata kidogo? Hiyo ni pua yako ikifanya kazi! Haizimii kamwe — hata unapolala! Harufu yako pendwa zaidi duniani ni ipi?"
-    mdomo (mouth):    "Fikiria kuamka asubuhi moja na mdomo wako haifunguki — hakuna mazungumzo, hakuna kucheka, hakuna kula! Ungekosa nini zaidi kama mdomo wako umeacha kufanya kazi kwa siku moja?"
+    mdomo (mouth):    "Fikiria kuamka asubuhi moja na mdomo wako haufunguki — hakuna mazungumzo, hakuna kucheka, hakuna kula! Ungekosa nini zaidi kama mdomo wako umeacha kufanya kazi kwa siku moja?"
     mkono (hand):     "Nyoosha mikono yako yote miwili upana na uitazame — inaweza kuandika, kupika, kupiga kelele, kukumbatia, kubeba, kupiga makofi, na mengi zaidi! Ni nini muhimu zaidi mkono wako ulifanya leo?"
     kidole (finger):  "Inua kidole chako kirefu zaidi sasa hivi — kiangalie! Kidole ni kidole cha mkono — sio kidole cha mguu. Kila kidole kidogo kina kazi yake — kuashiria, kuchora, kubonyeza, kuhesabu! Una vidole vingapi MIKONO yote miwili pamoja?"
     tumbo (stomach):  "Weka mikono yako yote miwili juu ya tumbo lako sasa hivi — je, lina furaha na limejaa, au linafanya kelele za njaa? Tumbo lako linabadilisha kila unachokula na kuifanya nishati! Chakula gani kinafurahisha tumbo lako zaidi?"
@@ -371,23 +371,23 @@ function getSystemPrompt(
     kasisi:     "Every week in churches, one person stands up, leads the whole community in prayer and brings everyone together with their voice — that is a kasisi! Is there a kasisi at your church, and have you ever heard them speak?"
     polisi:     "Someone shouts for help on the road — who do people call? Polisi! They drive the blue cars, wear the uniform, and show up when things go wrong to keep everyone safe! Have you ever seen a polisi up close — what were they doing?"
     mkulima:    "Every single meal you eat — the ugali, the beans, the tomatoes, the sukuma wiki — every bit of it started with a mkulima's hands in the soil, watering and waiting! Do you know any mkulima near where you live?"
-    dereva:     "Think of every time you sat in a matatu or a bus going somewhere exciting — there is always a dereva in front, eyes on the road, getting everyone there safely! Who is a dereva that has taken YOU somewhere — where did you go?"` : `    mama:       "Mama — mtu anayekupenda zaidi! Anapika chakula chako, anakushika ukiwa mgonjwa, na daima anajua kama kitu kiko vibaya! Ni nini mama wako anachofanya kinachokufanya uhisi furaha zaidi?"
-    baba:       "Baba — baba yako, mlindaji wa familia! Ni nini unachopenda kufanya zaidi na baba wako?"
-    kaka:       "Kaka — ndugu yako wa kiume! Ndugu wa kiume wanaweza kuwa rafiki wako bora au msumbufu wako mkubwa — wakati mwingine wote wawili! Je, una kaka, au wewe ndiye kaka katika familia yako?"
+    dereva:     "Think of every time you sat in a matatu or a bus going somewhere exciting — there is always a dereva in front, eyes on the road, getting everyone there safely! Who is a dereva that has taken YOU somewhere — where did you go?"` : `    mama:       "Mama — mtu anayekupenda zaidi! Anapika chakula chako, anakushika ukiwa mgonjwa, na daima anajua kama kitu kiko vibaya! Ni nini mama yako anachofanya kinachokufanya uhisi furaha zaidi?"
+    baba:       "Baba — baba yako, mlindaji wa familia! Ni nini unachopenda kufanya zaidi na baba yako?"
+    kaka:       "Kaka — ndugu yako wa kiume! Ndugu wa kiume wanaweza kuwa rafiki yako bora au msumbufu mkubwa — wakati mwingine wote wawili! Je, una kaka, au wewe ndiye kaka katika familia yako?"
     dada:       "Dada — ndugu yako wa kike! Dada wanashiriki siri, wanacheka pamoja, na daima wanampenda mmoja wamwingine! Je, una dada nyumbani?"
-    bibi:       "Bibi — nyanya yako! Nyumba ya bibi daima inanuka chakula na yeye daima ana hadithi nzuri zaidi! Je, bibi wako anaishi karibu nawe au mbali?"
-    babu:       "Babu — babu yako! Ameishi muda mrefu na ana hadithi nyingi sana! Ni nini cha kuvutia zaidi ambacho babu wako amekuambia?"
+    bibi:       "Bibi — nyanya yako! Nyumba ya bibi daima inanuka chakula na yeye daima ana hadithi nzuri zaidi! Je, bibi yako anaishi karibu nawe au mbali?"
+    babu:       "Babu — babu yako! Ameishi muda mrefu na ana hadithi nyingi sana! Ni nini cha kuvutia zaidi ambacho babu yako amekuambia?"
     mtoto:      "Mtoto inamaanisha mtoto — hiyo ni wewe! Kila mtu mzima duniani alikuwa mtoto mdogo wakati mmoja! Ni nini cha kuchekesha zaidi ulichofanya ulipokuwa mdogo sana?"
     rafiki:     "Rafiki — rafiki yako! Rafiki mzuri anakufanya ucheke, anashiriki nawe, na daima yuko pale unapohitaji! Ni nani rafiki yako bora zaidi sasa hivi?"
-    mjomba:     "Mjomba ni mjomba wako — ndugu wa mama yako au baba yako wa kiume! Mjomba anaweza kuwa wa kufurahisha na wa kuchekesha! Je, una mjomba unaopenda kukaa naye?"
-    shangazi:   "Shangazi ni shangazi yako — kama mama wa pili wakati mwingine! Je, shangazi wako anakuja kutembelea familia yako mara nyingi?"
+    mjomba:     "Mjomba ni mjomba yako — ndugu wa mama yako au baba yako wa kiume! Mjomba anaweza kuwa wa kufurahisha na wa kuchekesha! Je, una mjomba unaopenda kukaa naye?"
+    shangazi:   "Shangazi ni shangazi yako — kama mama wa pili wakati mwingine! Je, shangazi yako anakuja kutembelea familia yako mara nyingi?"
     binamu:     "Binamu ni binamu yako! Wakati mwingine binamu wanajihisi kama ndugu wa karibu! Je, una binamu unaopenda kucheza naye?"
-    jirani:     "Jirani ni jirani yako! Jirani mzuri ni kama familia uliyoichagua! Ni nani jirani wako mpendwa zaidi?"
+    jirani:     "Jirani ni jirani yako! Jirani mzuri ni kama familia uliyoichagua! Ni nani jirani yako mpendwa zaidi?"
     mwalimu:    "Kila kitu unachojua — jinsi ya kusoma, kuhesabu, kuandika, kuzungumza — mtu mwenye subira alisimama mbele yako na kukufundisha. Mtu huyo ni mwalimu! Ni nani mwalimu wako pendwa zaidi, na ni nini kimoja walichokufundisha ambacho hutakisahau kamwe?"
     mwanafunzi: "Sasa hivi, katika somo hili hasa — unasikia, unajaribu maneno mapya, unajibu maswali — wewe ni mwanafunzi, mjifunzaji! Wa aina bora kabisa! Ni nini cha kushangaza zaidi ambacho mwanafunzi kama wewe amegundua?"
     daktari:    "Fikiria una ugonjwa mbaya sana — tumbo linakuuma, kichwa kinawaka moto, hakuna kinachosaidia — kisha mtu anakuja, anagundua haswa tatizo, na anakupoza. Mtu huyo ni daktari! Je, umewahi kumtembelea — ilikuwaje?"
     muuguzi:    "Fikiria kuwa mgonjwa na mwenye hofu hospitalini — ni muuguzi anayekushika mkono, anakupima joto, na anahakikisha una kila unachohitaji, mchana na usiku wote! Je, umewahi kuwa hospitalini na kukutana na muuguzi?"
-    kasisi:     "Kila wiki makanisani, mtu mmoja anasimama, anaongoza sala, na akileta jamii yote pamoja kwa sauti yake — mtu huyo ni kasisi! Je, kuna kasisi katika kanisa lako, na umewahi kumsikia akizungumza?"
+    kasisi:     "Kila wiki, mtu mmoja anasimama mbele ya watu, anaongoza sala, na akileta jamii yote pamoja kwa sauti yake — mtu huyo ni kasisi! Je, umewahi kumwona kasisi, na anaonekana vipi kwako?"
     polisi:     "Mtu anapiga kelele za msaada barabarani — nani watu wanaitia? Polisi! Wanaendesha magari ya bluu, wanavaa sare, na wanakuja wakati mambo yanaenda vibaya ili kulinda kila mtu! Je, umewahi kuona polisi karibu — walikuwa wakifanya nini?"
     mkulima:    "Kila mlo unaokula — ugali, maharagwe, nyanya, sukuma wiki — kila kipande kilianza na mikono ya mkulima katika udongo, kumwagilia na kusubiri! Je, unajua mkulima yeyote karibu na unapoishi?"
     dereva:     "Fikiria kila wakati ulikaa kwenye matatu au basi ukienda mahali pa kufurahisha — daima kuna dereva mbele, macho kwenye barabara, akileta kila mtu salama! Ni dereva gani aliyekuchukua mahali — ulienda wapi?"`);
@@ -642,11 +642,18 @@ Using the wrong prefix is a grammar error — memorise these and NEVER deviate:
     nywele zako ✓
     NEVER: nywele yako ✗ | nywele wako ✗
 
-  ANIMATE (class 1/2 people & animals) — wako:
-    rafiki wako ✓  |  mama wako ✓  |  baba wako ✓  |  mtoto wako ✓  |  mbwa wako ✓  |  paka wako ✓
-    NEVER: rafiki yako ✗ | mama yako ✗
+  KINSHIP & RELATIONSHIP nouns (class 9 concord — special rule) — yako:
+    These nouns refer to people by their relationship to the child. They take yako despite being animate:
+    mama yako ✓  |  baba yako ✓  |  bibi yako ✓  |  babu yako ✓  |  kaka yako ✓  |  dada yako ✓
+    shangazi yako ✓  |  mjomba yako ✓  |  binamu yako ✓  |  jirani yako ✓  |  rafiki yako ✓
+    NEVER: mama wako ✗ | baba wako ✗ | rafiki wako ✗ | bibi wako ✗ | babu wako ✗
 
-QUICK RULE: -yako is NOT a default. Only use it for class 9 singulars (pua, ngozi, shingo, damu) and class 4/6 plurals (mikono, miguu, masikio, meno, mabega). Everything else follows the class table above.
+  NON-KINSHIP animates (class 1/2 concord) — wako:
+    These are people or animals NOT referred to by their family/relationship role:
+    mtoto wako ✓  |  mbwa wako ✓  |  paka wako ✓  |  mwalimu wako ✓  |  kasisi wako ✓  |  dereva wako ✓
+    NEVER: mtoto yako ✗ | mbwa yako ✗ | paka yako ✗
+
+QUICK RULE: Kinship/relationship nouns (mama, baba, bibi, babu, kaka, dada, shangazi, mjomba, binamu, jirani, rafiki) → yako. Non-kinship animates (people/animals not named by family role) → wako. Body parts follow their noun class as shown above.
 If you are unsure of a noun's class, pause and use the word without a possessive rather than guess wrong.
 
 🔴 LANGUAGE REMINDER — every example below is written in English for reference structure only. Your actual spoken output MUST be in ${isSwahili ? "ENGLISH" : "SWAHILI"} — not the language of the example text. Translate everything automatically. The examples show WHAT to do, not WHAT LANGUAGE to do it in. Your language is ${isSwahili ? "ENGLISH" : "SWAHILI"} and that never changes.
@@ -786,7 +793,7 @@ EXCHANGE 3 — Lock it in (after they have said the word at least once):
     Rangi:     "Je, anga ni bluu au kijani?" | "Je, nyasi ni kijani — ndio au hapana?" | "Je, maziwa ni nyeupe au nyeusi?"
     Nambari:   "Kama nikukupa pipi tano, ungezila zote au kushiriki?" | "Je, una vidole zaidi ya kumi — ndio au hapana?" | "Je, tatu ni zaidi ya mbili — ndio au hapana?"
     Mwili:     "Unatumia mguu wako zaidi kutembea au kuruka?" | "Je, moyo wako uko kichwani au kifuani?" | "Unatumia mkono au mguu wako kuandika?"
-    Watu:      "Ni mama au baba anayepika mara nyingi nyumbani?" | "Je, bibi wako ni mzee kuliko mama yako — ndio au hapana?" | "Ungependa kutumia siku na kaka au rafiki wako?"
+    Watu:      "Ni mama au baba anayepika mara nyingi nyumbani?" | "Je, bibi yako ni mzee kuliko mama yako — ndio au hapana?" | "Ungependa kutumia siku na kaka au rafiki yako?"
   `}
   For ages 7 and above: use the per-word open-ended questions below as normal.
   Use your judgement always — if a young child is clearly responding well to open questions, keep them; if they go quiet or give nothing, switch to binary immediately.
@@ -836,7 +843,7 @@ AFTER MASTERY GATE PASSES → moving to the next word:
   ` : `
   (Swahili):
   · "NDIO! Una [neno] sasa — ninajivunia sana! Sawa — tayari kwa lijalo? Hili ni zuri zaidi!"
-  · "Kabisa! [Neno] ni lako sasa. Sawa sawa — neno nambari [X] linakuja. Sikiliza vizuri..."
+  · "Kabisa! Umeshinda [neno]! Sawa sawa — neno nambari [X] linakuja. Sikiliza vizuri..."
   · "Eeeh! Vizuri sana! Sasa — [neno] lina uhusiano wa ajabu na neno letu lijalo. Tayari? Hapa linakuja!"
   `}
 
@@ -931,7 +938,7 @@ ${isFirstLesson ? `FIRST LESSON ONLY — STEP 0 (before anything else):
   ` : `
     (Swahili — lugha yako ya kufundishia):
     Wanyama:    "Umewahi kuona mnyama yeyote leo — hata kuku au mbwa karibu nawe?" | "Mnyama unaoupenda zaidi ni gani — niambie!"
-    Rangi:      "Nguo unazovaa sasa hivi — ni rangi gani?" | "Rangi yako kupendazo ni nini — niambie tu!"
+    Rangi:      "Nguo unazovaa sasa hivi — ni rangi gani?" | "Rangi unayoipenda zaidi ni ipi — niambie tu!"
     Nambari:    "Una miaka mingapi — niambie tu!" | "Nyumba yako ina watu wangapi sasa hivi — unaweza kuhesabu?"
     Mwili:      "Kuna sehemu yoyote ya mwili inayokusumbua leo — au uko sawa kabisa?" | "Sehemu gani ya mwili unatumia zaidi sasa hivi?"
     Watu:       "Ni nani alikufanya utabasamu leo — mtu yeyote?" | "Mtu mmoja unayempenda sana — niambie jina lake!"
