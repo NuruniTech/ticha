@@ -18,7 +18,7 @@ export default function LandingPage() {
         backdropFilter: "blur(8px)",
       }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Image src="/images/ticha-logo.PNG" alt="Ticha" width={140} height={48} style={{ objectFit: "contain" }} priority />
+          <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={140} height={48} style={{ objectFit: "contain" }} priority />
           <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <button onClick={() => router.push("/login")}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: 700, color: "#6B7280", padding: "8px 16px", fontFamily: "'Nunito', sans-serif" }}>
@@ -243,7 +243,7 @@ export default function LandingPage() {
       }}>
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "500px", height: "500px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
         <div style={{ position: "relative", maxWidth: "560px", margin: "0 auto" }}>
-          <Image src="/images/ticha-logo.PNG" alt="Ticha" width={180} height={62} style={{ objectFit: "contain", marginBottom: "20px", filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.1))" }} />
+          <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={180} height={62} style={{ objectFit: "contain", display: "block", margin: "0 auto 20px", filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.1))" }} />
           <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "clamp(24px, 5vw, 40px)", fontWeight: 800, color: "white", marginBottom: "12px", textShadow: "0 2px 12px rgba(0,0,0,0.12)" }}>
             Ready to start? Twende! 🌍
           </h2>
@@ -267,9 +267,12 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer style={{ background: "#0D1F3C", padding: "32px 24px", textAlign: "center" }}>
-        <Image src="/images/ticha-logo.PNG" alt="Ticha" width={100} height={34} style={{ objectFit: "contain", opacity: 0.7, marginBottom: "12px" }} />
-        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", margin: 0 }}>
-          Built for the Google Gemini Live Agent Challenge 2026 · 🌍 African Language AI · ♿ Accessible by design
+        <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={100} height={34} style={{ objectFit: "contain", opacity: 0.7, marginBottom: "12px", display: "block", margin: "0 auto 12px" }} />
+        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", margin: "0 0 4px" }}>
+          © Grow Wise Africa
+        </p>
+        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", margin: 0 }}>
+          Built by Nuruni Tech. · 🌍 African Language AI · ♿ Accessible by design
         </p>
       </footer>
 

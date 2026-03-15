@@ -157,15 +157,37 @@ export default function ChildPage() {
         <div style={{ background: "white", flex: 1, borderRadius: "28px 28px 0 0", marginTop: "-24px", padding: "24px 20px 40px", zIndex: 5, position: "relative" }}>
           <div style={{ maxWidth: "480px", margin: "0 auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-              {GAMES.map((g) => (
+              {GAMES.slice(0, 4).map((g) => (
                 <button key={g.id} onClick={() => setGame(g.id)} style={{
-                  background: g.bg, borderRadius: "20px", padding: "22px 14px 18px",
+                  background: g.bg, borderRadius: "20px", padding: "26px 16px 22px",
                   border: game === g.id ? "3px solid white" : "3px solid transparent", cursor: "pointer",
                   display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
                   boxShadow: game === g.id ? `0 8px 28px ${g.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)` : `0 4px 12px ${g.shadow}`,
                   transform: game === g.id ? "scale(1.04)" : "scale(1)", transition: "all 0.18s ease", position: "relative",
                 }}>
-                  <span style={{ fontSize: "44px", lineHeight: 1 }}>{g.emoji}</span>
+                  <span style={{ fontSize: "48px", lineHeight: 1 }}>{g.emoji}</span>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "16px", fontWeight: 800, color: "white", margin: 0, lineHeight: 1.2 }}>{g.label}</p>
+                    <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)", margin: 0 }}>{g.sub}</p>
+                  </div>
+                  {game === g.id && (
+                    <div style={{ position: "absolute", top: "10px", right: "10px", width: "22px", height: "22px", background: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>✓</div>
+                  )}
+                </button>
+              ))}
+            </div>
+            {/* 5th card — centered */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+              {GAMES.slice(4).map((g) => (
+                <button key={g.id} onClick={() => setGame(g.id)} style={{
+                  background: g.bg, borderRadius: "20px", padding: "26px 16px 22px",
+                  border: game === g.id ? "3px solid white" : "3px solid transparent", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
+                  boxShadow: game === g.id ? `0 8px 28px ${g.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)` : `0 4px 12px ${g.shadow}`,
+                  transform: game === g.id ? "scale(1.04)" : "scale(1)", transition: "all 0.18s ease", position: "relative",
+                  width: "calc(50% - 6px)",
+                }}>
+                  <span style={{ fontSize: "48px", lineHeight: 1 }}>{g.emoji}</span>
                   <div style={{ textAlign: "center" }}>
                     <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "16px", fontWeight: 800, color: "white", margin: 0, lineHeight: 1.2 }}>{g.label}</p>
                     <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)", margin: 0 }}>{g.sub}</p>
@@ -196,7 +218,7 @@ export default function ChildPage() {
             🏠
           </button>
           <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "22px", fontWeight: 800, color: "white", textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
-            Hello, {child.name}! 👋
+            Hello, {child.name}! 👋🏾
           </h1>
           <button onClick={() => router.push(`/progress/${child.id}`)} style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "20px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
             🏆

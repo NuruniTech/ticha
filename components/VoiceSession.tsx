@@ -1716,20 +1716,20 @@ export default function VoiceSession({ childName, language, game, childId, child
     <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Nunito', sans-serif", overflowX: "hidden" }}>
 
       {/* ── Header ── */}
-      <header style={{ background: "white", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 0 rgba(0,0,0,0.06)", flexShrink: 0, zIndex: 10 }}>
+      <header style={{ background: "white", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 0 rgba(0,0,0,0.06)", flexShrink: 0, zIndex: 10 }}>
         <button
           onClick={() => router.push(childId ? `/child/${childId}` : "/dashboard")}
-          style={{ width: "44px", height: "44px", borderRadius: "50%", border: "none", background: "#F3F4F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}
+          style={{ width: "54px", height: "54px", borderRadius: "50%", border: "none", background: "#F3F4F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", boxShadow: "0 3px 0 #D1D5DB" }}
         >🏠</button>
 
-        <div style={{ background: GAME_COLORS[game] || "#FF8C00", borderRadius: "9999px", padding: "9px 22px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}>
-          <span style={{ fontSize: "15px" }}>{GAME_EMOJIS[game]}</span>
+        <div style={{ background: GAME_COLORS[game] || "#FF8C00", borderRadius: "9999px", padding: "10px 22px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}>
+          <span style={{ fontSize: "16px" }}>{GAME_EMOJIS[game]}</span>
           <span style={{ color: "white", fontWeight: 800, fontSize: "14px", fontFamily: "'Baloo 2', cursive" }}>{GAME_SHORT[game]}</span>
         </div>
 
-        <div style={{ background: starsFlash ? "#FF8C00" : "#F3F4F6", borderRadius: "9999px", padding: "7px 14px", transition: "background 0.3s", display: "flex", alignItems: "center", gap: "5px" }}>
-          <span style={{ fontSize: "13px" }}>⭐</span>
-          <span style={{ fontSize: "14px", fontWeight: 800, color: starsFlash ? "white" : "#374151", fontFamily: "'Baloo 2', cursive" }}>{stars}</span>
+        <div style={{ background: starsFlash ? "#FF8C00" : "#FEF3C7", borderRadius: "9999px", padding: "10px 18px", transition: "background 0.3s", display: "flex", alignItems: "center", gap: "6px", border: "2px solid #F59E0B", boxShadow: "0 3px 0 #D97706" }}>
+          <span style={{ fontSize: "18px" }}>⭐</span>
+          <span style={{ fontSize: "17px", fontWeight: 800, color: starsFlash ? "white" : "#92400E", fontFamily: "'Baloo 2', cursive" }}>{stars}</span>
         </div>
       </header>
 
@@ -1739,7 +1739,7 @@ export default function VoiceSession({ childName, language, game, childId, child
         {/* Name + level + word progress */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "400px", marginBottom: "14px" }}>
           <div style={{ background: "rgba(255,255,255,0.75)", borderRadius: "9999px", padding: "6px 16px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>👋 {childName}</span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>👋🏾 {childName}</span>
           </div>
 
           {sessionStarted && (
@@ -1763,7 +1763,7 @@ export default function VoiceSession({ childName, language, game, childId, child
         {/* Status bubble */}
         <div style={{ background: "white", borderRadius: "9999px", padding: "9px 24px", marginBottom: "18px", boxShadow: "0 3px 16px rgba(0,0,0,0.12)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
           <span style={{ fontSize: "16px" }}>
-            {status === "connecting" ? "⏳" : !sessionStarted ? "🎓" : isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🖐" : "⏳"}
+            {status === "connecting" ? "⏳" : !sessionStarted ? "🎓" : isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🖐🏾" : "⏳"}
           </span>
           <span style={{ fontWeight: 800, fontSize: "14px", color: "#374151" }}>
             {status === "connecting" ? "Connecting..." :
@@ -1821,7 +1821,7 @@ export default function VoiceSession({ childName, language, game, childId, child
 
         {/* Hint */}
         <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
-          {!sessionStarted ? "👆 Press the microphone to start your lesson" :
+          {!sessionStarted ? "👆🏾 Press the microphone to start your lesson" :
            isPaused ? "⏸ Session paused — tap Resume" :
            status === "speaking" ? "🔊 Listen carefully to Ticha..." :
            pttActive ? "🎤 Your turn — just speak!" :
@@ -1860,26 +1860,26 @@ export default function VoiceSession({ childName, language, game, childId, child
                              "0 2px 8px rgba(0,0,0,0.08)",
                   transition: "background 0.3s, box-shadow 0.3s",
                 }}>
-                  {status === "speaking" ? "🔊" : pttActive ? "🎤" : "⏳"}
+                  {isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🎤" : "⏳"}
                 </div>
               </div>
-              <p style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "0.05em", margin: 0, textAlign: "center",
+              <p style={{ fontSize: "12px", fontWeight: 800, letterSpacing: "0.05em", margin: 0, textAlign: "center",
                 color: isPaused ? "#9CA3AF" : status === "speaking" ? "#6366F1" : pttActive ? "#22C55E" : "#9CA3AF" }}>
                 {isPaused ? "PAUSED" : status === "speaking" ? "TICHA IS TALKING" : pttActive ? "YOUR TURN — JUST SPEAK!" : "GETTING READY..."}
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <button onClick={toggleCamera} className="btn-control"
-                style={{ padding: "7px 16px", borderRadius: "9999px", border: `2px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FFF4" : "white", fontSize: "12px", fontWeight: 700, color: isCameraOn ? "#166534" : "#9CA3AF", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
+                style={{ padding: "11px 20px", borderRadius: "16px", border: `2.5px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FFF4" : "white", fontSize: "14px", fontWeight: 800, color: isCameraOn ? "#166534" : "#9CA3AF", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: isCameraOn ? "0 4px 0 #15803D" : "0 4px 0 #D1D5DB" }}>
                 📷 {isCameraOn ? "On" : "Off"}
               </button>
               <button onClick={togglePause} className="btn-control"
-                style={{ padding: "7px 16px", borderRadius: "9999px", border: `2px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "12px", fontWeight: 700, color: isPaused ? "#D97706" : "#9CA3AF", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
+                style={{ padding: "11px 22px", borderRadius: "16px", border: `2.5px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "14px", fontWeight: 800, color: isPaused ? "#D97706" : "#6B7280", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: isPaused ? "0 4px 0 #D97706" : "0 4px 0 #D1D5DB" }}>
                 {isPaused ? "▶ Resume" : "⏸ Pause"}
               </button>
               <button onClick={endSession} className="btn-control"
-                style={{ padding: "7px 16px", borderRadius: "9999px", border: "2px solid #FCA5A5", background: "white", fontSize: "12px", fontWeight: 700, color: "#EF4444", cursor: "pointer", boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
+                style={{ padding: "11px 22px", borderRadius: "16px", border: "2.5px solid #FCA5A5", background: "#FFF1F2", fontSize: "14px", fontWeight: 800, color: "#EF4444", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: "0 4px 0 #FCA5A5" }}>
                 ✕ End
               </button>
             </div>
