@@ -1834,9 +1834,18 @@ export default function VoiceSession({ childName, language, game, childId, child
             onClick={startSession}
             disabled={status === "connecting"}
             className={status !== "connecting" ? "btn-control" : ""}
-            style={{ width: "88px", height: "88px", borderRadius: "50%", background: status === "connecting" ? "#9CA3AF" : "#FF8C00", border: "none", cursor: status === "connecting" ? "default" : "pointer", fontSize: "36px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: status !== "connecting" ? "0 6px 0 #CC6A00, 0 10px 28px rgba(255,140,0,0.4)" : "none" }}
+            style={{ width: "110px", height: "110px", borderRadius: "50%", background: status === "connecting" ? "#9CA3AF" : "#FF8C00", border: "none", cursor: status === "connecting" ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: status !== "connecting" ? "0 8px 0 #CC6A00, 0 14px 36px rgba(255,140,0,0.45)" : "none" }}
           >
-            {status === "connecting" ? "⏳" : "🎤"}
+            {status === "connecting" ? (
+              <span style={{ fontSize: "38px" }}>⏳</span>
+            ) : (
+              <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="2" width="6" height="11" rx="3" fill="white"/>
+                <path d="M5 11a7 7 0 0 0 14 0" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="12" y1="18" x2="12" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="8" y1="22" x2="16" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
+            )}
           </button>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
@@ -1844,23 +1853,39 @@ export default function VoiceSession({ childName, language, game, childId, child
               <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {pttActive && !isPaused && (
                   <>
-                    <div className="mic-ring" style={{ position: "absolute", width: "108px", height: "108px", borderRadius: "50%", background: "#22C55E", opacity: 0.22 }} />
-                    <div className="mic-ring" style={{ position: "absolute", width: "96px", height: "96px", borderRadius: "50%", background: "#22C55E", opacity: 0.14 }} />
+                    <div className="mic-ring" style={{ position: "absolute", width: "130px", height: "130px", borderRadius: "50%", background: "#22C55E", opacity: 0.22 }} />
+                    <div className="mic-ring" style={{ position: "absolute", width: "116px", height: "116px", borderRadius: "50%", background: "#22C55E", opacity: 0.14 }} />
                   </>
                 )}
                 <div style={{
-                  width: "88px", height: "88px", borderRadius: "50%",
+                  width: "110px", height: "110px", borderRadius: "50%",
                   background: isPaused ? "#D1D5DB" :
                                status === "speaking" ? "#6366F1" :
                                pttActive ? "#22C55E" : "#E5E7EB",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "36px",
-                  boxShadow: status === "speaking" && !isPaused ? "0 6px 0 #4338CA, 0 10px 28px rgba(99,102,241,0.4)" :
-                             pttActive && !isPaused ? "0 6px 0 #16A34A, 0 10px 28px rgba(34,197,94,0.4)" :
-                             "0 2px 8px rgba(0,0,0,0.08)",
+                  boxShadow: status === "speaking" && !isPaused ? "0 8px 0 #4338CA, 0 14px 36px rgba(99,102,241,0.45)" :
+                             pttActive && !isPaused ? "0 8px 0 #16A34A, 0 14px 36px rgba(34,197,94,0.45)" :
+                             "0 3px 10px rgba(0,0,0,0.1)",
                   transition: "background 0.3s, box-shadow 0.3s",
                 }}>
-                  {isPaused ? "⏸" : status === "speaking" ? "🔊" : pttActive ? "🎤" : "⏳"}
+                  {isPaused ? (
+                    <span style={{ fontSize: "42px" }}>⏸</span>
+                  ) : status === "speaking" ? (
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 5L6 9H2v6h4l5 4V5z" fill="white"/>
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                    </svg>
+                  ) : pttActive ? (
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+                      <rect x="9" y="2" width="6" height="11" rx="3" fill="white"/>
+                      <path d="M5 11a7 7 0 0 0 14 0" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                      <line x1="12" y1="18" x2="12" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                      <line x1="8" y1="22" x2="16" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                    </svg>
+                  ) : (
+                    <span style={{ fontSize: "42px" }}>⏳</span>
+                  )}
                 </div>
               </div>
               <p style={{ fontSize: "12px", fontWeight: 800, letterSpacing: "0.05em", margin: 0, textAlign: "center",

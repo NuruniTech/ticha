@@ -227,41 +227,41 @@ export default function ChildPage() {
       </div>
 
       {/* Stats cards row */}
-      <div style={{ padding: "20px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+      <div style={{ padding: "24px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
           {/* Day Streak */}
-          <div style={{ background: "white", borderRadius: "18px", padding: "14px 10px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-            <div style={{ width: "36px", height: "36px", background: "#FF8C00", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", marginBottom: "8px" }}>🔥</div>
-            <p style={{ fontSize: "10px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 3px", letterSpacing: "0.03em" }}>Day Streak</p>
-            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "13px", fontWeight: 800, color: "#FF8C00", margin: 0 }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "18px 12px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+            <div style={{ width: "42px", height: "42px", background: "#FF8C00", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", marginBottom: "10px" }}>🔥</div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 4px", letterSpacing: "0.03em" }}>Day Streak</p>
+            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "14px", fontWeight: 800, color: "#FF8C00", margin: 0 }}>
               {child.streak > 0 ? `${child.streak} Days! 🔥` : "Start today!"}
             </p>
           </div>
 
           {/* Your Level */}
-          <div style={{ background: "white", borderRadius: "18px", padding: "14px 10px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-            <div style={{ width: "36px", height: "36px", background: "#22C55E", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", marginBottom: "8px" }}>✨</div>
-            <p style={{ fontSize: "10px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 3px", letterSpacing: "0.03em" }}>Your Level</p>
-            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "13px", fontWeight: 800, color: "#22C55E", margin: 0 }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "18px 12px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+            <div style={{ width: "42px", height: "42px", background: "#22C55E", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", marginBottom: "10px" }}>✨</div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 4px", letterSpacing: "0.03em" }}>Your Level</p>
+            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "14px", fontWeight: 800, color: "#22C55E", margin: 0 }}>
               Level {levelNum} ⭐
             </p>
           </div>
 
           {/* Today */}
-          <div style={{ background: "white", borderRadius: "18px", padding: "14px 10px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-            <div style={{ width: "36px", height: "36px", background: "#4B8BF5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", marginBottom: "8px" }}>🏆</div>
-            <p style={{ fontSize: "10px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 4px", letterSpacing: "0.03em" }}>Today</p>
-            <div style={{ height: "5px", background: "#F3F4F6", borderRadius: "9999px", overflow: "hidden", marginBottom: "4px" }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "18px 12px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+            <div style={{ width: "42px", height: "42px", background: "#4B8BF5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", marginBottom: "10px" }}>🏆</div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: "#9CA3AF", margin: "0 0 5px", letterSpacing: "0.03em" }}>Today</p>
+            <div style={{ height: "6px", background: "#F3F4F6", borderRadius: "9999px", overflow: "hidden", marginBottom: "5px" }}>
               <div style={{ height: "100%", background: "#4B8BF5", borderRadius: "9999px", width: `${todayPct}%`, transition: "width 0.5s" }} />
             </div>
-            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "11px", fontWeight: 800, color: "#4B8BF5", margin: 0 }}>{todayPct}% Done!</p>
+            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "12px", fontWeight: 800, color: "#4B8BF5", margin: 0 }}>{todayPct}% Done!</p>
           </div>
         </div>
       </div>
 
       {/* Today's Mission banner */}
-      <div style={{ padding: "16px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
-        <div style={{ background: "linear-gradient(135deg, #FF9500 0%, #FF3878 100%)", borderRadius: "22px", padding: "20px 20px 22px", boxShadow: "0 6px 24px rgba(255,80,100,0.3)" }}>
+      <div style={{ padding: "18px 20px 0", maxWidth: "640px", margin: "0 auto" }}>
+        <div style={{ background: "linear-gradient(135deg, #FF9500 0%, #FF3878 100%)", borderRadius: "24px", padding: "24px 22px 26px", boxShadow: "0 8px 28px rgba(255,80,100,0.35)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
             <div style={{ width: "40px", height: "40px", background: "rgba(255,255,255,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>✨</div>
             <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "white", margin: 0 }}>Today&apos;s Mission!</p>
@@ -284,42 +284,45 @@ export default function ChildPage() {
 
       {/* Let's Play & Learn */}
       <div style={{ padding: "22px 20px 48px", maxWidth: "640px", margin: "0 auto" }}>
-        <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "white", marginBottom: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
+        <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "20px", fontWeight: 800, color: "white", marginBottom: "16px", textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
           Let&apos;s Play &amp; Learn!
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          {/* Chat with AI */}
-          <button onClick={() => setView("topics")} style={{ background: "white", borderRadius: "20px", padding: "20px 16px", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.13)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)"; }}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+          {/* Learn with Ticha */}
+          <button onClick={() => setView("topics")} style={{ background: "white", borderRadius: "22px", padding: "24px 18px", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 4px 20px rgba(0,0,0,0.09)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 10px 28px rgba(0,0,0,0.14)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.09)"; }}
           >
-            <div style={{ width: "50px", height: "50px", background: "#4B8BF5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
-                <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <div style={{ width: "56px", height: "56px", background: "#4B8BF5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 0 #2563EB" }}>
+              <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+                <rect x="9" y="2" width="6" height="11" rx="3" fill="white"/>
+                <path d="M5 11a7 7 0 0 0 14 0" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="12" y1="18" x2="12" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="8" y1="22" x2="16" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
-              <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "14px", fontWeight: 800, color: "#4B8BF5", margin: "0 0 3px" }}>Chat with AI</p>
-              <p style={{ fontSize: "11px", color: "#9CA3AF", margin: 0 }}>Talk and learn together!</p>
+              <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 800, color: "#4B8BF5", margin: "0 0 4px" }}>Learn with Ticha</p>
+              <p style={{ fontSize: "12px", color: "#9CA3AF", margin: 0 }}>Talk and learn together!</p>
             </div>
           </button>
 
           {/* Word Games */}
-          <button onClick={() => setView("quiz")} style={{ background: "white", borderRadius: "20px", padding: "20px 16px", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.13)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)"; }}
+          <button onClick={() => setView("quiz")} style={{ background: "white", borderRadius: "22px", padding: "24px 18px", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 4px 20px rgba(0,0,0,0.09)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 10px 28px rgba(0,0,0,0.14)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.09)"; }}
           >
-            <div style={{ width: "50px", height: "50px", background: "#22C55E", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
-                <rect x="2" y="6" width="20" height="12" rx="4" stroke="white" strokeWidth="2"/>
+            <div style={{ width: "56px", height: "56px", background: "#22C55E", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 0 #16A34A" }}>
+              <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+                <rect x="2" y="6" width="20" height="12" rx="4" stroke="white" strokeWidth="2.2"/>
                 <circle cx="8" cy="12" r="2" fill="white"/>
-                <line x1="16" y1="10" x2="16" y2="14" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="14" y1="12" x2="18" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="10" x2="16" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="14" y1="12" x2="18" y2="12" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
-              <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "14px", fontWeight: 800, color: "#22C55E", margin: "0 0 3px" }}>Word Games</p>
-              <p style={{ fontSize: "11px", color: "#9CA3AF", margin: 0 }}>Match pictures and words!</p>
+              <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 800, color: "#22C55E", margin: "0 0 4px" }}>Word Games</p>
+              <p style={{ fontSize: "12px", color: "#9CA3AF", margin: 0 }}>Match pictures and words!</p>
             </div>
           </button>
         </div>
