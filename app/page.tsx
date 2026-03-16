@@ -265,13 +265,17 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer style={{ background: "#0D1F3C", padding: "32px 24px", textAlign: "center" }}>
-        <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={100} height={34} style={{ objectFit: "contain", opacity: 0.7, marginBottom: "12px", display: "block", margin: "0 auto 12px" }} />
-        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", margin: "0 0 4px" }}>
-          © Grow Wise Africa
+        <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={100} height={34} style={{ objectFit: "contain", opacity: 0.9, marginBottom: "12px", display: "block", margin: "0 auto 12px" }} />
+        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", margin: "0 0 8px" }}>
+          © 2026 Grow Wise Africa · Built by Nuruni Tech
         </p>
-        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", margin: 0 }}>
-          Built by Nuruni Tech. · 🌍 African Language AI · ♿ Accessible by design
+        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: "0 0 14px" }}>
+          🌍 African Language AI · ♿ Accessible by design
         </p>
+        <div style={{ display: "flex", justifyContent: "center", gap: "24px" }}>
+          <a href="/privacy" style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", textDecoration: "none", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.3)" }}>Privacy Policy</a>
+          <a href="/terms" style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", textDecoration: "none", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.3)" }}>Terms of Service</a>
+        </div>
       </footer>
 
     </div>
