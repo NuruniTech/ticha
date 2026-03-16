@@ -97,6 +97,22 @@ Ticha is built on **Gemini 2.5 Flash Live Audio** (`gemini-2.5-flash-native-audi
 
 ---
 
+## Testing the Live Demo
+
+The fastest way to test Ticha is the live deployment — no setup needed:
+
+🌐 **[ticha-production.up.railway.app](https://ticha-production.up.railway.app)**
+
+1. Click **Get Started** and sign up with any email address
+2. Create a child profile (name, age, language direction)
+3. Select a topic (e.g. Animals)
+4. Tap the **microphone button** and speak — Ticha will respond in real time
+5. Complete the lesson and take the picture quiz
+
+> **Browser:** Use **Chrome or Edge** on desktop. Safari does not support AudioWorklet. Microphone permission is required.
+
+---
+
 ## Local Setup
 
 ### Prerequisites
@@ -136,8 +152,8 @@ This creates four tables with Row Level Security:
 ### 4. Configure Supabase Auth
 
 In Supabase → Authentication → URL Configuration:
-- **Site URL:** `https://ticha.app` (or your Vercel URL)
-- **Redirect URLs:** add `https://ticha.app/auth/callback`
+- **Site URL:** your deployment URL (e.g. `http://localhost:3000` for local dev)
+- **Redirect URLs:** add `http://localhost:3000/auth/callback`
 
 For local dev, also add `http://localhost:3000/auth/callback`.
 
