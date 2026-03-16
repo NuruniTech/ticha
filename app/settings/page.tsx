@@ -5,11 +5,8 @@ import { useAccessibility } from "@/context/AccessibilityContext";
 import { Theme, FontSize, VoiceName } from "@/types";
 
 const VOICES: { name: VoiceName; label: string; desc: string }[] = [
-  { name: "Aoede",  label: "Aoede 👩🏾",  desc: "Warm, friendly female voice" },
-  { name: "Kore",   label: "Kore 👩🏿",   desc: "Clear, energetic female voice" },
-  { name: "Puck",   label: "Puck 👦🏾",   desc: "Playful, enthusiastic male voice" },
-  { name: "Zephyr", label: "Zephyr 👨🏽", desc: "Calm, steady male voice" },
-  { name: "Charon", label: "Charon 👴🏾", desc: "Deep, warm male voice" },
+  { name: "Aoede", label: "Aoede 👩🏾", desc: "Warm, friendly — Ticha's default voice" },
+  { name: "Kore",  label: "Kore 👩🏿",  desc: "Clear, energetic — great for active learners" },
 ];
 
 export default function SettingsPage() {

@@ -56,7 +56,7 @@ export type LanguageCode = "sw" | "en";
 
 export type Theme = "default" | "high-contrast" | "colorblind";
 export type FontSize = "normal" | "large" | "xlarge";
-export type VoiceName = "Aoede" | "Puck" | "Kore" | "Zephyr" | "Charon";
+export type VoiceName = "Aoede" | "Kore";
 
 export interface AppSettings {
   theme: Theme;

@@ -26,7 +26,7 @@ export default function LandingPage() {
             <button onClick={() => router.push("/signup")} className="nav-cta"
               onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
               onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}>
-              Get Started Free
+              Get Started
             </button>
           </div>
         </div>
@@ -51,8 +51,8 @@ export default function LandingPage() {
             <Image
               src="/images/ticha-hero.PNG"
               alt="Ticha teacher"
-              width={320}
-              height={320}
+              width={360}
+              height={360}
               style={{ objectFit: "contain", filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.2))" }}
               priority
             />

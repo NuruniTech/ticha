@@ -18,7 +18,13 @@ The app supports two learning directions:
 - **English speaker learning Swahili** — Ticha speaks English, teaches Swahili words
 - **Swahili speaker learning English** — Ticha speaks Swahili, teaches English words
 
-Topics include Animals, Colors, Numbers, Body Parts, and People (greetings).
+Topics include **Animals, Colors, Numbers, Body Parts, and People**.
+
+---
+
+## Live Demo
+
+🌐 **[ticha.app](https://ticha.app)**
 
 ---
 
@@ -32,18 +38,24 @@ Ticha is built on **Gemini 2.5 Flash Live Audio** (`gemini-2.5-flash-native-audi
 | Microphone capture | `AudioWorklet` (`MicProcessor`) at 16 kHz, zero main-thread jitter |
 | Audio playback | Dual `AudioContext` — one for capture (16 kHz), one for playback (24 kHz). Gapless via `AudioBufferSourceNode` queue |
 | Voice Activity Detection | Gemini's built-in VAD — `realtimeInputConfig.automaticActivityDetection` |
-| Structured lesson | System prompt encodes a 3-exchange CEFR A1 lesson per topic per session |
+| Barge-in / interruption | Mic always open — child can speak mid-sentence; queued audio cancelled instantly |
+| Structured lesson | ~12 KB system prompt encodes a 5-step CEFR A1 lesson with 3 exchanges per word |
 | Bilingual teaching | Language direction selected per child profile; trigger phrase and hooks adapt automatically |
+| Session auto-end | `"Tutaonana"` phrase in Ticha's transcript signals lesson complete → quiz transition |
 | Session persistence | Supabase stores transcript, XP earned, words practiced, and duration |
 
 **Core session loop:**
 
-1. Parent sets up a child profile (name, age, learning direction, topic)
-2. Child taps "Start" — Ticha greets them and launches Exchange 1 (introduce a word with a memorable hook)
-3. Exchange 2: Ticha drills the word in context
-4. Exchange 3: Ticha asks a personalised question to lock the word in memory
-5. After 5 words: REPETITION DRILL → MASTERY GATE quiz → MEMORY MOMENT reflection
-6. XP awarded, session saved, child sees their stars on the dashboard
+1. Parent sets up a child profile (name, age, learning direction)
+2. Child chooses a topic and taps the mic button
+3. Ticha greets them by name (Step 1 — warm-up question)
+4. Transition into 5 vocabulary words — 3 exchanges each:
+   - Exchange 1: vivid hook + connecting question
+   - Exchange 2: syllable breakdown + repetition drill
+   - Exchange 3: personal lock-in question (binary for young children)
+5. Review game: rapid-fire recall of all 5 words
+6. Goodbye: Ticha celebrates, announces the quiz
+7. Picture quiz: 5-question matching game, XP awarded, session saved
 
 ---
 
@@ -51,23 +63,37 @@ Ticha is built on **Gemini 2.5 Flash Live Audio** (`gemini-2.5-flash-native-audi
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
+| Framework | Next.js 15 (App Router, TypeScript) |
 | AI | Google Gemini 2.5 Flash Live Audio API (`@google/genai`) |
-| Auth & DB | Supabase (Auth + PostgreSQL with RLS) |
-| Styling | Tailwind CSS v4 |
+| Auth & DB | Supabase (Auth + PostgreSQL with RLS + Google OAuth) |
+| Styling | CSS-in-JS inline styles + globals.css animations |
 | Deployment | Vercel |
 
 ---
 
 ## Features
 
-- **Voice-only UI** — no reading or typing required; ideal for pre-literate children
-- **Gamified progress** — XP, streaks, star ratings, and level titles (Beginner → Champion)
-- **Parent dashboard** — session history, words practiced, XP growth per child
-- **Multiple child profiles** — one parent account, multiple children
-- **Accessibility** — high contrast, large touch targets, slow-speech option, visual mode
-- **Bilingual** — full English ↔ Swahili support with authentic East African warmth in every prompt
+### For Children
+- 🎙️ **Voice-only UI** — no reading or typing required; ideal for pre-literate children
+- 🦁 **5 topic categories** — Animals, Colors, Numbers, Body Parts, People
+- 🌍 **Swahili ↔ English** — both directions supported
+- ⭐ **Gamified progress** — XP, streaks, star ratings, and level titles (Mwanafunzi → Msomi → Hodari → Bingwa)
+- 🎮 **Picture quiz** after every session
+- 🎨 **Animated Ticha avatar** — live lip sync, eye blink, head bob (custom SVG, no image assets)
+- 🌳 **Adaptive difficulty** — word selection and teaching style adjust per child's XP and age
+
+### For Parents
+- 👨‍👩‍👧 **Parent dashboard** — add multiple child profiles with individual settings
+- 📊 **Progress screen** — session history, XP earned, words practiced
+- 🔐 **Google OAuth or email/password** signup
+
+### Accessibility
+- 🐢 **Slow Speech Mode** — Ticha speaks at half pace for young beginners
+- 👁️ **Visual Mode** — for deaf/hard-of-hearing learners; emoji animations replace audio feedback
+- ⬛ **High Contrast theme** — maximum contrast for low vision
+- 👁️‍🗨️ **Colorblind-safe theme** — optimised colour palette
+- ✋ **Reduce Motion** — all CSS animations disabled
+- 🗣️ **Voice selection** — Aoede or Kore (both female voices)
 
 ---
 
@@ -82,7 +108,7 @@ Ticha is built on **Gemini 2.5 Flash Live Audio** (`gemini-2.5-flash-native-audi
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ticha.git
+git clone https://github.com/NuruniTech/ticha.git
 cd ticha
 npm install
 ```
@@ -107,7 +133,15 @@ This creates four tables with Row Level Security:
 - `sessions` — voice lesson history
 - `progress` — per-word spaced repetition data
 
-### 4. Run the development server
+### 4. Configure Supabase Auth
+
+In Supabase → Authentication → URL Configuration:
+- **Site URL:** `https://ticha.app` (or your Vercel URL)
+- **Redirect URLs:** add `https://ticha.app/auth/callback`
+
+For local dev, also add `http://localhost:3000/auth/callback`.
+
+### 5. Run the development server
 
 ```bash
 npm run dev
@@ -124,25 +158,29 @@ Open [http://localhost:3000](http://localhost:3000) in a browser.
 ```
 ticha/
 ├── app/
-│   ├── page.tsx          # Landing page
-│   ├── login/            # Auth pages
-│   ├── signup/
-│   ├── dashboard/        # Parent dashboard (child management)
-│   ├── child/            # Child home (pick topic + start)
-│   ├── session/          # Voice session page (hosts VoiceSession)
-│   ├── progress/         # Progress & history view
-│   ├── quiz/             # Post-session quiz
-│   └── settings/         # Child profile settings
+│   ├── page.tsx              # Landing page
+│   ├── login/page.tsx        # Login (email + Google OAuth)
+│   ├── signup/page.tsx       # Parent signup
+│   ├── dashboard/page.tsx    # Parent dashboard (child management)
+│   ├── child/[id]/page.tsx   # Child home (stats, topic picker, word games)
+│   ├── session/page.tsx      # Voice session page (hosts VoiceSession)
+│   ├── progress/[id]/page.tsx # Progress & history view
+│   ├── settings/page.tsx     # Accessibility + voice settings
+│   └── auth/callback/page.tsx # Supabase OAuth callback
 ├── components/
-│   ├── VoiceSession.tsx  # Core AI voice session component
-│   ├── TichaAvatar.tsx   # Animated avatar (idle/listening/speaking)
-│   └── QuizOverlay.tsx   # End-of-session quiz overlay
+│   ├── VoiceSession.tsx      # Core AI voice session — Gemini Live, audio pipeline, state machine
+│   ├── TichaAvatar.tsx       # Animated SVG avatar (lip sync, eye blink, head bob)
+│   └── QuizOverlay.tsx       # Post-session picture-matching quiz
+├── context/
+│   └── AccessibilityContext.tsx # Global settings (theme, voice, slow speech, etc.)
 ├── lib/
-│   ├── supabase.ts       # Supabase browser client
-│   └── schema.sql        # Database schema (run once in Supabase)
+│   ├── supabase.ts           # Supabase browser client
+│   └── schema.sql            # Database schema (run once in Supabase)
 ├── public/
-│   └── mic-processor.js  # AudioWorklet processor (16 kHz mic capture)
-└── types/                # Shared TypeScript types
+│   ├── mic-processor.js      # AudioWorklet processor (16 kHz mic capture)
+│   └── images/               # Logo and character images
+└── types/
+    └── index.ts              # Shared TypeScript interfaces
 ```
 
 ---
@@ -159,7 +197,27 @@ Browser mic → AudioWorklet (mic-processor.js, 16 kHz)
 
 - The `AudioWorklet` runs on a dedicated thread — no main-thread jitter or dropped frames
 - Gemini's VAD detects when the child stops speaking and triggers a response automatically
-- Audio output is queued as `AudioBufferSourceNode` chains so playback is seamless even across many small chunks
+- Audio output is queued as `AudioBufferSourceNode` chains so playback is seamless across many small chunks
+- On barge-in: all queued nodes are cancelled instantly so Ticha stops and listens
+
+---
+
+## Lesson Design
+
+The system prompt (~12 KB) encodes a research-backed 5-step lesson structure:
+
+| Step | Purpose |
+|------|---------|
+| 1 — Greeting | Welcome by name, one warm-up question |
+| 2 — Transition | Bridge from child's answer into Word 1 |
+| 3 — Teach 5 words | 3 exchanges per word: hook → say it → lock it in |
+| 4 — Review game | Rapid-fire recall of all 5 words |
+| 5 — Goodbye | Celebrate, announce quiz, say tutaonana |
+
+Lesson level adapts per child XP and age:
+- **Level 1 (0–99 XP):** 5 foundational words
+- **Level 2 (100–299 XP):** next 5 words per category
+- **Levels 3–4 (300+ XP):** random selection + mastery mode (no translation given — child must recall)
 
 ---
 
@@ -167,7 +225,7 @@ Browser mic → AudioWorklet (mic-processor.js, 16 kHz)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
-Add the three environment variables (`NEXT_PUBLIC_GEMINI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in your Vercel project settings, then deploy.
+Add the three environment variables in your Vercel project settings, then deploy.
 
 ---
 
@@ -180,3 +238,4 @@ For 200 million Swahili speakers — and the diaspora children growing up betwee
 ---
 
 *Built with the Google Gemini Live Audio API · Next.js · Supabase*
+*© Grow Wise Africa · Built by Nuruni Tech*

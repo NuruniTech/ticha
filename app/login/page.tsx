@@ -49,7 +49,7 @@ function LoginForm() {
     setError("");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `https://ticha.app/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) { setError(mapError(error.message)); setGoogleLoading(false); }
   }
@@ -60,7 +60,7 @@ function LoginForm() {
     setResetLoading(true);
     setError("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `https://ticha.app/auth/callback?next=/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
     setResetLoading(false);
     if (error) { setError(mapError(error.message)); return; }
