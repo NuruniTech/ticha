@@ -70,11 +70,11 @@ export default function TichaAvatar({ state, size = 220 }: Props) {
             <stop offset="0%"   stopColor="#D4956A" />
             <stop offset="100%" stopColor="#A0622E" />
           </radialGradient>
-          {/* Dress — vibrant ankara-inspired orange/green */}
+          {/* Dress — brand green */}
           <linearGradient id="dressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stopColor="#E8540A" />
-            <stop offset="50%"  stopColor="#F97316" />
-            <stop offset="100%" stopColor="#DC6B0E" />
+            <stop offset="0%"   stopColor="#2E8B2E" />
+            <stop offset="50%"  stopColor="#22A022" />
+            <stop offset="100%" stopColor="#1A6B1A" />
           </linearGradient>
           <radialGradient id="eyeWhite" cx="40%" cy="35%" r="65%">
             <stop offset="0%"   stopColor="#FFFFFF" />
@@ -95,10 +95,12 @@ export default function TichaAvatar({ state, size = 220 }: Props) {
             fill="rgba(255,255,255,0.12)" />
           <path d="M55 175 Q57 170 60 168 Q100 160 140 168 Q143 170 145 175 L143 185 Q100 177 57 185 Z"
             fill="rgba(0,0,0,0.08)" />
-          <path d="M50 200 Q100 190 150 200 L150 210 Q100 202 50 210 Z"
-            fill="rgba(255,255,255,0.10)" />
-          {/* Collar */}
-          <ellipse cx="100" cy="147" rx="16" ry="7" fill="#C04A08" />
+          {/* White hem stripe */}
+          <path d="M50 210 Q100 200 150 210 L152 222 Q100 213 48 222 Z"
+            fill="rgba(255,255,255,0.28)" />
+          {/* White collar */}
+          <ellipse cx="100" cy="147" rx="16" ry="7" fill="white" />
+          <ellipse cx="100" cy="147" rx="12" ry="5" fill="#F0FDF4" />
           {/* Neck */}
           <rect x="89" y="131" width="22" height="18" rx="8" fill="url(#skinGrad)" />
         </g>

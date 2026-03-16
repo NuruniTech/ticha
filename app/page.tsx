@@ -14,18 +14,16 @@ export default function LandingPage() {
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(255,255,255,0.96)",
         borderBottom: "2px solid rgba(46,139,46,0.10)",
-        padding: "0 28px",
+        padding: "0 16px 0 10px",
         backdropFilter: "blur(8px)",
       }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Image src="/images/ticha-logo-v2.PNG" alt="Ticha" width={140} height={48} style={{ objectFit: "contain" }} priority />
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <button onClick={() => router.push("/login")}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: 700, color: "#6B7280", padding: "8px 16px", fontFamily: "'Nunito', sans-serif" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button onClick={() => router.push("/login")} className="nav-login">
               Log In
             </button>
-            <button onClick={() => router.push("/signup")}
-              style={{ background: "#2E8B2E", color: "white", border: "none", borderRadius: "9999px", padding: "11px 26px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "15px", cursor: "pointer", boxShadow: "0 4px 0 #1F6B1F", transition: "transform 0.12s" }}
+            <button onClick={() => router.push("/signup")} className="nav-cta"
               onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
               onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}>
               Get Started Free
@@ -53,8 +51,8 @@ export default function LandingPage() {
             <Image
               src="/images/ticha-hero.PNG"
               alt="Ticha teacher"
-              width={280}
-              height={280}
+              width={320}
+              height={320}
               style={{ objectFit: "contain", filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.2))" }}
               priority
             />

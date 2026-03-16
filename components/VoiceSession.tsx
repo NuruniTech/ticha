@@ -1785,7 +1785,7 @@ export default function VoiceSession({ childName, language, game, childId, child
       </header>
 
       {/* ── Gradient Stage ── */}
-      <div className="session-stage" style={{ background: "linear-gradient(160deg, #A8C8F8 0%, #C4B0F8 50%, #B0EEF4 100%)" }}>
+      <div className="session-stage" style={{ background: "linear-gradient(160deg, #D4F0E0 0%, #B8E8CC 40%, #A0D8BC 100%)" }}>
 
         {/* Topic cartoon background emojis */}
         {bgEmojis.map((item, i) => (
@@ -1857,7 +1857,7 @@ export default function VoiceSession({ childName, language, game, childId, child
             border: `5px solid ${ringColor}`,
             boxShadow: "0 6px 32px rgba(0,0,0,0.14)",
           }}>
-            <TichaAvatar state={avatarState} size={220} />
+            <TichaAvatar state={avatarState} size={245} />
           </div>
           {isCameraOn && (
             <div style={{ position: "absolute", bottom: "10px", right: "-8px", borderRadius: "10px", overflow: "hidden", border: "3px solid #22C55E", zIndex: 2 }}>

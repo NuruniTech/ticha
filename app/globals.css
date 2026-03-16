@@ -196,6 +196,35 @@ body {
 .ticha-celebrate { animation: ticha-celebrate 0.5s ease-in-out infinite; }
 .ticha-idle      { animation: ticha-idle      3s ease-in-out infinite; }
 
+/* ── Nav buttons — responsive sizes ── */
+.nav-login {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  color: #6B7280;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  padding: 6px 10px;
+}
+.nav-cta {
+  background: #2E8B2E;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #1F6B1F;
+  transition: transform 0.12s;
+  font-size: 13px;
+  padding: 9px 16px;
+}
+@media (min-width: 480px) {
+  .nav-login { font-size: 15px; padding: 8px 16px; }
+  .nav-cta   { font-size: 15px; padding: 11px 26px; }
+}
+
 /* ── App container — phone-width on all screens ── */
 .app-page {
   width: 100%;
@@ -205,8 +234,8 @@ body {
 
 /* ── Avatar circle ── */
 .avatar-circle {
-  width: 270px;
-  height: 270px;
+  width: 285px;
+  height: 285px;
   border-radius: 50%;
   background: white;
   display: flex;
