@@ -76,11 +76,6 @@ export default function TichaAvatar({ state, size = 220 }: Props) {
             <stop offset="50%"  stopColor="#F97316" />
             <stop offset="100%" stopColor="#DC6B0E" />
           </linearGradient>
-          {/* Headwrap — deep green */}
-          <linearGradient id="wrapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stopColor="#2E8B2E" />
-            <stop offset="100%" stopColor="#1A5C1A" />
-          </linearGradient>
           <radialGradient id="eyeWhite" cx="40%" cy="35%" r="65%">
             <stop offset="0%"   stopColor="#FFFFFF" />
             <stop offset="100%" stopColor="#F0EDE8" />
@@ -149,19 +144,30 @@ export default function TichaAvatar({ state, size = 220 }: Props) {
           {/* Chin/jaw shading */}
           <ellipse cx="100" cy="132" rx="38" ry="10" fill="rgba(0,0,0,0.10)" />
 
-          {/* ── HEADWRAP ── */}
-          {/* Main wrap band */}
-          <path d="M46 78 Q48 42 100 36 Q152 42 154 78 Q152 68 100 64 Q48 68 46 78 Z"
-            fill="url(#wrapGrad)" />
-          {/* Wrap top dome */}
-          <path d="M52 72 Q55 40 100 34 Q145 40 148 72 Q145 58 100 54 Q55 58 52 72 Z"
-            fill="#2E8B2E" />
-          {/* Wrap knot / bow on top-right */}
-          <ellipse cx="140" cy="52" rx="12" ry="8" fill="#1A5C1A" transform="rotate(-20 140 52)" />
-          <ellipse cx="148" cy="46" rx="9" ry="6" fill="#2E8B2E" transform="rotate(-20 148 46)" />
-          <circle  cx="144" cy="49" r="4" fill="#1A5C1A" />
-          {/* Wrap fold details */}
-          <path d="M52 72 Q76 62 100 64 Q124 62 148 72" stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none" />
+          {/* ── BRAIDS ── */}
+          {/* Scalp / top hair dome */}
+          <path d="M48 82 Q50 38 100 32 Q150 38 152 82 Q148 60 100 56 Q52 60 48 82 Z"
+            fill="#1C0A00" />
+          {/* Centre parting highlight */}
+          <path d="M100 32 L100 58" stroke="#2C1408" strokeWidth="3" fill="none" />
+          {/* Left hanging braid — thick outer */}
+          <path d="M56 70 Q44 96 48 122 Q42 148 46 172 Q44 186 46 196"
+            stroke="#1C0A00" strokeWidth="11" fill="none" strokeLinecap="round" />
+          {/* Left braid texture */}
+          <path d="M56 70 Q44 96 48 122 Q42 148 46 172 Q44 186 46 196"
+            stroke="#3D1A08" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="8 6" />
+          {/* Left braid gold bead tip */}
+          <circle cx="46" cy="198" r="6" fill="#F59E0B" />
+          <circle cx="46" cy="198" r="3" fill="#FBBF24" />
+          {/* Right hanging braid — thick outer */}
+          <path d="M144 70 Q156 96 152 122 Q158 148 154 172 Q156 186 154 196"
+            stroke="#1C0A00" strokeWidth="11" fill="none" strokeLinecap="round" />
+          {/* Right braid texture */}
+          <path d="M144 70 Q156 96 152 122 Q158 148 154 172 Q156 186 154 196"
+            stroke="#3D1A08" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="8 6" />
+          {/* Right braid gold bead tip */}
+          <circle cx="154" cy="198" r="6" fill="#F59E0B" />
+          <circle cx="154" cy="198" r="3" fill="#FBBF24" />
 
           {/* ── EARS ── */}
           <ellipse cx="44"  cy="92" rx="9" ry="12" fill="url(#skinGrad)" />
