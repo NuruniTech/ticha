@@ -205,6 +205,46 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Grow Wise Africa ── */}
+      <section style={{ background: "#071527", padding: "80px 24px" }}>
+        <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "0" }}>
+          {/* Label */}
+          <p style={{ fontSize: "11px", fontWeight: 700, color: "#22C55E", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: "32px" }}>
+            The Mission Behind Ticha
+          </p>
+          {/* Two-column layout */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "56px", alignItems: "center", width: "100%" }}>
+            {/* Left — logo + nonprofit badge */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "20px" }}>
+              <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: "24px", padding: "32px", border: "1px solid rgba(255,255,255,0.08)", display: "inline-block" }}>
+                <Image src="/images/grow-wise-africa-logo.png" alt="Grow Wise Africa" width={240} height={110} style={{ objectFit: "contain", display: "block" }} />
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", borderRadius: "8px", padding: "6px 12px", border: "1px solid rgba(255,255,255,0.08)" }}>🌱 Nonprofit</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", borderRadius: "8px", padding: "6px 12px", border: "1px solid rgba(255,255,255,0.08)" }}>🇹🇿 Tanzania</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", borderRadius: "8px", padding: "6px 12px", border: "1px solid rgba(255,255,255,0.08)" }}>📋 Registered</span>
+              </div>
+            </div>
+            {/* Right — text */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "clamp(24px, 3.5vw, 36px)", fontWeight: 800, color: "white", lineHeight: 1.2, margin: 0 }}>
+                Ticha is a<br /><span style={{ color: "#22C55E" }}>Grow Wise Africa</span><br />Initiative
+              </h2>
+              <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.6)", lineHeight: 1.85, margin: 0 }}>
+                Grow Wise Africa is a registered nonprofit in Tanzania dedicated to empowering the next generation through education, technology, and leadership.
+              </p>
+              <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.6)", lineHeight: 1.85, margin: 0 }}>
+                Every time your child learns with Ticha, you&apos;re supporting that mission — helping more African children access quality learning tools, regardless of where they come from.
+              </p>
+              <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "4px 0" }} />
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", fontStyle: "italic", margin: 0 }}>
+                &ldquo;Technology in service of Africa&apos;s children.&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Who it's for ── */}
       <section style={{ background: "#1E3A8A", padding: "64px 24px" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
