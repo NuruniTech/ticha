@@ -1426,8 +1426,8 @@ export default function VoiceSession({ childName, language, game, childId, child
           realtimeInputConfig: {
             automaticActivityDetection: {
               disabled: false,
-              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
-              endOfSpeechSensitivity:   EndSensitivity.END_SENSITIVITY_LOW,
+              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
+              endOfSpeechSensitivity:   EndSensitivity.END_SENSITIVITY_HIGH,
               // 100 ms: was 300 ms which silently dropped short child answers
               // (single words like "yes", "bird", "cat" finish in ~200 ms).
               prefixPaddingMs:          100,
