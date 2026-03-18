@@ -713,10 +713,7 @@ QUIET 1: "No rush — I am right here whenever you are ready!"
 QUIET 2: "Here is a little clue — it starts with the sound [first sound]. What do you think?"
 QUIET 3: "Hey ${childName}, are you still there? You can say anything — even a funny sound!"
 QUIET 4: "That is okay! Do you want a word game, the next word, or a little break — which one sounds fun right now?"
-QUIET 5: End gently — ${isSwahili
-  ? `"Okay ${childName}! It looks like you need to go — and that is completely fine. Come back whenever you are ready. Tutaonana!"`
-  : `"Sawa ${childName}! Inaonekana unahitaji kwenda — na hiyo ni sawa kabisa. Rudi wakati wowote unapokuwa tayari. Tutaonana!"`
-}
+QUIET 5: End gently — "Okay ${childName}! It looks like you need to go — and that is completely fine. Come back whenever you are ready. Tutaonana!" — say this entirely in ENGLISH regardless of lesson direction.
 
 ━━━ MINI-GAMES ━━━
 Use when a child is stuck (3rd attempt), energy is low, going in circles, or during the review.
@@ -829,7 +826,7 @@ EXCHANGE 3 — Lock it in (after they have said the word at least once):
 
 MASTERY GATE — required before every word transition:
 After Exchange 3, ${childName} must use the word at least once before you move on. Check naturally:
-  If they already used the word in their Exchange 3 answer: celebrate it specifically — "You just used [word] in a real sentence — that is EXACTLY how a fluent speaker talks!"
+  If they already used the word in their Exchange 3 answer: celebrate it specifically — "You just used [word] perfectly — that is EXACTLY how a fluent speaker does it!" NEVER say "in a sentence" or "in a full sentence" — they may have used just one word as their answer, and that still counts. Celebrate what they actually did, not what you assumed they did.
   If they did NOT use the word in their answer: one gentle nudge — "Love it! Now try to use [word] in your own sentence — anything, even silly!"
     If they succeed: celebrate loudly and move on.
     If they try but miss: celebrate the try and move on — never drill more than once.
@@ -1050,26 +1047,20 @@ STEP 4 — REVIEW GAME:
 
 STEP 5 — GOODBYE:
   This is the one turn where you may speak 3-4 sentences — ${childName} does not need to respond.
-  Speak entirely in your instructional language (${isSwahili ? "ENGLISH" : "SWAHILI"}). Cover four things:
+  Speak entirely in ENGLISH. Cover four things:
     1. Celebrate the lesson — genuine, specific pride about what ${childName} did today.
     2. Announce the quiz — make it exciting, not scary.
     3. Encourage them to show their score to mama or baba.
     4. Invite them to come back and do it again.
   Then close with the farewell — end with "Tutaonana!" regardless of direction (it is the session-end signal).
 
-  ${isSwahili ? `
-  Example in ENGLISH (adapt warmly):
-    "Hongera sana ${childName}! You were absolutely amazing today — every single word! I am SO proud of you!
+
+  Example in ENGLISH (adapt warmly — same for both lesson directions):
+    "Wow, ${childName}! You were absolutely amazing today — every single word! I am SO proud of you!
      Now the quiz is coming — this is YOUR chance to show off everything you just learned, good luck!
      When you finish, show your score to mama or baba — they are going to be SO proud of you!
      Come back tomorrow or later to learn even more words — ask mama or baba to help you find it! Tutaonana!"
-  ` : `
-  Mfano kwa KISWAHILI (badilisha kwa joto):
-    "Hongera sana ${childName}! Ulifanya vizuri sana leo — maneno yote! Ninajivunia wewe sana!
-     Sasa mtihani unakuja — hii ni nafasi yako ya kuonyesha ulichojifunza leo, bahati nzuri!
-     Ukimaliza, onyesha alama zako mama au baba — watafurahi sana!
-     Rudi tena baadaye au kesho ili ujifunze maneno mengine zaidi — mwombe mama au baba akusaidie kuipata! Tutaonana!"
-  `}
+
   IMPORTANT: After saying goodbye, if ${childName} speaks — a question, "wait!", "one more thing", anything — STOP the goodbye immediately and respond to them. Do NOT say "Tutaonana" until ${childName} is actually finished and ready to go. Never close a session over a child who is still talking.
 
 ━━━ YOUR VERY FIRST RESPONSE — THIS IS A HARD RULE ━━━
@@ -1947,15 +1938,11 @@ export default function VoiceSession({ childName, language, game, childId, child
             </div>
 
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <button onClick={toggleCamera} className="btn-control"
-                style={{ padding: "11px 20px", borderRadius: "16px", border: `2.5px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FFF4" : "white", fontSize: "14px", fontWeight: 800, color: isCameraOn ? "#166534" : "#9CA3AF", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: isCameraOn ? "0 4px 0 #15803D" : "0 4px 0 #D1D5DB" }}>
-                📷 {isCameraOn ? "On" : "Off"}
-              </button>
               <button onClick={togglePause} className="btn-control"
                 style={{ padding: "11px 22px", borderRadius: "16px", border: `2.5px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "14px", fontWeight: 800, color: isPaused ? "#D97706" : "#6B7280", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: isPaused ? "0 4px 0 #D97706" : "0 4px 0 #D1D5DB" }}>
                 {isPaused ? "▶ Resume" : "⏸ Pause"}
               </button>
-              <button onClick={endSession} className="btn-control"
+              <button onClick={async () => { await endSession(); router.push(childId ? `/child/${childId}` : "/dashboard"); }} className="btn-control"
                 style={{ padding: "11px 22px", borderRadius: "16px", border: "2.5px solid #FCA5A5", background: "#FFF1F2", fontSize: "14px", fontWeight: 800, color: "#EF4444", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: "0 4px 0 #FCA5A5" }}>
                 ✕ End
               </button>
