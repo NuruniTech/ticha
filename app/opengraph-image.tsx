@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const alt = "Ticha: AI Language Tutor for African Children";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
