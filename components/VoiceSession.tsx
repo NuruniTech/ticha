@@ -1863,8 +1863,8 @@ export default function VoiceSession({ childName, language, game, childId, child
       <div style={{ background: "white", flex: 1, borderRadius: "28px 28px 0 0", marginTop: "-24px", display: "flex", flexDirection: "column", alignItems: "center", padding: "22px 20px 40px", zIndex: 5, position: "relative" }}>
 
         {/* Hint */}
-        <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
-          {!sessionStarted ? "👆🏾 Press the microphone to start your lesson" :
+        <p style={{ fontSize: "15px", color: !sessionStarted ? "#1F2937" : "#9CA3AF", fontWeight: 800, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
+          {!sessionStarted ? "👇🏾 Press the microphone to start your lesson" :
            isPaused ? "⏸ Session paused — tap Resume" :
            status === "speaking" ? "🔊 Listen carefully to Ticha..." :
            pttActive ? "🎤 Your turn — just speak!" :
