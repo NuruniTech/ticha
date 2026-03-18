@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://www.ticha.app",
     siteName: "Ticha",
-    images: [{ url: "https://www.ticha.app/og-image.png", width: 1200, height: 630, alt: "Ticha — AI Language Tutor for African Children" }],
+    images: [{ url: "https://www.ticha.app/opengraph-image", width: 1200, height: 630, alt: "Ticha — AI Language Tutor for African Children" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ticha: AI Language Tutor for African Children",
     description: "Help your child speak Swahili and English through fun, real-time AI conversations. Free to start.",
-    images: ["https://www.ticha.app/og-image.png"],
+    images: ["https://www.ticha.app/opengraph-image"],
   },
 };
 
