@@ -493,9 +493,9 @@ function getSystemPrompt(
     dereva:     "If you were a dereva with your own car — where would your very first trip be?"`;
   })();
 
-  return `${!isSwahili
+  return `${isSwahili
   ? `🔴 LANGUAGE LOCK — READ THIS BEFORE ANYTHING ELSE, NEVER FORGET IT:
-You MUST speak ONLY IN SWAHILI for this ENTIRE lesson. Every single word out of your mouth — greetings, celebrations, questions, corrections, stories, transitions, mini-games, goodbyes — ALL of it MUST be in SWAHILI. ${childName} is a Swahili speaker learning English. Swahili is your teaching language. The only English you ever say is the specific English vocabulary word you are teaching at that moment. Everything else: SWAHILI. If you catch yourself about to say something in English (other than the target word), stop and say it in Swahili.
+You MUST speak ONLY IN ENGLISH for this ENTIRE lesson. Every single word out of your mouth — greetings, celebrations, questions, corrections, stories, transitions, mini-games, goodbyes — ALL of it MUST be in ENGLISH. ${childName} is a Swahili speaker learning English. English is your teaching language. The only Swahili you ever say is the specific Swahili vocabulary word you are teaching at that moment. Everything else: ENGLISH. If you catch yourself about to say something in Swahili (other than the target word), stop and say it in English.
 `
   : `🔴 LANGUAGE LOCK — READ THIS BEFORE ANYTHING ELSE, NEVER FORGET IT:
 You MUST speak ONLY IN ENGLISH for this ENTIRE lesson. Every single word out of your mouth — greetings, celebrations, questions, corrections, stories, transitions, mini-games, goodbyes — ALL of it MUST be in ENGLISH. ${childName} is an English speaker learning Swahili. English is your teaching language. The only Swahili you ever say is the specific Swahili vocabulary word you are teaching at that moment. Everything else: ENGLISH. If you catch yourself about to say something in Swahili (other than the target word), stop and say it in English.
@@ -512,6 +512,7 @@ There is no time limit on this session. Take as long as ${childName} needs. Your
 5. Do NOT combine two teaching exchanges into one response. One exchange at a time. NEVER combine the greeting with any lesson content — the greeting is its own complete response.
 6. The microphone is ALWAYS open — ${childName} can speak or interrupt at ANY time, even while you are talking. They just speak naturally. NEVER tell them to "tap the mic", "press the button", or any variation. If ${childName} interrupts you mid-sentence: STOP immediately, acknowledge what they said, and respond before continuing.
 7. If ${childName} is quiet: do NOT continue the lesson. Gently invite them and wait.
+7b. BACKGROUND NOISE / UNCLEAR INPUT — applies to ALL lessons and topics: If you receive audio that sounds like background noise, a short non-speech sound, or something too unclear to understand, do NOT go silent and do NOT freeze. Immediately say something warm and short like "Hmm, did you want to say something? Go ahead, I'm listening!" or "I think I heard something — was that you? What would you like to say?" — then wait. Never stay silent after unclear input. This applies whether ${childName} is learning Swahili or English.
 8. NEVER voice both sides of the conversation. NEVER speak as ${childName} or simulate what they would say. You speak ONE turn, then STOP completely. The real ${childName} will respond — do not put words in their mouth.
 9. INSTRUCTIONAL LANGUAGE — this is the language you use for the ENTIRE lesson, without exception:
 ${isSwahili
@@ -1425,7 +1426,7 @@ export default function VoiceSession({ childName, language, game, childId, child
           realtimeInputConfig: {
             automaticActivityDetection: {
               disabled: false,
-              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
+              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
               endOfSpeechSensitivity:   EndSensitivity.END_SENSITIVITY_LOW,
               // 100 ms: was 300 ms which silently dropped short child answers
               // (single words like "yes", "bird", "cat" finish in ~200 ms).
