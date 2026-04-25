@@ -49,7 +49,7 @@ export interface TranscriptEntry {
   text: string;
 }
 
-export type GameId = "animals" | "numbers" | "colors" | "body" | "people";
+export type GameId = "animals" | "numbers" | "colors" | "body" | "people" | "chakula" | "vitenzi" | "shule" | "hisia" | "mazingira";
 export type LanguageCode = "sw" | "en";
 
 // ─── Accessibility / Settings ─────────────────────────────────────────────────

@@ -1,0 +1,32 @@
+{
+  "name": "Ticha — Your Child's Swahili & English Tutor",
+  "short_name": "Ticha",
+  "description": "Help your child speak Swahili and English through fun voice conversations with Ticha. No reading, no typing — just talk!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFBF0",
+  "theme_color": "#FF8C00",
+  "orientation": "portrait",
+  "categories": ["education", "kids"],
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

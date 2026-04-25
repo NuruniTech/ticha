@@ -8,20 +8,72 @@ type MouthShape = "smile" | "small" | "open";
 interface Props {
   state: AvatarState;
   size?: number;
+  analyser?: AnalyserNode | null;
 }
 
-export default function TichaAvatar({ state, size = 220 }: Props) {
+export default function TichaAvatar({ state, size = 220, analyser }: Props) {
   const [mouth,     setMouth]     = useState<MouthShape>("smile");
   const [eyeOpen,   setEyeOpen]   = useState(true);
   const [headShift, setHeadShift] = useState(0);
   // ── Lip sync ─────────────────────────────────────────────────────────────
+  // When an AnalyserNode is provided (live session), drive mouth shapes from real
+  // audio frequency data — the mouth genuinely reacts to Ticha's voice.
+  // Falls back to a timer-based sequence when no analyser is available.
   useEffect(() => {
     if (state !== "talking") { setMouth("smile"); return; }
+
+    if (analyser) {
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let rafId: number;
+      let lastShape: MouthShape = "smile";
+      // Count consecutive frames where the analyser appears silent.
+      // If it stays silent for ~40 frames (~667ms at 60fps), the analyser
+      // is likely not receiving audio — activate the timer fallback instead.
+      let silentFrames = 0;
+      let useFallback = false;
+      let fallbackSeq: MouthShape[] = ["smile","small","open","open","small","smile","small","open","small","smile"];
+      let fallbackIdx = 0;
+
+      const tick = () => {
+        if (useFallback) {
+          // Timer-style fallback inside the RAF loop — fires every ~130ms
+          fallbackIdx++;
+          if (fallbackIdx % 8 === 0) {           // 8 frames × 16.7ms ≈ 133ms
+            const next = fallbackSeq[Math.floor(fallbackIdx / 8) % fallbackSeq.length];
+            if (next !== lastShape) { lastShape = next; setMouth(next); }
+          }
+          rafId = requestAnimationFrame(tick);
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+        // Average first 12 bins (~0–1 kHz speech fundamentals).
+        let sum = 0;
+        const bins = Math.min(12, dataArray.length);
+        for (let i = 0; i < bins; i++) sum += dataArray[i];
+        const avg = sum / bins;
+
+        // Track silence to detect a dead/disconnected analyser
+        if (avg < 2) { silentFrames++; } else { silentFrames = 0; }
+        if (silentFrames > 40) { useFallback = true; }
+
+        const next: MouthShape = avg < 10 ? "smile" : avg < 40 ? "small" : "open";
+        // Only call setMouth when shape actually changes — avoids triggering 60
+        // React re-renders per second when the mouth is stable.
+        if (next !== lastShape) { lastShape = next; setMouth(next); }
+
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(rafId);
+    }
+
+    // Fallback: timer-based sequence when no live analyser (e.g. demo / idle preview)
     const seq: MouthShape[] = ["smile","small","open","open","small","smile","small","open","small","smile"];
     let i = 0;
     const iv = setInterval(() => { setMouth(seq[i++ % seq.length]); }, 130);
     return () => clearInterval(iv);
-  }, [state]);
+  }, [state, analyser]);
 
   // ── Eye blink ─────────────────────────────────────────────────────────────
   useEffect(() => {

@@ -2,16 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useAccessibility } from "@/context/AccessibilityContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { T } from "@/lib/translations";
 import { Theme, FontSize, VoiceName } from "@/types";
 
-const VOICES: { name: VoiceName; label: string; desc: string }[] = [
-  { name: "Aoede", label: "Aoede 👩🏾", desc: "Warm, friendly — Ticha's default voice" },
-  { name: "Kore",  label: "Kore 👩🏿",  desc: "Clear, energetic — great for active learners" },
-];
+const VOICE_NAMES: VoiceName[] = ["Aoede", "Kore"];
+const VOICE_ICONS = ["👩🏾", "👩🏿"];
+const THEME_IDS: Theme[] = ["default", "high-contrast", "colorblind"];
 
 export default function SettingsPage() {
   const router = useRouter();
   const { settings, updateSetting } = useAccessibility();
+  const { lang, setLang } = useLanguage();
+  const t = T[lang].settings;
 
   function Toggle({ label, desc, checked, onChange, icon }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; icon: string }) {
     return (
@@ -33,35 +36,54 @@ export default function SettingsPage() {
     );
   }
 
+  const TOGGLE_ICONS = ["🐢", "👁️", "🌗", "✋"];
+
   return (
     <div style={{ minHeight: "100vh", background: "#FFFBF0" }}>
       <header style={{ background: "white", borderBottom: "1px solid #E5E7EB", padding: "0 24px" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", gap: "16px" }}>
           <button onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "#9CA3AF" }}>
-            ← Back
+            {t.back}
           </button>
-          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "20px", fontWeight: 800, color: "#1E3A5F" }}>⚙️ Settings</h1>
+          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "20px", fontWeight: 800, color: "#1E3A5F" }}>{t.title}</h1>
         </div>
       </header>
 
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "28px 24px" }}>
 
+        {/* Language toggle */}
+        <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
+          <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "16px" }}>
+            🌍 {lang === "sw" ? "Lugha ya Programu" : "App Language"}
+          </h2>
+          <div style={{ display: "flex", gap: "10px" }}>
+            {(["en", "sw"] as const).map((l) => (
+              <button key={l} onClick={() => setLang(l)}
+                style={{ flex: 1, padding: "14px", border: `2px solid ${lang === l ? "#F59E0B" : "#E5E7EB"}`, borderRadius: "12px", background: lang === l ? "#FEF3C7" : "white", cursor: "pointer", fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: "15px", color: "#1E3A5F", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                {l === "en" ? "🇬🇧 English" : "🇹🇿 Kiswahili"}
+                {lang === l && <span style={{ fontSize: "16px" }}>✅</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Voice selection */}
         <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "16px" }}>
-            🗣️ Ticha&apos;s Voice
+            {t.voiceTitle}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {VOICES.map((v) => (
-              <button key={v.name} onClick={() => updateSetting("voice", v.name)}
-                style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", border: `2px solid ${settings.voice === v.name ? "#F59E0B" : "#E5E7EB"}`, borderRadius: "12px", background: settings.voice === v.name ? "#FEF3C7" : "white", cursor: "pointer", textAlign: "left" }}
+            {VOICE_NAMES.map((name, i) => (
+              <button key={name} onClick={() => updateSetting("voice", name)}
+                style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", border: `2px solid ${settings.voice === name ? "#F59E0B" : "#E5E7EB"}`, borderRadius: "12px", background: settings.voice === name ? "#FEF3C7" : "white", cursor: "pointer", textAlign: "left" }}
               >
-                <span style={{ fontSize: "24px" }}>{v.label.split(" ")[1]}</span>
+                <span style={{ fontSize: "24px" }}>{VOICE_ICONS[i]}</span>
                 <div>
-                  <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 700, color: "#1E3A5F" }}>{v.label.split(" ")[0]}</p>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{v.desc}</p>
+                  <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 700, color: "#1E3A5F" }}>{name}</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{t.voiceDescs[i]}</p>
                 </div>
-                {settings.voice === v.name && <span style={{ marginLeft: "auto", fontSize: "18px" }}>✅</span>}
+                {settings.voice === name && <span style={{ marginLeft: "auto", fontSize: "18px" }}>✅</span>}
               </button>
             ))}
           </div>
@@ -70,14 +92,14 @@ export default function SettingsPage() {
         {/* Font size */}
         <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "16px" }}>
-            🔡 Text Size
+            {t.textSizeTitle}
           </h2>
           <div style={{ display: "flex", gap: "10px" }}>
             {(["normal", "large", "xlarge"] as FontSize[]).map((size) => (
               <button key={size} onClick={() => updateSetting("fontSize", size)}
                 style={{ flex: 1, padding: "14px", border: `2px solid ${settings.fontSize === size ? "#F59E0B" : "#E5E7EB"}`, borderRadius: "12px", background: settings.fontSize === size ? "#FEF3C7" : "white", cursor: "pointer", fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: size === "normal" ? "14px" : size === "large" ? "16px" : "18px", color: "#1E3A5F" }}
               >
-                {size === "normal" ? "Normal" : size === "large" ? "Large" : "X-Large"}
+                {t.textSizes[size]}
               </button>
             ))}
           </div>
@@ -86,20 +108,16 @@ export default function SettingsPage() {
         {/* Theme */}
         <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "16px" }}>
-            🎨 Display Theme
+            {t.themeTitle}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {([
-              ["default",       "🌟 Default",        "Warm yellows and greens"],
-              ["high-contrast", "⬛ High Contrast",   "Black & white, maximum readability for low vision"],
-              ["colorblind",    "👁️ Colorblind Safe", "Optimised for colour vision deficiency"],
-            ] as [Theme, string, string][]).map(([id, label, desc]) => (
+            {THEME_IDS.map((id, i) => (
               <button key={id} onClick={() => updateSetting("theme", id)}
                 style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", border: `2px solid ${settings.theme === id ? "#F59E0B" : "#E5E7EB"}`, borderRadius: "12px", background: settings.theme === id ? "#FEF3C7" : "white", cursor: "pointer", textAlign: "left" }}
               >
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 700, color: "#1E3A5F" }}>{label}</p>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{desc}</p>
+                  <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 700, color: "#1E3A5F" }}>{t.themes[i].label}</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{t.themes[i].desc}</p>
                 </div>
                 {settings.theme === id && <span style={{ fontSize: "18px" }}>✅</span>}
               </button>
@@ -110,37 +128,28 @@ export default function SettingsPage() {
         {/* Accessibility toggles */}
         <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "8px" }}>
-            ♿ Accessibility
+            {t.accessibilityTitle}
           </h2>
           <Toggle
-            icon="🐢" label="Slow Speech Mode"
-            desc="Ticha speaks slower and more clearly — great for beginners and young learners"
-            checked={settings.slowSpeech}
-            onChange={(v) => updateSetting("slowSpeech", v)}
+            icon={TOGGLE_ICONS[0]} label={t.toggles[0].label} desc={t.toggles[0].desc}
+            checked={settings.slowSpeech} onChange={(v) => updateSetting("slowSpeech", v)}
           />
           <Toggle
-            icon="👁️" label="Visual Mode"
-            desc="For deaf / hard-of-hearing learners — large emoji animations and text replace audio responses"
-            checked={settings.visualMode}
-            onChange={(v) => updateSetting("visualMode", v)}
+            icon={TOGGLE_ICONS[1]} label={t.toggles[1].label} desc={t.toggles[1].desc}
+            checked={settings.visualMode} onChange={(v) => updateSetting("visualMode", v)}
           />
           <Toggle
-            icon="🌗" label="High Contrast"
-            desc="Maximum colour contrast for low vision or bright screen conditions"
-            checked={settings.highContrast}
-            onChange={(v) => updateSetting("highContrast", v)}
+            icon={TOGGLE_ICONS[2]} label={t.toggles[2].label} desc={t.toggles[2].desc}
+            checked={settings.highContrast} onChange={(v) => updateSetting("highContrast", v)}
           />
           <Toggle
-            icon="✋" label="Reduce Motion"
-            desc="Disable animations — helpful for motion sensitivity or epilepsy"
-            checked={settings.reduceMotion}
-            onChange={(v) => updateSetting("reduceMotion", v)}
+            icon={TOGGLE_ICONS[3]} label={t.toggles[3].label} desc={t.toggles[3].desc}
+            checked={settings.reduceMotion} onChange={(v) => updateSetting("reduceMotion", v)}
           />
         </div>
 
         <p style={{ textAlign: "center", fontSize: "12px", color: "#9CA3AF", lineHeight: 1.7 }}>
-          Settings are saved automatically on this device.<br />
-          ♿ Ticha is built to be accessible to every child.
+          {t.footer.split("\n").map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
         </p>
       </main>
     </div>

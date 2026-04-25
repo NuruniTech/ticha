@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ticha Ad</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 450px;
+      min-height: 800px;
+      background: linear-gradient(160deg, #7C3AED 0%, #4F46E5 40%, #1E3A8A 100%);
+      font-family: 'Nunito', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Confetti dots */
+    .dots {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.15) 2px, transparent 2px),
+        radial-gradient(circle, rgba(255,200,0,0.18) 1.5px, transparent 1.5px);
+      background-size: 36px 36px, 22px 22px;
+      background-position: 0 0, 11px 11px;
+    }
+
+    .wrapper {
+      position: relative;
+      padding: 28px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 4px;
+      position: relative;
+      z-index: 2;
+    }
+    .brand {
+      font-family: 'Baloo 2', cursive;
+      font-size: 72px;
+      font-weight: 900;
+      color: #FFD700;
+      letter-spacing: -2px;
+      line-height: 1;
+      text-shadow: 0 4px 0 #B8860B, 0 8px 20px rgba(0,0,0,0.4);
+      -webkit-text-stroke: 2px rgba(0,0,0,0.15);
+    }
+    .tagline {
+      font-family: 'Baloo 2', cursive;
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+    .tagline span {
+      color: #FFA500;
+    }
+
+    /* ── MASCOT ROW ── */
+    .mascot-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      margin: -4px 0 -8px;
+      position: relative;
+      z-index: 3;
+    }
+    .mascot {
+      font-size: 64px;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.35));
+      animation: float 3s ease-in-out infinite;
+    }
+    .mascot:nth-child(2) { animation-delay: -1.5s; font-size: 76px; }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 14px 14px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 2px 0 rgba(255,255,255,0.4) inset;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      border-radius: 20px 20px 0 0;
+    }
+    .card.orange::before { background: linear-gradient(90deg, #FF8C00, #FFB347); }
+    .card.purple::before { background: linear-gradient(90deg, #9B59F5, #C084FC); }
+    .card.blue::before   { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+    .card.green::before  { background: linear-gradient(90deg, #22C55E, #4ADE80); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .orange .card-icon { background: #FFF7ED; }
+    .purple .card-icon { background: #F5F3FF; }
+    .blue   .card-icon { background: #EFF6FF; }
+    .green  .card-icon { background: #F0FDF4; }
+
+    .card-title {
+      font-family: 'Baloo 2', cursive;
+      font-size: 15px;
+      font-weight: 900;
+      color: #1E3A5F;
+      line-height: 1.1;
+    }
+    .card-title span {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #9CA3AF;
+    }
+
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .card ul li {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #374151;
+      display: flex;
+      gap: 5px;
+      align-items: flex-start;
+      line-height: 1.35;
+    }
+    .card ul li::before {
+      content: '✦';
+      font-size: 8px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .orange li::before { color: #FF8C00; }
+    .purple li::before { color: #9B59F5; }
+    .blue   li::before { color: #3B82F6; }
+    .green  li::before { color: #22C55E; }
+
+    /* ── STATS STRIP ── */
+    .stats {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      margin-top: 12px;
+      position: relative;
+      z-index: 2;
+    }
+    .stat {
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 10px 8px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .stat-num {
+      font-family: 'Baloo 2', cursive;
+      font-size: 22px;
+      font-weight: 900;
+      color: #FFD700;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* ── CTA ── */
+    .cta-wrap {
+      width: 100%;
+      margin-top: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .cta {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #FF8C00 0%, #FFB347 100%);
+      border: none;
+      border-radius: 20px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 26px;
+      font-weight: 900;
+      color: white;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 0 #CC6A00, 0 10px 28px rgba(255,140,0,0.5);
+      cursor: pointer;
+      display: block;
+      text-decoration: none;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .sub-cta {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      margin-top: 8px;
+    }
+    .sub-cta span { color: #FFD700; }
+
+    /* ── BOTTOM BADGE ── */
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 9999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      color: white;
+      backdrop-filter: blur(6px);
+    }
+
+    /* ── DECORATIVE STARS ── */
+    .star {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0.5;
+      animation: twinkle 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+  <div class="dots"></div>
+
+  <!-- Decorative stars -->
+  <div class="star" style="top:8%; left:8%; animation-delay:0s">⭐</div>
+  <div class="star" style="top:12%; right:10%; animation-delay:0.7s">✨</div>
+  <div class="star" style="top:35%; left:3%; animation-delay:1.2s; font-size:14px">🌟</div>
+  <div class="star" style="top:38%; right:3%; animation-delay:0.4s; font-size:14px">⭐</div>
+  <div class="star" style="bottom:22%; left:5%; animation-delay:1.8s; font-size:12px">✨</div>
+  <div class="star" style="bottom:18%; right:5%; animation-delay:0.9s; font-size:12px">🌟</div>
+
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">TICHA</div>
+      <div class="tagline">Learn English &amp; <span>Swahili</span><br/>Through Live Conversation!</div>
+    </div>
+
+    <!-- Mascot row -->
+    <div class="mascot-row">
+      <div class="mascot">🦁</div>
+      <div class="mascot" style="margin-bottom:8px">👧🏾</div>
+      <div class="mascot">🐘</div>
+    </div>
+
+    <!-- 4-card grid -->
+    <div class="grid">
+      <div class="card orange">
+        <div class="card-header">
+          <div class="card-icon">🦁</div>
+          <div class="card-title">Animals<span>Wanyama</span></div>
+        </div>
+        <ul>
+          <li>Learn 30+ African animal names</li>
+          <li>Simba, Tembo, Twiga &amp; more!</li>
+          <li>Real conversation, not flashcards</li>
+        </ul>
+      </div>
+
+      <div class="card purple">
+        <div class="card-header">
+          <div class="card-icon">🔢</div>
+          <div class="card-title">Numbers<span>Nambari</span></div>
+        </div>
+        <ul>
+          <li>Count 1–20 in Swahili</li>
+          <li>Moja, Mbili, Tatu &amp; beyond</li>
+          <li>Interactive number games</li>
+        </ul>
+      </div>
+
+      <div class="card blue">
+        <div class="card-header">
+          <div class="card-icon">🎨</div>
+          <div class="card-title">Colors &amp; Feelings<span>Rangi &amp; Hisia</span></div>
+        </div>
+        <ul>
+          <li>Colors, emotions &amp; body parts</li>
+          <li>Build real-life vocabulary</li>
+          <li>Talk, listen &amp; respond live</li>
+        </ul>
+      </div>
+
+      <div class="card green">
+        <div class="card-header">
+          <div class="card-icon">🏫</div>
+          <div class="card-title">School &amp; More<span>Shule &amp; Zaidi</span></div>
+        </div>
+        <ul>
+          <li>10 topics, 300+ Swahili words</li>
+          <li>Stars, streaks &amp; level badges</li>
+          <li>Parents track progress live</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">10</div>
+        <div class="stat-label">Topics</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">300+</div>
+        <div class="stat-label">Words</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">A1</div>
+        <div class="stat-label">CEFR Level</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Free</div>
+        <div class="stat-label">To Start</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a class="cta" href="https://ticha.app">🚀 START LEARNING FREE</a>
+      <p class="sub-cta">No reading. No typing. Just <span>talk.</span> · ticha.app</p>
+    </div>
+
+    <!-- Bottom badges -->
+    <div class="badge-row">
+      <div class="badge">🌍 Built for African Children</div>
+      <div class="badge">🌱 Nonprofit</div>
+      <div class="badge">♿ Accessible</div>
+    </div>
+
+  </div>
+</body>
+</html>

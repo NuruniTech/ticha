@@ -1,0 +1,65 @@
+steps:
+  # Build the Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - --build-arg
+      - NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}
+      - --build-arg
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - --build-arg
+      - NEXT_PUBLIC_POSTHOG_KEY=${_NEXT_PUBLIC_POSTHOG_KEY}
+      - --build-arg
+      - NEXT_PUBLIC_POSTHOG_HOST=${_NEXT_PUBLIC_POSTHOG_HOST}
+      - -t
+      - gcr.io/$PROJECT_ID/ticha:$COMMIT_SHA
+      - -t
+      - gcr.io/$PROJECT_ID/ticha:latest
+      - .
+
+  # Push to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "--all-tags", "gcr.io/$PROJECT_ID/ticha"]
+
+  # Deploy to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ticha
+      - --image
+      - gcr.io/$PROJECT_ID/ticha:$COMMIT_SHA
+      - --region
+      - us-central1
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --memory
+      - "512Mi"
+      - --cpu
+      - "1"
+      - --min-instances
+      - "0"
+      - --max-instances
+      - "10"
+      - --set-env-vars
+      - GEMINI_API_KEY=${_GEMINI_API_KEY},RESEND_API_KEY=${_RESEND_API_KEY},CRON_SECRET=${_CRON_SECRET},SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY}
+
+images:
+  - "gcr.io/$PROJECT_ID/ticha"
+
+substitutions:
+  _NEXT_PUBLIC_SUPABASE_URL: ""
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+  _NEXT_PUBLIC_POSTHOG_KEY: ""
+  _NEXT_PUBLIC_POSTHOG_HOST: "https://us.i.posthog.com"
+  _GEMINI_API_KEY: ""
+  _RESEND_API_KEY: ""
+  _CRON_SECRET: ""
+  _SUPABASE_SERVICE_ROLE_KEY: ""
+
+options:
+  logging: CLOUD_LOGGING_ONLY

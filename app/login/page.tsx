@@ -5,22 +5,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Suspense } from "react";
 import Image from "next/image";
+import { useLanguage } from "@/context/LanguageContext";
+import { T } from "@/lib/translations";
 
-function mapError(msg: string): string {
+function mapError(msg: string, errors: typeof T.en.login.errors): string {
   if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials") || msg.includes("Invalid email or password"))
-    return "Incorrect email or password. Please try again.";
+    return errors.wrongCredentials;
   if (msg.includes("Email not confirmed"))
-    return "Please confirm your email before logging in. Check your inbox.";
+    return errors.confirmEmail;
   if (msg.includes("rate limit") || msg.includes("too many"))
-    return "Too many attempts. Please wait a few minutes and try again.";
+    return errors.rateLimit;
   if (msg.includes("network") || msg.includes("fetch"))
-    return "Connection error. Check your internet and try again.";
+    return errors.connection;
   return msg;
 }
 
 function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
+  const { lang }     = useLanguage();
+  const t            = T[lang].login;
+
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw]     = useState(false);
@@ -32,15 +37,15 @@ function LoginForm() {
   const [view, setView]         = useState<"login" | "forgot">("login");
 
   useEffect(() => {
-    if (searchParams.get("error")) setError("Authentication failed. Please try again.");
-  }, [searchParams]);
+    if (searchParams.get("error")) setError(t.errors.authFailed);
+  }, [searchParams, t.errors.authFailed]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(mapError(error.message)); setLoading(false); return; }
+    if (error) { setError(mapError(error.message, t.errors)); setLoading(false); return; }
     router.push("/dashboard");
   }
 
@@ -51,19 +56,19 @@ function LoginForm() {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) { setError(mapError(error.message)); setGoogleLoading(false); }
+    if (error) { setError(mapError(error.message, t.errors)); setGoogleLoading(false); }
   }
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) { setError("Enter your email address above first."); return; }
+    if (!email.trim()) { setError(t.errors.enterEmail); return; }
     setResetLoading(true);
     setError("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
     setResetLoading(false);
-    if (error) { setError(mapError(error.message)); return; }
+    if (error) { setError(mapError(error.message, t.errors)); return; }
     setResetSent(true);
   }
 
@@ -76,26 +81,26 @@ function LoginForm() {
             <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
               <Image src="/images/ticha-login.PNG" alt="Ticha" width={110} height={110} style={{ objectFit: "contain" }} />
             </div>
-            <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "24px", fontWeight: 800, color: "#1E3A8A" }}>Reset Password</h1>
-            <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>We&apos;ll send you a reset link</p>
+            <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "24px", fontWeight: 800, color: "#1E3A8A" }}>{t.resetTitle}</h1>
+            <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>{t.resetSubtitle}</p>
           </div>
 
           <div className="card" style={{ padding: "32px" }}>
             {resetSent ? (
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "48px", marginBottom: "12px" }}>📬</div>
-                <p style={{ fontSize: "15px", color: "#1E3A8A", fontWeight: 700, marginBottom: "8px" }}>Check your inbox</p>
+                <p style={{ fontSize: "15px", color: "#1E3A8A", fontWeight: 700, marginBottom: "8px" }}>{t.checkInbox}</p>
                 <p style={{ fontSize: "13px", color: "#6B7280", lineHeight: 1.6, marginBottom: "24px" }}>
-                  We sent a password reset link to <strong>{email}</strong>.
+                  {t.resetSentTo(email)}
                 </p>
                 <button className="btn-primary" onClick={() => { setView("login"); setResetSent(false); }} style={{ padding: "12px 28px", fontSize: "15px" }}>
-                  Back to Login
+                  {t.backToLoginBtn}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword}>
                 <div style={{ marginBottom: "18px" }}>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>Email address</label>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>{t.emailAddressLabel}</label>
                   <input
                     type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                     placeholder="you@example.com"
@@ -113,12 +118,12 @@ function LoginForm() {
                 )}
 
                 <button type="submit" className="btn-primary" disabled={resetLoading} style={{ width: "100%", padding: "14px", fontSize: "16px", opacity: resetLoading ? 0.6 : 1, marginBottom: "14px" }}>
-                  {resetLoading ? "Sending..." : "Send Reset Link"}
+                  {resetLoading ? t.sending : t.sendResetLink}
                 </button>
 
                 <p style={{ textAlign: "center", fontSize: "13px", color: "#9CA3AF" }}>
                   <button type="button" onClick={() => { setView("login"); setError(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#2E8B2E", fontWeight: 700, fontSize: "13px" }}>
-                    ← Back to Login
+                    {t.backToLogin}
                   </button>
                 </p>
               </form>
@@ -138,8 +143,8 @@ function LoginForm() {
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
             <Image src="/images/ticha-login.PNG" alt="Ticha" width={120} height={120} style={{ objectFit: "contain" }} />
           </div>
-          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>Welcome back!</h1>
-          <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>Log in to your Ticha account</p>
+          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>{t.title}</h1>
+          <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>{t.subtitle}</p>
         </div>
 
         <div className="card" style={{ padding: "32px" }}>
@@ -157,18 +162,18 @@ function LoginForm() {
               <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3-11.4-7.4l-6.5 5C9.5 39.4 16.3 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.4 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/>
             </svg>
-            {googleLoading ? "Redirecting..." : "Continue with Google"}
+            {googleLoading ? t.googleRedirecting : t.google}
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
             <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
-            <span style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 600 }}>or with email</span>
+            <span style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 600 }}>{t.orEmail}</span>
             <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
           </div>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>Email</label>
+              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>{t.emailLabel}</label>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                 placeholder="you@example.com"
@@ -180,10 +185,10 @@ function LoginForm() {
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>Password</label>
+                <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>{t.passwordLabel}</label>
                 <button type="button" onClick={() => { setView("forgot"); setError(""); }}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "#2E8B2E", fontWeight: 700, fontSize: "12px", padding: 0 }}>
-                  Forgot password?
+                  {t.forgotPassword}
                 </button>
               </div>
               <div style={{ position: "relative" }}>
@@ -198,7 +203,7 @@ function LoginForm() {
                 <button
                   type="button" onClick={() => setShowPw(!showPw)}
                   style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9CA3AF", padding: 0 }}
-                  aria-label={showPw ? "Hide password" : "Show password"}
+                  aria-label={showPw ? t.hidePassword : t.showPassword}
                 >
                   {showPw ? "🙈" : "👁️"}
                 </button>
@@ -213,14 +218,14 @@ function LoginForm() {
             )}
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ width: "100%", padding: "14px", fontSize: "17px", opacity: loading ? 0.6 : 1, marginTop: "16px" }}>
-              {loading ? "Logging in..." : "Log In →"}
+              {loading ? t.loggingIn : t.loginBtn}
             </button>
           </form>
 
           <p style={{ textAlign: "center", fontSize: "13px", color: "#9CA3AF", marginTop: "20px" }}>
-            No account?{" "}
+            {t.noAccount}{" "}
             <button type="button" onClick={() => router.push("/signup")} style={{ background: "none", border: "none", cursor: "pointer", color: "#2E8B2E", fontWeight: 700, fontSize: "13px" }}>
-              Sign up free
+              {t.signUpFree}
             </button>
           </p>
         </div>

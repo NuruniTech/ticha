@@ -4,22 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import { useLanguage } from "@/context/LanguageContext";
+import { T } from "@/lib/translations";
+import posthog from "posthog-js";
 
-function mapError(msg: string): string {
+function mapError(msg: string, errors: typeof T.en.signup.errors): string {
   if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("already been registered"))
-    return "An account with this email already exists. Log in instead.";
+    return errors.emailExists;
   if (msg.includes("Password should") || msg.includes("password"))
-    return "Password is too weak. Use at least 8 characters with letters and numbers.";
+    return errors.passwordWeak;
   if (msg.includes("valid email") || msg.includes("Unable to validate"))
-    return "Please enter a valid email address.";
+    return errors.invalidEmail;
   if (msg.includes("rate limit") || msg.includes("too many"))
-    return "Too many attempts. Please wait a moment and try again.";
+    return errors.rateLimit;
   if (msg.includes("network") || msg.includes("fetch"))
-    return "Connection error. Check your internet and try again.";
+    return errors.connection;
   return msg;
 }
 
-function PasswordStrength({ password }: { password: string }) {
+function PasswordStrength({ password, labels }: { password: string; labels: typeof T.en.signup.passwordStrength }) {
   if (!password) return null;
   let score = 0;
   if (password.length >= 8) score++;
@@ -27,11 +30,11 @@ function PasswordStrength({ password }: { password: string }) {
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
   const levels = [
-    { label: "Weak",   color: "#EF4444" },
-    { label: "Weak",   color: "#EF4444" },
-    { label: "Fair",   color: "#2E8B2E" },
-    { label: "Good",   color: "#10B981" },
-    { label: "Strong", color: "#059669" },
+    { label: labels.weak,   color: "#EF4444" },
+    { label: labels.weak,   color: "#EF4444" },
+    { label: labels.fair,   color: "#2E8B2E" },
+    { label: labels.good,   color: "#10B981" },
+    { label: labels.strong, color: "#059669" },
   ];
   const { label, color } = levels[score];
   return (
@@ -48,6 +51,9 @@ function PasswordStrength({ password }: { password: string }) {
 
 export default function SignupPage() {
   const router = useRouter();
+  const { lang } = useLanguage();
+  const t = T[lang].signup;
+
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -64,13 +70,13 @@ export default function SignupPage() {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) { setError(mapError(error.message)); setGoogleLoading(false); }
+    if (error) { setError(mapError(error.message, t.errors)); setGoogleLoading(false); }
   }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) { setError("Please enter your name."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (!name.trim()) { setError(t.errors.enterName); return; }
+    if (password.length < 8) { setError(t.errors.passwordShort); return; }
     setLoading(true);
     setError("");
 
@@ -83,24 +89,26 @@ export default function SignupPage() {
       },
     });
 
-    if (error) { setError(mapError(error.message)); setLoading(false); return; }
+    if (error) { setError(mapError(error.message, t.errors)); setLoading(false); return; }
 
-    // If session is null, email confirmation is required
     if (!data.session) {
       setConfirmed(true);
       setLoading(false);
       return;
     }
 
-    // Session exists (confirmation disabled) — upsert profile and go to dashboard
     if (data.user) {
-      await supabase.from("profiles").upsert({
-        id: data.user.id,
-        email,
-        full_name: name.trim(),
-      }, { onConflict: "id" });
+      try {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          email,
+          full_name: name.trim(),
+        }, { onConflict: "id" });
+      } catch { /* non-critical */ }
+      posthog.identify(data.user.id, { name: name.trim(), email });
+      posthog.capture("signed_up", { method: "email" });
     }
-    router.push("/dashboard");
+    router.push("/onboarding");
   }
 
   // ── Email confirmation screen ─────────────────────────────────────────────
@@ -109,18 +117,18 @@ export default function SignupPage() {
       <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #F4FAF4, #D1FAE5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
         <div style={{ width: "100%", maxWidth: "420px", textAlign: "center" }}>
           <div style={{ width: "72px", height: "72px", background: "#D1FAE5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 20px" }}>📬</div>
-          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "24px", fontWeight: 800, color: "#1E3A8A", marginBottom: "10px" }}>Check your email</h1>
+          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "24px", fontWeight: 800, color: "#1E3A8A", marginBottom: "10px" }}>{t.confirmTitle}</h1>
           <p style={{ fontSize: "15px", color: "#6B7280", lineHeight: 1.7, marginBottom: "8px" }}>
-            We sent a confirmation link to <strong style={{ color: "#1E3A8A" }}>{email}</strong>.
+            {t.confirmSentTo(email)}
           </p>
           <p style={{ fontSize: "14px", color: "#9CA3AF", marginBottom: "28px", lineHeight: 1.6 }}>
-            Click the link in the email to activate your account, then log in here.
+            {t.confirmInstructions}
           </p>
           <button className="btn-primary" onClick={() => router.push("/login")} style={{ padding: "13px 36px", fontSize: "16px" }}>
-            Go to Login →
+            {t.goToLogin}
           </button>
           <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "16px" }}>
-            Didn&apos;t receive it? Check your spam folder.
+            {t.noEmail}
           </p>
         </div>
       </main>
@@ -136,8 +144,8 @@ export default function SignupPage() {
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
             <Image src="/images/ticha-login.PNG" alt="Ticha" width={110} height={110} style={{ objectFit: "contain" }} />
           </div>
-          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>Join Ticha</h1>
-          <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>Create a free parent account</p>
+          <h1 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "#1E3A8A" }}>{t.title}</h1>
+          <p style={{ fontSize: "14px", color: "#9CA3AF", marginTop: "4px" }}>{t.subtitle}</p>
         </div>
 
         <div className="card" style={{ padding: "32px" }}>
@@ -155,22 +163,22 @@ export default function SignupPage() {
               <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3-11.4-7.4l-6.5 5C9.5 39.4 16.3 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.4 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/>
             </svg>
-            {googleLoading ? "Redirecting..." : "Continue with Google"}
+            {googleLoading ? t.googleRedirecting : t.google}
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
             <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
-            <span style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 600 }}>or with email</span>
+            <span style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 600 }}>{t.orEmail}</span>
             <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
           </div>
 
           <form onSubmit={handleSignup}>
             {/* Name */}
             <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>Your name</label>
+              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>{t.nameLabel}</label>
               <input
                 type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                placeholder="e.g. Amina Juma"
+                placeholder={t.namePlaceholder}
                 style={{ width: "100%", border: "2px solid #E5E7EB", borderRadius: "12px", padding: "12px 16px", fontSize: "16px", fontFamily: "'Nunito', sans-serif", outline: "none" }}
                 onFocus={(e) => e.target.style.borderColor = "#2E8B2E"}
                 onBlur={(e) => e.target.style.borderColor = "#E5E7EB"}
@@ -179,7 +187,7 @@ export default function SignupPage() {
 
             {/* Email */}
             <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>Email</label>
+              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>{t.emailLabel}</label>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                 placeholder="you@example.com"
@@ -191,12 +199,12 @@ export default function SignupPage() {
 
             {/* Password */}
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>Password</label>
+              <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "6px" }}>{t.passwordLabel}</label>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPw ? "text" : "password"} value={password}
                   onChange={(e) => setPassword(e.target.value)} required
-                  placeholder="Min. 8 characters"
+                  placeholder={t.passwordPlaceholder}
                   style={{ width: "100%", border: "2px solid #E5E7EB", borderRadius: "12px", padding: "12px 44px 12px 16px", fontSize: "16px", fontFamily: "'Nunito', sans-serif", outline: "none" }}
                   onFocus={(e) => e.target.style.borderColor = "#2E8B2E"}
                   onBlur={(e) => e.target.style.borderColor = "#E5E7EB"}
@@ -209,7 +217,7 @@ export default function SignupPage() {
                   {showPw ? "🙈" : "👁️"}
                 </button>
               </div>
-              <PasswordStrength password={password} />
+              <PasswordStrength password={password} labels={t.passwordStrength} />
             </div>
 
             {error && (
@@ -220,19 +228,19 @@ export default function SignupPage() {
             )}
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ width: "100%", padding: "14px", fontSize: "17px", opacity: loading ? 0.6 : 1, marginTop: "6px" }}>
-              {loading ? "Creating account..." : "🚀 Create Account"}
+              {loading ? t.creating : t.createBtn}
             </button>
 
             <p style={{ textAlign: "center", fontSize: "13px", color: "#9CA3AF", marginTop: "20px" }}>
-              Already have an account?{" "}
+              {t.alreadyAccount}{" "}
               <button type="button" onClick={() => router.push("/login")} style={{ background: "none", border: "none", cursor: "pointer", color: "#2E8B2E", fontWeight: 700, fontSize: "13px" }}>
-                Log in
+                {t.loginLink}
               </button>
             </p>
           </form>
 
           <p style={{ textAlign: "center", fontSize: "11px", color: "#9CA3AF", marginTop: "16px", lineHeight: 1.6 }}>
-            🔒 Your data is private · ♿ Accessible by design · 🌍 Built for Africa
+            {t.privacyNote}
           </p>
         </div>
       </div>

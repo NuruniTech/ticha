@@ -111,6 +111,25 @@ body {
 .animate-pop-in { animation: pop-in 0.4s ease-out forwards; }
 .animate-float { animation: float 3s ease-in-out infinite; }
 
+@keyframes word-reveal {
+  0%   { opacity: 0; transform: scale(0.6) translateY(20px); }
+  60%  { opacity: 1; transform: scale(1.08) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+@keyframes word-dismiss {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.85) translateY(-12px); }
+}
+.word-reveal  { animation: word-reveal  0.45s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.word-dismiss { animation: word-dismiss 0.3s  ease-in forwards; }
+
+@keyframes emoji-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40%       { transform: translateY(-10px) scale(1.12); }
+  70%       { transform: translateY(-4px)  scale(1.05); }
+}
+.emoji-bounce { animation: emoji-bounce 0.8s ease-in-out 0.35s 1; }
+
 .wave-bar { animation: wave-bar 0.8s ease-in-out infinite; }
 .wave-bar:nth-child(2) { animation-delay: 0.1s; }
 .wave-bar:nth-child(3) { animation-delay: 0.2s; }
