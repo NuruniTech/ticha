@@ -677,7 +677,7 @@ function getSystemPrompt(
     if (game === "colors") return `COLORS — use these hooks, matched to the specific colour.\n${dirNote}\n` + (isSwahili ? `    nyekundu (red):    "Nyekundu is the colour of fire, ripe tomatoes, and passion fruit — warm and bold! What is the most nyekundu thing you have ever seen?"
     bluu (blue):       "Bluu is the colour of the sky on a clear bright day and deep lake water — calm and wide! Is the sky bluu where you are right now?"
     njano (yellow):    "Njano is the colour of sunshine, bananas, and ripe maize — bright and warm! What is your favourite njano food or fruit?"
-    kijani (green):    "Kijani is everywhere in nature — grass, trees, leaves, all the vegetables in the shamba! What is one kijani thing you see every single day?"
+    kijani (green):    "Kijani is everywhere in nature — grass, trees, leaves, all the vegetables in the garden! What is one kijani thing you see every single day?"
     nyeupe (white):    "Nyeupe is the colour of clouds, fresh milk, and sugar — clean and bright! What is the whitest thing you can think of right now?"
     nyeusi (black):    "Nyeusi is the colour of the night sky and charcoal — deep and powerful! What is the darkest nyeusi thing you can see around you?"
     waridi (pink):     "Waridi is the colour of flamingos, some flowers, and a beautiful sunset sky! Have you ever seen something waridi in real life?"
@@ -1879,7 +1879,7 @@ EXCHANGE 3 — Lock it in (after they have said the word at least once):
   ` : `
   Mifano ya maswali ya chaguo (Kiswahili — lugha yako ya kufundishia):
     Wanyama:   "Ungependa kuwa na simba au mbwa kama rafiki?" | "Je, tembo ni mkubwa kuliko nyumba yako — ndio au hapana?" | "Paka au mbwa — ni mnyama gani bora zaidi?"
-    Rangi:     "Je, anga ni bluu au kijani?" | "Je, nyasi ni kijani — ndio au hapana?" | "Je, maziwa ni nyeupe au nyeusi?"
+    Rangi:     "Je, anga ni 'blue' au 'green'?" | "Je, nyasi ni 'green' — ndio au hapana?" | "Je, maziwa ni 'white' au 'black'?"
     Nambari:   "Kama nikukupa pipi tano, ungezila zote au kushiriki?" | "Je, una vidole zaidi ya kumi — ndio au hapana?" | "Je, tatu ni zaidi ya mbili — ndio au hapana?"
     Mwili:     "Unatumia mguu wako zaidi kutembea au kuruka?" | "Je, moyo wako uko kichwani au kifuani?" | "Unatumia mkono au mguu wako kuandika?"
     Watu:      "Ni mama au baba anayepika mara nyingi nyumbani?" | "Je, bibi yako ni mzee kuliko mama yako — ndio au hapana?" | "Ungependa kutumia siku na kaka au rafiki yako?"
@@ -2004,7 +2004,7 @@ As you move through the 5 words, find natural bridges between them — one sente
   Level 2 connections (when lesson includes Level 2 words):
   "You know nyekundu — well, nyeusi is the OPPOSITE — as dark as nyekundu is bright!"
   "Remember kijani? Well, kahawia is what kijani turns into when things dry out — the colour of dead grass and tree bark!"
-  "You know bluu — well, kijivu is like a faded bluu mixed with nyeupe — the colour of clouds and ash!"`
+  "You know bluu — well, kijivu is like a faded bluu mixed with white — the colour of clouds and ash!"`
     : `Muunganisho wa Kiwango cha 1 (kati ya 'red'/'blue'/'yellow'/'green'/'white'):
   "Unajua 'yellow' — sasa 'red' pia ni rangi ya joto na nishati, lakini kali zaidi — rangi ya moto badala ya jua!"
   "Kumbuka 'blue'? Sasa 'green' ni kinachofanyika 'blue' inapokutana na 'yellow' — rangi ya miti na nyasi!"
