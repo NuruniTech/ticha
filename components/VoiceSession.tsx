@@ -1285,7 +1285,7 @@ function getSystemPrompt(
     bluu:     "Look up — is the sky bluu today, or covered in clouds?"
     njano:    "What is your favourite njano food — banana, maize, something else?"
     kijani:   "Name ONE kijani thing you can see around you right now!"
-    nyeupe:   "What is the nyeupe-st thing in your house — milk, sugar, a wall?"
+    nyeupe:   "Name the most nyeupe thing inside your house right now — milk, sugar, a wall, something else?"
     nyeusi:   "The night sky is nyeusi — what else around you is that dark?"
     waridi:   "Have you ever seen a waridi flower or a flamingo — which one is more waridi?"
     zambarau: "Biringanya is zambarau — that deep purple colour you do not see every day! Have you ever tasted biringanya — what did you think of it?"
@@ -1997,12 +1997,22 @@ As you move through the 5 words, find natural bridges between them — one sente
   "Tulijifunza ishirini — sasa thelathini ni ishirini na kumi zaidi — kadri nambari inavyokuwa kubwa, ndivyo safari inavyokuwa ndefu!"`}
   Colors ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
   ${isSwahili
-    ? `"You know nyekundu — well, nyeusi is the OPPOSITE — as dark as nyekundu is bright!"
+    ? `Level 1 connections (between nyekundu/bluu/njano/kijani/nyeupe):
+  "You know njano — well, nyekundu is just as warm and bright, but bolder — the colour of fire instead of sunshine!"
+  "Remember bluu? Well, kijani is what happens when bluu meets njano — the colour of trees and grass!"
+  "You know njano — well, nyeupe is the quietest colour there is. Njano shouts; nyeupe whispers!"
+  Level 2 connections (when lesson includes Level 2 words):
+  "You know nyekundu — well, nyeusi is the OPPOSITE — as dark as nyekundu is bright!"
   "Remember kijani? Well, kahawia is what kijani turns into when things dry out — the colour of dead grass and tree bark!"
-  "You know bluu — well, kijivu is like a faded bluu mixed with white — the colour of clouds and ash!"`
-    : `"Unajua 'red' — sasa 'black' ni KINYUME CHAKE — nyeusi ni giza jinsi nyekundu inavyong'aa!"
+  "You know bluu — well, kijivu is like a faded bluu mixed with nyeupe — the colour of clouds and ash!"`
+    : `Muunganisho wa Kiwango cha 1 (kati ya 'red'/'blue'/'yellow'/'green'/'white'):
+  "Unajua 'yellow' — sasa 'red' pia ni rangi ya joto na nishati, lakini kali zaidi — rangi ya moto badala ya jua!"
+  "Kumbuka 'blue'? Sasa 'green' ni kinachofanyika 'blue' inapokutana na 'yellow' — rangi ya miti na nyasi!"
+  "Unajua 'yellow' — sasa 'white' ni rangi tulivu zaidi. 'Yellow' inalia kwa sauti; 'white' inanyamaza kimya!"
+  Muunganisho wa Kiwango cha 2 (somo linapojumuisha maneno ya Kiwango cha 2):
+  "Unajua 'red' — sasa 'black' ni KINYUME CHAKE — nyeusi ni giza jinsi nyekundu inavyong'aa!"
   "Kumbuka 'green'? Sasa 'brown' ni rangi ambayo 'green' inageuka inapokauka — rangi ya nyasi kavu na gome la mti!"
-  "Tulijifunza 'blue' — sasa 'gray' ni kama 'blue' iliyofifia ikichanganywa na nyeupe — rangi ya mawingu na majivu!"`}
+  "Unajua 'blue' — sasa 'gray' ni kama 'blue' iliyofifia ikichanganywa na 'white' — rangi ya mawingu na majivu!"`}
   People: "We just talked about mama — well, your bibi IS mama's mama — the one who taught YOUR mama everything she knows!"
   People: "Remember kaka? Well, your binamu is like a kaka who lives in a different house — a cousin is family you do not live with every day!"
   People: "We learned mwalimu — well, mwanafunzi is the reason the mwalimu comes to school every day — you cannot have one without the other!"
@@ -3191,9 +3201,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     const tichaText = raw.toLowerCase().replace(/[''ʼ′]/g, "'");
 
     const newlyIntroduced = lessonWords.find(lw => {
-      // Fire on the translation word — it only appears after Ticha's formal introduction,
-      // avoiding false positives from common words like "one" / "two" in general speech.
-      // Consistent with introducedWordIndices logic below.
+      // Fire on the vocabulary target word (sw for Swahili lessons, en for English lessons).
+      // Using the Swahili word for sw-sessions avoids false positives from common English
+      // words like "one"/"two" that appear in normal English instruction speech.
       const target = (language === "sw" ? lw.sw : lw.en).toLowerCase();
       return tichaText.includes(target) && !revealedWordsRef.current.has(lw.sw);
     });
@@ -3201,9 +3211,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     if (!newlyIntroduced) return;
     revealedWordsRef.current.add(newlyIntroduced.sw);
     const emoji = QUIZ_WORD_LISTS[game]?.find(w => w.sw === newlyIntroduced.sw)?.emoji ?? "✨";
-    // primary = the word being learned; secondary = its translation shown small beneath
-    const primary   = language === "sw" ? newlyIntroduced.en : newlyIntroduced.sw;
-    const secondary = language === "sw" ? newlyIntroduced.sw : newlyIntroduced.en;
+    // primary = vocabulary target (what the child is learning); secondary = known-language translation
+    // sw session: teaching Swahili → Swahili word big, English small
+    // en session: teaching English → English word big, Swahili small
+    const primary   = language === "sw" ? newlyIntroduced.sw : newlyIntroduced.en;
+    const secondary = language === "sw" ? newlyIntroduced.en : newlyIntroduced.sw;
     setRevealCard({ primary, secondary, emoji, dismissing: false });
 
     const dismissTimer = setTimeout(() => {
@@ -3406,7 +3418,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                       </div>
                       {done && (
                         <span style={{ fontSize: "8px", fontWeight: 800, color: "white", maxWidth: "36px", textAlign: "center", letterSpacing: "0.01em", lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {language === "sw" ? lw.en : lw.sw}
+                          {language === "sw" ? lw.sw : lw.en}
                         </span>
                       )}
                     </div>
