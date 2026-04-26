@@ -1902,6 +1902,83 @@ After Exchange 3, ${childName} must use the word at least once before you move o
   This is a gate, not a test. The goal is one natural production of the word before moving forward. Move on after ONE extra attempt maximum.
   Age exception: for ages ≤5, skip the sentence nudge — one clear repetition in Exchange 2 is sufficient mastery.
 
+━━━ SHOW ME MOMENT — after every MASTERY GATE, before moving to the next word ━━━
+This gives vision a defined role in the curriculum — never random, always purposeful.
+
+TIMING: ONCE per word. AFTER Mastery Gate. BEFORE Word Connection.
+LENGTH: Maximum 2 turns (your invite → child's response). Then move on regardless — never stall.
+
+STEP 1 — CAMERA INVITE (one warm sentence only):
+Ask ${childName} to turn on the camera button and show you something related to the word.
+${isSwahili ? `
+Invite in ENGLISH (your instructional language):
+  colors:    "Can you find something [color] near you and show me on camera?"
+  numbers:   "Hold up [number] fingers for me on camera — show me!"
+  body:      "Can you point to your [body part] on the camera? Show me where it is!"
+  chakula:   "Do you have a [food] at home? Show me if you can find one!"
+  shule:     "Do you have a [school item] nearby? Hold it up and show me!"
+  animals:   "Do you have a toy [animal] or a picture of one? Show me — even a drawing counts!"
+  vitenzi:   "Show me on camera — act out [verb] for me! I want to see you do it!"
+  hisia:     "Make a [feeling] face for me on camera — your very best [feeling] expression!"
+  mazingira: "Can you find something from nature nearby — a leaf, a stone, anything? Show me!"
+  people:    "Is there someone nearby? Wave to me on camera — or draw a quick face and show me!"
+` : `
+Invite in SWAHILI (lugha yako ya kufundishia):
+  rangi:     "Je, unaweza kupata kitu [rangi] karibu nawe na kunionyesha kwa kamera?"
+  nambari:   "Nionyeshe vidole [nambari] kwenye kamera — nionyeshe!"
+  mwili:     "Je, unaweza kunionyesha [sehemu ya mwili] kwenye kamera? Nionyeshe iko wapi!"
+  chakula:   "Je, una [chakula] nyumbani? Nionyeshe kama unaweza kupata kimoja!"
+  shule:     "Je, una [kitu cha shule] karibu nawe? Shikilia juu na unionyeshe!"
+  wanyama:   "Je, una toy ya [mnyama] au picha yake? Nionyeshe — hata mchoro unafanya kazi!"
+  vitenzi:   "Nionyeshe kwenye kamera — fanya [kitendo] kwa ajili yangu! Nataka kukuona!"
+  hisia:     "Fanya uso wa [hisia] kwenye kamera — uso wako bora zaidi wa [hisia]!"
+  mazingira: "Je, unaweza kupata kitu cha asili karibu — jani, jiwe, chochote? Nionyeshe!"
+  watu:      "Je, kuna mtu karibu nawe? Mpige mkono kwenye kamera — au chora uso haraka unionyeshe!"
+`}
+
+STEP 2A — CAMERA IS ON AND CHILD SHOWS SOMETHING:
+  Correct or close: celebrate loudly and name the word — "${isSwahili ? "YES! That's [word]! Perfect!" : "NDIO! Hiyo ni [neno]! Vizuri sana!"}"
+  Close but not exact: gently name what you see and connect — "${isSwahili ? "Ooh! That's [what you see] — and [word] looks just like this! Well done for trying!" : "Ooh! Hiyo ni [ulichokiona] — na [neno] inafanana na hii! Umejaribu vizuri!"}"
+  Wrong object: redirect warmly — "${isSwahili ? "Nice! But today's word is [word] — can you find that one? No worries if not!" : "Vizuri! Lakini neno la leo ni [neno] — unaweza kupata hiyo? Hakuna wasiwasi kama huwezi!"}"
+
+STEP 2B — CAMERA IS OFF OR CHILD SAYS THEY DON'T HAVE IT:
+Do NOT wait — 3 seconds of silence after your invite = move immediately to emoji fallback.
+Engage with the word's emoji displayed on screen (1 vivid observation + 1 question):
+${isSwahili ? `
+  (English — your instructional language):
+  "No problem! Look at our [word] picture — [one vivid thing you notice about the emoji]. [one quick question]"
+  animals:   "No problem! Look at our [animal] — [striking feature]! If you saw one in real life, what would you do?"
+  colors:    "No problem! Look at our [color] — [color] is the colour of [vivid real thing]! What's the most [color] thing you own?"
+  numbers:   "No problem! Look at our number [X] — let's count together! One... [X]! Can you count it faster than me?"
+  body:      "No problem! Look at our [body part] — did you know [surprising body fact]? Isn't that amazing?"
+  chakula:   "No problem! Look at our [food] — [one thing about how it looks/tastes]. When did you last eat one?"
+  shule:     "No problem! Look at our [school item] — [one vivid thing about it]. Do you use yours every day?"
+  vitenzi:   "No problem! Look at our [verb] picture — imagine you're doing it right now! How does it feel in your body?"
+  hisia:     "No problem! Look at our [feeling] face — [describe the expression]. When was the last time you felt [feeling]?"
+  mazingira: "No problem! Look at our [nature word] — [one vivid observation]. Have you ever seen one up close?"
+  people:    "No problem! Look at our [person] — [one warm observation]. Who in your family does this remind you of?"
+` : `
+  (Swahili — lugha yako ya kufundishia):
+  "Sawa kabisa! Angalia picha yetu ya [neno] — [uchunguzi mmoja wa kuvutia kuhusu emoji]. [swali moja la haraka]"
+  wanyama:   "Sawa kabisa! Angalia [mnyama] wetu — [kipengele kinachoonekana]! Kama ungeona mmoja maishani, ungefanya nini?"
+  rangi:     "Sawa kabisa! Angalia [rangi] yetu — [rangi] ni rangi ya [kitu halisi cha kuvutia]! Kitu gani chenye [rangi] zaidi unachomiliki?"
+  nambari:   "Sawa kabisa! Angalia nambari yetu [X] — tuhesabu pamoja! Moja... [X]! Je, unaweza kuhesabu haraka kuliko mimi?"
+  mwili:     "Sawa kabisa! Angalia [sehemu ya mwili] yetu — je, ulijua [ukweli wa kushangaza wa mwili]? Si ya ajabu?"
+  chakula:   "Sawa kabisa! Angalia [chakula] chetu — [kitu kimoja kuhusu jinsi kinavyoonekana/ladha]. Ulipokula mara ya mwisho ilikuwa lini?"
+  shule:     "Sawa kabisa! Angalia [kitu cha shule] chetu — [kitu kimoja cha kuvutia kuhusu hicho]. Je, unatumia yako kila siku?"
+  vitenzi:   "Sawa kabisa! Angalia picha yetu ya [kitendo] — fikiria unafanya hivyo sasa hivi! Inajisikiaje mwilini mwako?"
+  hisia:     "Sawa kabisa! Angalia uso wetu wa [hisia] — [elezea hali ya uso]. Mara ya mwisho ulihisi [hisia] ilikuwa lini?"
+  mazingira: "Sawa kabisa! Angalia [neno la asili] letu — [uchunguzi mmoja wa kuvutia]. Je, umewahi kuona kimoja karibu?"
+  watu:      "Sawa kabisa! Angalia [mtu] wetu — [uchunguzi mmoja wa joto]. Nani katika familia yako anakukumbusha huyu?"
+`}
+
+SHOW ME RULES — non-negotiable:
+• One camera invite only — never repeat it
+• Never pressure or shame — "No problem!" is always the answer when child can't show
+• After child responds (camera or emoji): celebrate warmly, then move to WORD CONNECTION
+• If child is clearly restless or session energy is low: skip Show Me and go straight to Word Connection
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 WORD CONNECTIONS — natural callbacks between words:
 As you move through the 5 words, find natural bridges between them — one sentence per transition is enough.
   Animals: "Remember tembo? Well, the ndege lives in the same trees the tembo walks past every morning!"
@@ -2278,7 +2355,15 @@ Instructional language for your greeting: ${isSwahili ? "ENGLISH" : "SWAHILI"}.
 REMINDER — there is NO time limit. Take as long as ${childName} needs. Do NOT rush through words. Do NOT skip repetition. A child who needs to hear a word five times gets it five times.
 REMINDER — end the session ONLY when you are genuinely confident ${childName} can recall all 5 words without help. The review game (STEP 4) is your mastery check — if they struggle, go back and reteach before saying goodbye.
 REMINDER — follow the ENERGY ARC: HIGH open → FOCUSED teach → HIGH review → WARM close.
-REMINDER — use WORD CONNECTIONS and MASTERY GATE as you teach each word.`;
+REMINDER — use WORD CONNECTIONS and MASTERY GATE as you teach each word.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CAMERA / VISION MODE:
+The camera button lets ${childName} show you real objects. Video frames arrive as images in the conversation.
+When you receive frames:
+• Name what you see immediately and connect it to the lesson word — "Oooh! Is that a [word]? YES!"
+• If it is unclear or dark: "I can't quite see — can you point the camera closer?"
+• If ${childName} shows something unrelated: briefly name it, then bridge back — "That's a [what you see]! And today we're learning [word] — can you find that one too?"
+• The SHOW ME MOMENT section above defines exactly when and how to invite camera use — follow that structure. Do not invite the camera outside of Show Me Moments.`;
 }
 
 // Float32 mic audio → PCM16 base64 (Gemini input format, 16 kHz)
@@ -2468,9 +2553,17 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       log("📷 Camera off");
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 240 }, height: { ideal: 180 } },
-        });
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", width: { ideal: 240 }, height: { ideal: 180 } },
+          });
+        } catch {
+          // Desktop or front-camera-only device — fall back to any camera
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 240 }, height: { ideal: 180 } },
+          });
+        }
         cameraStreamRef.current = stream;
         if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
         setIsCameraOn(true);
@@ -3457,6 +3550,19 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 style={{ padding: "11px 22px", borderRadius: "16px", border: `2.5px solid ${isPaused ? "#F59E0B" : "#E5E7EB"}`, background: isPaused ? "#FFFBEB" : "white", fontSize: "14px", fontWeight: 800, color: isPaused ? "#D97706" : "#6B7280", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: isPaused ? "0 4px 0 #D97706" : "0 4px 0 #D1D5DB" }}>
                 {isPaused ? ts.resume : ts.pause}
               </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                <button onClick={toggleCamera} className="btn-control"
+                  title={isCameraOn ? "Turn camera off" : "Show Ticha what you see"}
+                  style={{ padding: "11px 14px", borderRadius: "16px", border: `2.5px solid ${isCameraOn ? "#22C55E" : "#E5E7EB"}`, background: isCameraOn ? "#F0FDF4" : "white", fontSize: "14px", fontWeight: 800, color: isCameraOn ? "#16A34A" : "#6B7280", cursor: "pointer", boxShadow: isCameraOn ? "0 4px 0 #16A34A" : "0 4px 0 #D1D5DB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 7l-7 5 7 5V7z"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2"/>
+                  </svg>
+                </button>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: isCameraOn ? "#16A34A" : "#9CA3AF", letterSpacing: "0.03em" }}>
+                  {isCameraOn ? "CAM ON" : "CAMERA"}
+                </span>
+              </div>
               <button onClick={() => endSession(true)} className="btn-control"
                 style={{ padding: "11px 22px", borderRadius: "16px", border: "2.5px solid #FCA5A5", background: "#FFF1F2", fontSize: "14px", fontWeight: 800, color: "#EF4444", cursor: "pointer", fontFamily: "'Baloo 2', cursive", boxShadow: "0 4px 0 #FCA5A5" }}>
                 {ts.end}
