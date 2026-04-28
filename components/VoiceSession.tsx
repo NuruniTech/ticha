@@ -531,7 +531,7 @@ function getSystemPrompt(
     paka (cat):        "Paka has soft paws, quiet steps, and loves warm sunny spots! Do you have a paka at home, or have you ever petted one?"
     ndege (bird):      "Ndege has wings and can fly up into the sky! If you could be a ndege for one day — where would you fly?"
     mbuzi (goat):      "Mbuzi will eat almost anything — grass, leaves, your school bag if you leave it close! Have you ever seen a cheeky mbuzi?"
-    ng'ombe (cow):     "Ng'ombe gives us the milk we put in our chai every morning — big, gentle, calm! Do you drink milk from an ng'ombe?"
+    ng'ombe (cow):     "Ng'ombe gives us the milk we put in our tea every morning — big, gentle, calm! Do you drink milk from an ng'ombe?"
     punda (donkey):    "Punda works so hard carrying heavy loads up hills without complaining! Have you ever seen a punda on the road carrying things?"
     farasi (horse):    "Farasi is fast, beautiful, and powerful — running like the wind! Would you like to ride a farasi someday?"
     kondoo (sheep):    "Kondoo has fluffy wool — we cut it and make warm blankets and jerseys! Have you ever touched fluffy kondoo wool?"
@@ -544,7 +544,7 @@ function getSystemPrompt(
     kiboko (hippo):    "Kiboko looks lazy and fat — just floating in the water, ears wiggling — but it is INCREDIBLY dangerous! It is one of the most deadly large animals in Africa! Would you ever dare swim in a river where a kiboko lives?"
     sungura (rabbit):  "Sungura has the softest ears, the fastest legs, and the most twitchy nose — sniff sniff sniff! Do you know the story of Sungura the clever rabbit — the trickster who always outsmarts the bigger animals?"
     panya (mouse/rat): "Panya is tiny but everywhere — in the fields, in the walls, in the market — finding food with its sharp nose and disappearing before you blink! How do you feel about panya — cute little creature or not so much?"
-    nyuki (bee):       "Nyuki is one of the most important animals on earth — without nyuki visiting flowers and spreading pollen, we would have no fruits, no vegetables, no food! And of course — asali! Have you ever been stung by a nyuki?"
+    nyuki (bee):       "Nyuki is one of the most important animals on earth — without nyuki visiting flowers and spreading pollen, we would have no fruits, no vegetables, no food! And of course — honey! Have you ever been stung by a nyuki?"
     kipepeo (butterfly):"Kipepeo starts life as a caterpillar — just crawling along eating leaves — and then wraps itself up and comes out totally different — with wings and colour and beauty! Have you ever seen a kipepeo land on a flower near you?"
     mbu (mosquito):    "Mbu is the tiniest, most annoying animal on earth — that high-pitched WHINE right next to your ear at night! But mbu are dangerous because they spread malaria. Do you sleep under a net to keep the mbu away?"
     duma (cheetah):    "Duma is the FASTEST land animal on earth — faster than any car on a town road — from 0 to 100 in just THREE SECONDS! What do you think it would feel like to be a duma in full sprint?"
@@ -557,8 +557,8 @@ function getSystemPrompt(
     ngiri (warthog):   "Ngiri is a wild pig with huge curved tusks — not the prettiest animal, but incredibly tough! It runs with its tail straight up in the air like an antenna! Have you ever seen a ngiri in the wild or on TV?"
     pweza (octopus):   "Pweza has EIGHT arms, three hearts, blue blood, and can change colour in seconds to hide! It is one of the most intelligent animals in the ocean — it can solve puzzles and open jars! What is the most amazing pweza fact you just heard?"
     pundamilia (zebra):"Pundamilia has black and white stripes — but here is the question scientists still debate: is it a white animal with black stripes, or a black animal with white stripes?! What do you think — white with black, or black with white?"
-    nyati (buffalo):   "Nyati — the African buffalo — is one of the most dangerous animals in the wild! It lives in large herds with massive curved horns. Even simba tries to avoid a herd of angry nyati! Have you ever seen nyati?"
-    swala (gazelle):   "Swala is one of the most graceful animals on the savanna — leaping through the air with those long legs, zigzagging to escape the duma! Swala can jump almost three metres in the air! Have you ever seen swala running?"
+    nyati (buffalo):   "Nyati — the African buffalo — is one of the most dangerous animals in the wild! It lives in large herds with massive curved horns. Even a lion tries to avoid a herd of angry nyati! Have you ever seen nyati?"
+    swala (gazelle):   "Swala is one of the most graceful animals on the savanna — leaping through the air with those long legs, zigzagging to escape the cheetah! Swala can jump almost three metres in the air! Have you ever seen swala running?"
     korongo (crane):   "Korongo — the crowned crane — is one of the most beautiful birds in East Africa, with that golden crown of feathers on its head! It is even on the Ugandan flag! Have you ever seen a korongo standing in a field?"
     kobe (tortoise):   "Kobe carries its whole house on its back — that hard shell is both its armour and its home! Tortoises can live for over 100 years! What do you think a kobe that is 100 years old has seen in its lifetime?"
     nge (scorpion):    "Nge has that curved tail with a sting — a scorpion! It hunts at night and glows under ultraviolet light! Have you ever seen a nge — were you scared?"
@@ -628,17 +628,17 @@ function getSystemPrompt(
     arobaini (40):     "Arobaini — forty! Ali Baba and the Forty Thieves — arobaini wabaya all hiding in big jars! If YOU were Ali Baba, what would you have done with all arobaini of them?"
     hamsini (50):      "Hamsini — fifty! Half of a hundred — the halfway point! If you had hamsini seconds to run as far as you could from right now — how far do you think you would get?"
     sitini (60):       "Sitini — sixty! There are exactly sitini seconds in every single minute — every minute of every day! If you had an extra sitini seconds added to every minute, what would you do with the extra time?"
-    sabini (70):       "Sabini — seventy! Your bibi or babu might be close to sabini years old! If YOU were sabini years old, what is ONE thing you hope you would have done that you are most proud of?"
+    sabini (70):       "Sabini — seventy! Your grandparents might be close to sabini years old! If YOU were sabini years old, what is ONE thing you hope you would have done that you are most proud of?"
     themanini (80):    "Themanini — eighty! That is a lot of years to live! If you could write a letter to yourself when you are themanini years old, what is the ONE thing you would tell yourself?"
-    tisini (90):       "Tisini — ninety! Just TEN more and you reach the great mia moja! What would you do to celebrate reaching tisini — throw a party or do a little dance?"
+    tisini (90):       "Tisini — ninety! Just TEN more and you reach the great one hundred! What would you do to celebrate reaching tisini — throw a party or do a little dance?"
     mia moja (100):    "MIA MOJA — one hundred! The big round number! If someone gave you mia moja shillings right now — no rules, no adults watching — what is the FIRST thing you would spend it on?"
     sifuri (zero):     "Sifuri — zero — nothing! Before you were born, how many of YOUR birthdays had happened? Sifuri! Zero is so important — without it, we could not write ten, one hundred, or one thousand! What has zero of something around you right now?"
     wa kwanza (first): "Wa kwanza — first place! Imagine crossing the finish line ahead of everyone else — you made it, wa kwanza! When was the last time you were wa kwanza at something — even something small?"
     wa pili (second):  "Wa pili — second place! Sometimes second place tries even harder than first — they are right there, one step behind, never giving up! Is there something you came wa pili in where you wanted to be wa kwanza?"
     wa tatu (third):   "Wa tatu — third place! There is a saying: the wa tatu person often watches both the first and second make their mistakes and learns from them! Are you the wa tatu child in your family — or are you first or second?"
     nusu (half):       "Nusu — half! Cut an apple right down the middle — nusu each! If you had to give nusu of your absolute favourite thing to someone, who would you choose to give it to?"
-    robo (quarter):    "Robo — a quarter — one piece out of four equal pieces! If you cut a keki into four robo pieces and you and three friends each took one robo, what fraction of the cake would be left for your mama?"
-    elfu (thousand):   "ELFU — one thousand! That is mia kumi — ten hundreds all together! If someone gave you elfu moja shillings — one thousand whole shillings — what big thing would you do with it?"` : `    moja (one):        "Fikiria kitu kimoja tu — moja! Una pua moja tu, katikati ya uso wako — kamili, moja! Ni nini kingine mwilini mwako kipo katika moja tu?"
+    robo (quarter):    "Robo — a quarter — one piece out of four equal pieces! If you cut a cake into four robo pieces and you and three friends each took one robo, what fraction of the cake would be left for your mother?"
+    elfu (thousand):   "ELFU — one thousand! Ten hundreds stacked together! If someone gave you elfu moja shillings — one thousand whole shillings — what big thing would you do with it?"` : `    moja (one):        "Fikiria kitu kimoja tu — moja! Una pua moja tu, katikati ya uso wako — kamili, moja! Ni nini kingine mwilini mwako kipo katika moja tu?"
     mbili (two):       "Inua vidole viwili! Mbili — viwili! Una macho mawili, masikio mawili, mikono miwili — kila kitu muhimu kipo mbili! Ni mkono gani unaoitumia zaidi — mkono wa kulia au mkono wa kushoto?"
     tatu (three):      "Tatu! Pembetatu ina pande tatu, pembe tatu — tatu ya kila kitu! Unakula milo mingapi kila siku? Inaweza kuwa tatu?"
     nne (four):        "Magurudumu manne kwenye gari, miguu minne kwenye meza — nne! Kila kitu imara kina nne! Unaweza kutaja mnyama anayetembea kwa miguu minne?"
@@ -681,7 +681,7 @@ function getSystemPrompt(
     nyeupe (white):    "Nyeupe is the colour of clouds, fresh milk, and sugar — clean and bright! What is the whitest thing you can think of right now?"
     nyeusi (black):    "Nyeusi is the colour of the night sky and charcoal — deep and powerful! What is the darkest nyeusi thing you can see around you?"
     waridi (pink):     "Waridi is the colour of flamingos, some flowers, and a beautiful sunset sky! Have you ever seen something waridi in real life?"
-    zambarau (purple): "Zambarau is the colour of jacaranda flowers and biringanya — a colour you do not see every day! Have you ever seen a zambarau flower or fruit?"
+    zambarau (purple): "Zambarau is the colour of jacaranda flowers and eggplant — a colour you do not see every day! Have you ever seen a zambarau flower or fruit?"
     kahawia (brown):   "Kahawia is the colour of soil, tree bark, and chocolate — warm and earthy! Is the ground where you walk every day kahawia?"
     kijivu (gray):     "Kijivu is the colour of rain clouds, ash, and elephant skin — calm and heavy! What does the sky look like just before it rains?"` : `    nyekundu (red):    "Nyekundu ni rangi ya moto, nyanya zilizoiva, na passion fruit — ya joto na hodari! Kitu gani chenye nyekundu zaidi umewahi kukiona?"
     bluu (blue):       "Bluu ni rangi ya anga siku ya jua wazi na maji ya ziwa — ya utulivu na upana! Je, anga ni bluu mahali ulipo sasa hivi?"
@@ -729,7 +729,7 @@ function getSystemPrompt(
     kiganja (palm):   "Open your hand flat and look at your kiganja — that open palm! Every kiganja in the world has a unique fingerprint pattern — no two are the same! Press your kiganja against a foggy window and see your pattern!"
     taya (jaw):       "Your taya — your jaw — is the only bone in your face that can move! It opens and closes hundreds of times every day — talking, eating, laughing! Right now, open your taya as wide as it goes — how wide can you open it?"
     shavu (cheek):    "Your shavu — your cheek — is the soft, round part of your face on each side! When you smile your biggest smile, your shavu goes up and becomes round and full. What gives you your absolute biggest smile?"
-    paji (forehead):  "Your paji — your forehead — is just above your eyes! When you are confused, you wrinkle your paji! When your mama checks if you have a fever, she puts her hand on your paji! What expression makes your paji most wrinkly?"
+    paji (forehead):  "Your paji — your forehead — is just above your eyes! When you are confused, you wrinkle your paji! When your mother checks if you have a fever, she puts her hand on your paji! What expression makes your paji most wrinkly?"
     kisigino (heel):  "Your kisigino — your heel — is the very bottom back of your foot! Every single step you take lands on your kisigino first! What happens if you walk barefoot on very hot sand — which part of your foot feels it first?"
     kidole_gumba (thumb):"Your kidole gumba — your thumb — is the most important finger on your hand! Without it, you cannot grip, write, or hold anything properly! Try to pick something up without using your kidole gumba — is it hard?"` : `    kichwa (head):    "Kichwa chako ndicho mkuu wa mwili wako wote — ubongo wako ndani unatuma amri kwa miguu yako, mikono yako, kila kitu! Unafikiri kichwa chako kinawaambia nini miguu yako sasa hivi?"
     jicho (eye):      "Funga macho yote mawili — sasa fungua! Kwa kupiga kope moja tu, jicho lako liona chumba kizima! Kama ungeweza kuona rangi moja tu maishani mwote, ungechagua ipi?"
@@ -771,44 +771,44 @@ function getSystemPrompt(
     kidole_gumba (thumb):"Kidole gumba chako ni kidole muhimu zaidi mkononi mwako! Bila hicho, huwezi kushika, kuandika, au kushika kitu chochote vizuri! Jaribu kuinua kitu — chochote karibu nawe — bila kutumia kidole gumba — ni ngumu?"` );
 
     if (game === "chakula") return `CHAKULA — vivid food hooks grounded in East African daily life.\n${dirNote}\n` + (isSwahili ? `    maji (water):         "Every single living thing on earth — every animal, every plant, every human being — cannot survive without maji. It is the most important drink in the whole world! How many cups of maji have you drunk today?"
-    chakula (food):       "Imagine you just came home from school — stomach growling, legs tired, completely ready to eat — and your mama has chakula waiting for you on the table. Chakula means food — all of it! What is your very favourite chakula in the whole world?"
+    chakula (food):       "Imagine you just came home from school — stomach growling, legs tired, completely ready to eat — and your mother has chakula waiting for you on the table. Chakula means food — all of it! What is your very favourite chakula in the whole world?"
     mkate (bread):        "Mkate is that soft, fluffy bread — warm from the oven, maybe with a little butter — the kind that fills the whole room with a beautiful smell! Do you eat mkate for breakfast, or do you prefer something else?"
-    matunda (fruit):      "Walk through any market in East Africa and you will see colour everywhere — papai, ndizi, embe, tikiti maji — all that beautiful food hanging and piled up high. All of that is matunda — fruit! What is your absolute favourite matunda?"
+    matunda (fruit):      "Walk through any market in East Africa and you will see colour everywhere — papayas, bananas, mangoes, watermelons — all that beautiful food hanging and piled up high. All of that is matunda — fruit! What is your absolute favourite matunda?"
     nyama (meat):         "On a special day — a birthday, a holiday, a wedding — families across Tanzania and Kenya make sure there is nyama cooking. The smell travels right through the neighbourhood! Does your family eat nyama on special days — what kind?"
-    wali (rice):          "Wali is fluffy, white, steamed rice — perfect with mchuzi, beans, or a good piece of nyama. It is in almost every East African home every single day! Do you prefer your wali with beans or with stew?"
+    wali (rice):          "Wali is fluffy, white, steamed rice — perfect with stew, beans, or a good piece of meat. It is in almost every East African home every single day! Do you prefer your wali with beans or with stew?"
     ugali (ugali):        "Ugali is the king of East African food — thick, filling, made from maize flour, shaped by hand with a big wooden spoon. No fork, no knife — you just tear off a piece and scoop! Have you ever eaten ugali — what did you eat it with?"
     ndizi (banana):       "Ndizi is one of the most perfect foods on earth — you peel it, and it is ready! No cooking, no cutting — just eat! Kenya and Tanzania grow millions of ndizi every year. Is your favourite ndizi the small sweet one or the big cooking one?"
     embe (mango):         "Embe — just saying the word makes you feel the juice running down your chin! Sweet, orange, sticky, incredible — embe is one of the most loved fruits in all of East Africa. When is mango season where you live — do you look forward to it?"
-    mboga (vegetables):   "Mboga is everything green and good from the shamba — spinach, cabbage, beans, peas, all of it! Your mama puts it in the pot and it comes out soft and delicious. Which mboga do you actually enjoy eating — or is there one you always try to avoid?"
-    chai (tea):           "Chai in East Africa is not just a drink — it is a whole moment. You boil the water, you add the tea leaves, the sugar, the maziwa — and everyone comes and sits together. Have you ever made chai yourself — or do you just drink it?"
-    maziwa (milk):        "Maziwa is that thick, fresh, white drink — from a real ng'ombe — that your bibi used to warm up for you on cold mornings! So simple and so good. Do you drink maziwa cold or warm?"
+    mboga (vegetables):   "Mboga is everything green and good from the garden — spinach, cabbage, beans, peas, all of it! Your mother puts it in the pot and it comes out soft and delicious. Which mboga do you actually enjoy eating — or is there one you always try to avoid?"
+    chai (tea):           "Chai in East Africa is not just a drink — it is a whole moment. You boil the water, you add the tea leaves, the sugar, the milk — and everyone comes and sits together. Have you ever made chai yourself — or do you just drink it?"
+    maziwa (milk):        "Maziwa is that thick, fresh, white drink — from a real cow — that your grandmother used to warm up for you on cold mornings! So simple and so good. Do you drink maziwa cold or warm?"
     mayai (eggs):         "Mayai — eggs — fried, boiled, scrambled, or in an omelette — they can become almost anything! And the best part: they cook in just a few minutes! How do you like your mayai best — fried or boiled?"
-    mahindi (maize/corn): "Mahindi roasting on a charcoal jiko at the side of the road — the smell alone makes your stomach growl! Or maize flour turned into ugali — mahindi is EVERYWHERE in East Africa. Have you ever eaten mahindi roasted on a fire?"
-    nyanya (tomato):      "Cut a nyanya in half and the juice goes everywhere — red, bright, full of flavour! It goes into almost every meal — mchuzi, salads, fried with eggs. Is there a meal you love that always has nyanya in it?"
-    vitunguu (onions):    "Vitunguu — onions — make your eyes water when you chop them, but when they hit the hot mafuta, that smell! Every good cook starts with vitunguu in the pan. Does someone in your family cook with vitunguu every day?"
+    mahindi (maize/corn): "Mahindi roasting on a charcoal stove at the side of the road — the smell alone makes your stomach growl! Or maize flour turned into cornmeal porridge — mahindi is EVERYWHERE in East Africa. Have you ever eaten mahindi roasted on a fire?"
+    nyanya (tomato):      "Cut a nyanya in half and the juice goes everywhere — red, bright, full of flavour! It goes into almost every meal — stew, salads, fried with eggs. Is there a meal you love that always has nyanya in it?"
+    vitunguu (onions):    "Vitunguu — onions — make your eyes water when you chop them, but when they hit the hot oil, that smell! Every good cook starts with vitunguu in the pan. Does someone in your family cook with vitunguu every day?"
     viazi (potatoes):     "Viazi can become chips, boiled potatoes, mashed, or mixed in a stew — it is one of the most useful vegetables! Have you ever eaten viazi karai — deep-fried crispy potatoes — from a little shop?"
-    maharagwe (beans):    "Maharagwe simmering on the jiko for hours — slowly getting soft and full of flavour — is one of the best smells in any East African kitchen! Do you eat maharagwe with wali or with ugali?"
-    sukari (sugar):       "Sukari — sugar — goes into chai, cakes, porridge, juice — it makes everything sweeter! But a little too much and it is too sweet. How many spoons of sukari do you put in your chai?"
+    maharagwe (beans):    "Maharagwe simmering on the stove for hours — slowly getting soft and full of flavour — is one of the best smells in any East African kitchen! Do you eat maharagwe with rice or with cornmeal porridge?"
+    sukari (sugar):       "Sukari — sugar — goes into tea, cakes, porridge, juice — it makes everything sweeter! But a little too much and it is too sweet. How many spoons of sukari do you put in your tea?"
     chumvi (salt):        "Just a pinch of chumvi can change everything — food without it tastes flat and wrong, but with it — perfect! Have you ever accidentally added too much chumvi to something — what happened?"
-    mafuta (oil):         "When mafuta hits a hot pan, it sizzles — and that sound means something delicious is about to happen! Cooking oil, coconut oil, butter — all of it is mafuta. What does your mama fry in mafuta at home?"
-    asali (honey):        "Asali is liquid gold — thick, sweet, golden — made by thousands of tiny nyuki working together for weeks! You can drizzle it on mkate, stir it into uji, or eat it straight from the spoon. Have you ever tasted real asali — what did it taste like?"
+    mafuta (oil):         "When mafuta hits a hot pan, it sizzles — and that sound means something delicious is about to happen! Cooking oil, coconut oil, butter — all of it is mafuta. What does your family fry in mafuta at home?"
+    asali (honey):        "Asali is liquid gold — thick, sweet, golden — made by thousands of tiny bees working together for weeks! You can drizzle it on bread, stir it into porridge, or eat it straight from the spoon. Have you ever tasted real asali — what did it taste like?"
     uji (porridge):       "On a cold morning, before school, a warm bowl of uji — smooth, sweet, slightly thick — is the best start to the day. It warms you up from the inside! Did you ever eat uji for breakfast — do you have it with sugar or milk?"
     pilau (pilau):        "Pilau is a celebration food — rice cooked slowly with spices, onions, and meat, filling the whole house with an incredible aroma. In Kenya, when there is a big occasion, pilau appears! Have you eaten pilau at a wedding or a party?"
     keki (cake):          "Keki — a birthday cake! Soft, sweet, decorated with icing, candles on top — everyone sings before you blow them out! What flavour is your dream keki — chocolate, vanilla, or something else?"
-    biskuti (biscuits):   "Biskuti — crunchy, sweet little biscuits — perfect dunked in chai! The crunch when you bite and the way they soften just a little in the chai — so good! Do you have a favourite type of biskuti?"
+    biskuti (biscuits):   "Biskuti — crunchy, sweet little biscuits — perfect dunked in tea! The crunch when you bite and the way they soften just a little in the tea — so good! Do you have a favourite type of biskuti?"
     pipi (sweets/candy):  "Pipi — sweets and candy — wrapped in bright colours, small enough to hide in your pocket! Everyone loves pipi. What is the very first pipi that comes to your mind right now — what does it taste like?"
     juisi (juice):        "Juisi is the fresh squeezed or packed drink — orange, mango, passion fruit — cold and sweet and refreshing! What is your favourite flavour of juisi?"
     soda (soda):          "Soda — fizzy, cold, full of bubbles that tickle your nose — the one treat you get at a party or a celebration! What is your go-to soda flavour when you get to choose?"
     nazi (coconut):       "Nazi is the coconut — hard and round on the outside, white and sweet on the inside, full of coconut water that you drink straight through a straw! Have you ever drunk fresh nazi water straight from the shell?"
-    papai (papaya):       "Papai is soft, orange, sweet and slightly musky — and it grows right here in East Africa, in backyards and shambas! Do you eat papai plain or with a squeeze of lime?"
+    papai (papaya):       "Papai is soft, orange, sweet and slightly musky — and it grows right here in East Africa, in backyards and gardens! Do you eat papai plain or with a squeeze of lime?"
     tikiti maji (watermelon): "Tikiti maji — the name literally means water fruit — and when you bite into a thick slice of that cold, red, dripping flesh, you understand exactly why! Have you ever eaten tikiti maji on a really hot day?"
     zabibu (grapes):      "Zabibu — small, round, sweet grapes — sometimes green, sometimes purple, sometimes red — you can eat a whole bunch without even realising! Have you eaten zabibu before — which colour do you prefer?"
-    karoti (carrot):      "Karoti is orange, crunchy, and sweet — you can eat it raw right from the shamba or cooked soft in a stew! Have you ever eaten a raw karoti like a snack — right from the market?"
+    karoti (carrot):      "Karoti is orange, crunchy, and sweet — you can eat it raw right from the garden or cooked soft in a stew! Have you ever eaten a raw karoti like a snack — right from the market?"
     kabichi (cabbage):    "Kabichi is that big, round, leafy vegetable — chopped up fine in a salad or cooked soft in a pot — you see it in almost every market stall! Does your family eat kabichi a lot at home?"
-    chipsi (chips/fries): "Chipsi — those golden, crispy, salty fries! Whether from a little roadside kiosk or made at home in hot mafuta, chipsi is one of East Africa's most loved street foods! When was the last time you had chipsi — and what did you eat them with?"
-    mchuzi (stew/sauce):  "Mchuzi is the rich, spiced sauce that makes wali and ugali complete — thick with tomatoes, onions, spices, and sometimes nyama or samaki! Every family has their own mchuzi recipe. What does the mchuzi in your house smell like when it is cooking?"
-    mandazi (mandazi):    "Mandazi — those puffy, slightly sweet, deep-fried triangles of dough — warm and golden from the jiko, perfect with a cup of chai! In East Africa, mandazi are everywhere — sold at every corner! Have you ever eaten mandazi fresh from the fryer — still hot?"
-    samaki (fish):        "Samaki — fish! Fried whole on the jiko, grilled over open fire, or simmered in a coconut mchuzi — samaki is eaten all along the East African coast and around the great maziwa! Have you ever eaten samaki — what is your favourite way to have it?"` : `    maji (water):         "Kila kiumbe hai duniani — kila mnyama, kila mmea, kila binadamu — hawezi kuishi bila maji. Ni kinywaji muhimu zaidi duniani! Umeshakunywa vikombe vingapi vya maji leo?"
+    chipsi (chips/fries): "Chipsi — those golden, crispy, salty fries! Whether from a little roadside kiosk or made at home in hot oil, chipsi is one of East Africa's most loved street foods! When was the last time you had chipsi — and what did you eat them with?"
+    mchuzi (stew/sauce):  "Mchuzi is the rich, spiced sauce that makes rice and cornmeal porridge complete — thick with tomatoes, onions, spices, and sometimes meat or fish! Every family has their own mchuzi recipe. What does the mchuzi in your house smell like when it is cooking?"
+    mandazi (mandazi):    "Mandazi — those puffy, slightly sweet, deep-fried triangles of dough — warm and golden from the stove, perfect with a cup of tea! In East Africa, mandazi are everywhere — sold at every corner! Have you ever eaten mandazi fresh from the fryer — still hot?"
+    samaki (fish):        "Samaki — fish! Fried whole on the stove, grilled over open fire, or simmered in a coconut sauce — samaki is eaten all along the East African coast and around the great lakes! Have you ever eaten samaki — what is your favourite way to have it?"` : `    maji (water):         "Kila kiumbe hai duniani — kila mnyama, kila mmea, kila binadamu — hawezi kuishi bila maji. Ni kinywaji muhimu zaidi duniani! Umeshakunywa vikombe vingapi vya maji leo?"
     chakula (food):       "Fikiria unatoka shuleni — tumbo likilia, miguu imechoka, tayari kula — na mama amekuandalia chakula mezani. Chakula ni kila kitu unachokula! Chakula unachopenda zaidi duniani ni kipi?"
     mkate (bread):        "Mkate ni ule mkate laini, wa povu — moto kutoka jikoni, labda na siagi kidogo — ule unaojaza chumba kizima na harufu nzuri! Je, unakula mkate kwa kifungua kinywa au unapenda kitu kingine?"
     matunda (fruit):      "Tembea kwenye soko lolote la Afrika Mashariki na utaona rangi kila mahali — papai, ndizi, embe, tikiti maji — chakula chote kizuri kimening'inia na kupangwa juu! Hiyo yote ni matunda! Matunda unayopenda zaidi ni yapi?"
@@ -836,7 +836,7 @@ function getSystemPrompt(
     biskuti (biscuits):   "Biskuti — vidogo, vitamu, vinavyopasuka — kamili vikiingizwa kwenye chai! Mwanga unapovunja na jinsi vinavyolainisha kidogo kwenye chai — vizuri sana! Je, una aina yako pendwa ya biskuti?"
     pipi (sweets/candy):  "Pipi — peremende na kitu kitamu — zimefungwa katika rangi angavu, vidogo vya kutosha kujificha mfukoni! Kila mtu anapenda pipi. Pipi ya kwanza inayokuja akilini mwako sasa hivi ni ipi — inaonja nini?"
     juisi (juice):        "Juisi ni kinywaji kipya kilichokamuliwa au kilichopakiwa — machungwa, embe, passionfruit — baridi na tamu na cha kuburudisha! Ladha yako pendwa ya juisi ni ipi?"
-    soda (soda):          "Soda — yenye fizzy, baridi, yenye Bubbles zinazokuchekesha pua — zawadi moja unayopata kwenye sherehe au sikukuu! Ladha yako ya kawaida ya soda unapopewa chaguo ni ipi?"
+    soda (soda):          "Soda — baridi, yenye mapovu madogo madogo yanayokuchekesha pua — zawadi moja unayopata kwenye sherehe au sikukuu! Ladha yako ya kawaida ya soda unapopewa chaguo ni ipi?"
     nazi (coconut):       "Nazi ni nazi — ngumu na pande zote nje, nyeupe na tamu ndani, yenye maji ya nazi unayokunywa moja kwa moja kwa mrija! Je, umewahi kunywa maji ya nazi safi moja kwa moja kutoka kwenye nazi?"
     papai (papaya):       "Papai ni laini, la machungwa, tamu na kidogo la harufu ya kipekee — na linakua hapa Afrika Mashariki, kwenye nyua na mashamba! Je, unakula papai bila kitu au na squeeze ya limao?"
     tikiti maji (watermelon): "Tikiti maji — jina linamaanisha 'tunda la maji' — na unapouma vipande vikubwa vya nyama nyekundu, baridi, inayotiririka, unaelewa kabisa kwa nini! Je, umewahi kula tikiti maji siku ya jua kali sana?"
@@ -850,7 +850,7 @@ function getSystemPrompt(
 ---`);
 
     if (game === "vitenzi") return `VITENZI — action verb hooks. Encourage the child to act it out.\n${dirNote}\n` + (isSwahili ? `    kula (eat):           "Right now — pretend you are picking up your absolute favourite food and putting it in your mouth. That action — eating — is kula! If Ticha could sit at the table with you tonight, what would you be eating?"
-    kunywa (drink):       "Tip your head back like you are taking a huge sip of ice-cold maji on the hottest day ever — that is kunywa — to drink! What is the one thing you always kunywa first thing in the morning?"
+    kunywa (drink):       "Tip your head back like you are taking a huge sip of ice-cold water on the hottest day ever — that is kunywa — to drink! What is the one thing you always kunywa first thing in the morning?"
     kulala (sleep):       "Put your hands together, tilt your head to the side, and close your eyes — that is kulala — to sleep! What time do you kulala at night — and what do you dream about most?"
     kucheza (play):       "What is the game that makes you lose track of time completely — the one you could kucheza for hours and hours? Kucheza means to play! Tell me your favourite game right now!"
     kukimbia (run):       "Stomp your feet fast on the ground like you are sprinting — that is kukimbia — to run! If you had to kukimbia a race against the fastest person you know — who would it be?"
@@ -882,7 +882,7 @@ function getSystemPrompt(
     kupanda (climb):      "Reach both arms up above your head and pull yourself up — like climbing a tree — that is kupanda! Have you ever kupanda a really tall tree — how high did you get?"
     kuosha (wash):        "Rub your hands together under invisible water — scrub scrub — that is kuosha — to wash! Do you kuosha your hands before every single meal?"
     kuvaa (wear):         "Reach down and pull on an invisible shirt over your head — that is kuvaa — to wear or to put on clothes! What is the one piece of clothing you love to kuvaa most?"
-    kulima (farm):        "Imagine digging a hole in dark, rich soil with a jembe — pushing the seeds in — covering them up — that is kulima — to farm! Have you ever helped someone kulima in a shamba?"
+    kulima (farm):        "Imagine digging a hole in dark, rich soil with a hoe — pushing the seeds in — covering them up — that is kulima — to farm! Have you ever helped someone kulima in a field?"
     kupiga (hit/kick):    "Wind up your leg and pretend to kick a football as hard as you can — go! That action is kupiga — to hit or kick! You can kupiga a ball, kupiga a drum, even kupiga a high-five! What is your favourite thing to kupiga?"` : `    kula (eat):           "Sasa hivi — fanya kana kwamba unachukua chakula chako unachopenda zaidi na kukiweka kinywani. Tendo hilo — kula! Kama Ticha angelikaa mezani nawe usiku wa leo, ungekuwa ukikula nini?"
     kunywa (drink):       "Inua kichwa chako nyuma kana kwamba unashika kikombe cha maji baridi siku ya joto kali — hiyo ni kunywa! Ni kitu gani unachokunywa kwanza kabisa asubuhi?"
     kulala (sleep):       "Weka mikono yako pamoja, inamisha kichwa pembeni, na funga macho — hiyo ni kulala! Unalala saa ngapi usiku — na unaota nini mara nyingi?"
@@ -920,14 +920,14 @@ function getSystemPrompt(
     kupiga (hit/kick):    "Jiandae — inua mguu wako na fanya kana kwamba unapiga mpira kwa nguvu iwezekanavyo — nenda! Tendo hilo ni kupiga! Unaweza kupiga mpira, kupiga ngoma, hata kupiga makofi! Unapenda kupiga nini zaidi?"
 ---`);
 
-    if (game === "shule") return `SHULE — school life hooks connecting to the child's daily school experience.\n${dirNote}\n` + (isSwahili ? `    shule (school):       "Every morning, millions of children across East Africa put on their sare, pick up their begi, and walk, run, or ride to the same place — shule! It is the place where everything you know was first learned! What is your very favourite thing about going to shule?"
+    if (game === "shule") return `SHULE — school life hooks connecting to the child's daily school experience.\n${dirNote}\n` + (isSwahili ? `    shule (school):       "Every morning, millions of children across East Africa put on their uniform, pick up their bag, and walk, run, or ride to the same place — shule! It is the place where everything you know was first learned! What is your very favourite thing about going to shule?"
     kitabu (book):        "A kitabu can take you anywhere — into jungles, to other countries, back in time, forward into the future — all without leaving your chair! What is the most exciting kitabu you have ever read or had read to you?"
     kalamu (pen):         "A kalamu is a small thing — you can hold it in two fingers — but it has the power to write anything: your name, a story, a letter to someone you love! What do you use your kalamu for the most at school?"
-    darasa (classroom):   "Every single day you walk into your darasa — the room where your mwalimu teaches, where you sit with your friends, where you think and learn and laugh! What is the thing you love most about your darasa?"
-    begi (bag):           "Every morning you fill your begi — kitabu, penseli, sare ya mchezo maybe, your lunch — and carry it all on your back to shule! What is the heaviest thing you ever had inside your begi?"
-    ubao (blackboard):    "The mwalimu picks up a piece of chaki and writes something on the ubao — big and white on that dark surface — and your whole darasa looks up and reads together! What is the last thing you saw written on your ubao?"
+    darasa (classroom):   "Every single day you walk into your darasa — the room where your teacher teaches, where you sit with your friends, where you think and learn and laugh! What is the thing you love most about your darasa?"
+    begi (bag):           "Every morning you fill your begi — a book, a pencil, your sport kit maybe, your lunch — and carry it all on your back to school! What is the heaviest thing you ever had inside your begi?"
+    ubao (blackboard):    "The teacher picks up a piece of chalk and writes something on the ubao — big and white on that dark surface — and your whole class looks up and reads together! What is the last thing you saw written on your ubao?"
     penseli (pencil):     "A penseli is special because you can erase it — you can try, get it wrong, rub it out, and start again! That is one of the best things about learning. What do you draw with your penseli at school?"
-    meza (table/desk):    "Your meza at school is where everything happens — you write on it, you open your kitabu on it, you eat your lunch on it sometimes! Is your meza at school shared with a friend or do you have your own?"
+    meza (table/desk):    "Your meza at school is where everything happens — you write on it, you open your book on it, you eat your lunch on it sometimes! Is your meza at school shared with a friend or do you have your own?"
     kiti (chair):         "You sit on a kiti for hours every school day — listening, reading, writing, thinking! If your kiti could talk, what would it have heard you say today?"
     mwalimu (teacher):    "Think about every single thing you know — your numbers, your letters, your history, your science — someone patient and kind stood up in front of you and gave it to you. That person is a mwalimu! Who is your favourite mwalimu of all time — what did they teach you?"
     mtihani (exam/test):  "Your heart beats a little faster, your pencil is sharp, the room goes quiet — it is mtihani day! An exam! What subject makes you feel most confident on mtihani day?"
@@ -935,16 +935,16 @@ function getSystemPrompt(
     sayansi (science):    "Sayansi is the subject that asks WHY — why does the sky turn red at sunset? Why does bread rise? Why do we get sick? Sayansi tries to answer every big question! What is one science question you have always wanted the answer to?"
     sanaa (art):          "Sanaa is drawing, painting, making things with your hands — expressing yourself without words! Some people say they cannot do sanaa, but everyone can — because there is no wrong answer in art! What do you love to draw or create?"
     historia (history):   "Historia is the story of everything that happened before today — the kings, the wars, the explorers, the inventions! It is the world's longest, most incredible story. What part of historia do you find most interesting?"
-    jiografia (geography):"Jiografia is the study of the world — where countries are, where rivers flow, why some places are cold and others are hot! Have you ever looked at a ramani and felt curious about a faraway place?"
-    muziki (music):       "Muziki is everywhere — in church, in the matatu, at a wedding, in your head when you cannot sleep! It can make you happy, sad, excited, or calm. What is the song you love so much you never want it to end?"
+    jiografia (geography):"Jiografia is the study of the world — where countries are, where rivers flow, why some places are cold and others are hot! Have you ever looked at a map and felt curious about a faraway place?"
+    muziki (music):       "Muziki is everywhere — in church, in the minibus, at a wedding, in your head when you cannot sleep! It can make you happy, sad, excited, or calm. What is the song you love so much you never want it to end?"
     lugha (language):     "Right now — in this very lesson — you are learning lugha! Language — the system of words and sounds that lets human beings talk to each other! How many lugha do you already speak, even a little?"
     mchezo (game/sport):  "After class, the field fills up with noise and energy — football, netball, skipping, running — that is mchezo time! What is the mchezo you play best at school?"
     lepe (rubber/eraser): "The lepe is the most forgiving thing in your pencil case — it says 'it is okay, try again' every single time! How many times have you used your lepe today already?"
     rula (ruler):         "A rula draws perfectly straight lines — the kind your hand alone cannot make! Have you ever tried to draw a line without a rula and it came out completely crooked?"
-    chaki (chalk):        "The mwalimu picks up a piece of chaki and writes on the ubao — scratch scratch scratch — and suddenly a whole maths problem or a new word appears! What do you think it would feel like to write on the ubao with chaki in front of the whole class?"
+    chaki (chalk):        "The teacher picks up a piece of chaki and writes on the board — scratch scratch scratch — and suddenly a whole maths problem or a new word appears! What do you think it would feel like to write on the board with chaki in front of the whole class?"
     sare (school uniform):"Sare is that special uniform — the same colour for everyone in the school — so when you put it on, you know you are part of something bigger! What colour is your sare at school?"
-    ratiba (timetable):   "The ratiba is your guide for the whole school day — it tells you when hesabu starts, when mchezo is, when you go home! If you could change ONE thing on your ratiba, what would it be?"
-    likizo (school holiday):"LIKIZO! The word that makes every child smile! Holiday — no school, no mtihani, sleep a little longer, play all day! What is the best thing you have ever done during likizo?"
+    ratiba (timetable):   "The ratiba is your guide for the whole school day — it tells you when maths starts, when sport time is, when you go home! If you could change ONE thing on your ratiba, what would it be?"
+    likizo (school holiday):"LIKIZO! The word that makes every child smile! Holiday — no school, no exams, sleep a little longer, play all day! What is the best thing you have ever done during likizo?"
     somo (lesson):        "Somo is a single lesson — one subject, one teacher, one chunk of knowledge! Every school day is made of somos. Which somo do you look forward to the most — the one that flies by because you love it?"
     dirisha (window):     "Imagine sitting in class and a breeze comes through the dirisha — fresh air, the sound of birds outside, a cloud drifting past! Every classroom has a dirisha — but do you ever daydream out of yours?"
     ramani (map):         "A ramani is a picture of the world — a country, or just your neighbourhood — showing you where everything is! Have you ever looked at a ramani and wondered about a faraway place?"
@@ -989,19 +989,19 @@ function getSystemPrompt(
     huzuni (sadness):     "Huzuni is when something touches your heart in a heavy way — when someone leaves, when you lose something, when a day does not go the way you hoped. It is okay to feel huzuni — it means you care deeply. What is something that once made you feel huzuni?"
     hasira (anger):       "Hasira is that burning, tight feeling — when something is unfair, when someone hurts you or takes your things! It is a real feeling, and everyone has it sometimes. What is the kind of thing that gives you hasira most quickly?"
     hofu (fear):          "Hofu is that cold, shaky feeling — when you hear a strange sound in the dark, or when you have to do something scary for the first time! What is the thing that gives you the most hofu?"
-    upendo (love):        "Upendo is the deepest, warmest feeling of all — for your mama, your baba, your best friend, even a favourite animal! It is bigger than words. Who do you feel the most upendo for?"
+    upendo (love):        "Upendo is the deepest, warmest feeling of all — for your mother, your father, your best friend, even a favourite animal! It is bigger than words. Who do you feel the most upendo for?"
     uchovu (tiredness):   "Uchovu is that heavy feeling — your eyes want to close, your legs do not want to move anymore, and everything feels like too much effort. Uchovu! What is the one thing that makes you feel the most uchovu?"
     shangwe (excitement): "Shangwe is when your heart speeds up and your feet want to dance — pure excitement and cheer! Like the night before a birthday or a school trip! What is coming up in your life that is giving you the most shangwe?"
     aibu (shame/embarrassment): "Aibu is that hot, prickly feeling — when you make a mistake in front of people, or do something you wish you hadn't. Everyone feels aibu sometimes — even grown-ups! Can you think of a funny moment that gave you a little aibu?"
-    fahari (pride):       "Fahari is that tall, warm, glowing feeling — when you finish something hard, when you help someone, when your mama looks at you with pride! It is one of the best feelings there is. What is something you have done that gave you real fahari?"
-    wasiwasi (worry):     "Wasiwasi is when your mind keeps going back to something — will it be okay? What if it goes wrong? Like before a mtihani or a new experience. What kind of thing gives you wasiwasi most often?"
+    fahari (pride):       "Fahari is that tall, warm, glowing feeling — when you finish something hard, when you help someone, when your mother looks at you with pride! It is one of the best feelings there is. What is something you have done that gave you real fahari?"
+    wasiwasi (worry):     "Wasiwasi is when your mind keeps going back to something — will it be okay? What if it goes wrong? Like before an exam or a new experience. What kind of thing gives you wasiwasi most often?"
     mshangao (surprise):  "MSHANGAO — when something happens that you absolutely did not expect! A surprise party, an unexpected gift, a twist in a story! Your eyes go wide and your mouth falls open — that is mshangao! What is the biggest mshangao you have ever had?"
-    ujasiri (courage):    "Ujasiri is doing something even when you are scared — speaking in front of the class, trying something new, standing up for what is right! It is not the absence of hofu — it is doing it anyway! When have you shown real ujasiri?"
+    ujasiri (courage):    "Ujasiri is doing something even when you are scared — speaking in front of the class, trying something new, standing up for what is right! It is not the absence of fear — it is doing it anyway! When have you shown real ujasiri?"
     huruma (compassion):  "Huruma is when you see someone hurting and your heart hurts too — and you want to help. It is the feeling behind every act of kindness. When was the last time you felt huruma for someone?"
     wivu (jealousy):      "Wivu is that complicated feeling — when someone else has something you want, or gets attention you wish was yours. Everyone feels it sometimes — even the people you look up to! Is there something that sometimes makes you feel a little wivu?"
     upole (gentleness):   "Upole is being soft, calm, and kind — the way you handle a small animal carefully, or speak to someone who is sad. It is a kind of strength. Who in your life shows the most upole?"
     heshima (respect):    "Heshima is treating someone as important and valuable — listening when they speak, not being rude, honouring who they are. It is the most important way we show love! Who do you show the most heshima to in your life?"
-    shukrani (gratitude): "Shukrani is the warm feeling of being thankful — for your food, your family, your health, this lesson! When you say asante and really mean it — that is shukrani. What is one thing you feel deeply shukrani for right now?"
+    shukrani (gratitude): "Shukrani is the warm feeling of being thankful — for your food, your family, your health, this lesson! When you say thank you and really mean it — that is shukrani. What is one thing you feel deeply shukrani for right now?"
     matumaini (hope):     "Matumaini is looking forward with a bright heart — believing that good things will come, even when today is hard. It is one of the most powerful feelings. What do you have matumaini about for your future?"
     amani (peace):        "Amani is when everything is still and calm — inside your heart and outside in the world. The opposite of noise, fighting, and worry. Where do you go or what do you do when you need to find amani?"
     imani (faith/trust):  "Imani is believing in something you cannot fully see — trusting that a person is good, that things will work out, that tomorrow will be better. Who do you have the most imani in — one person you trust completely?"
@@ -1051,7 +1051,7 @@ function getSystemPrompt(
     mvua (rain):          "The moment the first drops of mvua touch the dry ground — that smell! Petrichor — one of the best smells on earth! In East Africa, mvua means life — animals, crops, rivers, everything depends on it. What do you love most about mvua?"
     ardhi (ground/earth): "The ardhi beneath your feet right now has been there for millions of years. It holds water, grows food, supports every building and every tree! What colour is the ardhi where you live — red, dark brown, sandy?"
     maua (flowers):       "Maua are nature's decorations — bright, colourful, sweet-smelling — and they attract butterflies and bees! East Africa has some of the most beautiful maua in the world. What is your favourite colour of maua?"
-    mto (river):          "A mto starts as tiny drops of mvua high in the mlima — then those drops join together and grow into a huge, rushing, powerful river! Have you ever stood next to a mto — what did it sound like?"
+    mto (river):          "A mto starts as tiny drops of rain high in the mountain — then those drops join together and grow into a huge, rushing, powerful river! Have you ever stood next to a mto — what did it sound like?"
     mlima (mountain):     "Mlima Kilimanjaro — the highest mountain in ALL of Africa — stands right here in Tanzania, so tall its top is always covered in snow and ice even though we are so close to the equator! Have you ever seen a mlima with your own eyes?"
     bahari (ocean/sea):   "The bahari is so vast that if you stood on the shore and looked out, you would see nothing but water all the way to the horizon! The Indian Ocean touches Tanzania and Kenya — have you ever been near the bahari?"
     shamba (farm/field):  "A shamba is where food begins — where seeds go into the ground, where plants grow slowly with water and sunlight, where harvests happen! Have you ever worked in or visited a shamba — what was growing there?"
@@ -1059,26 +1059,26 @@ function getSystemPrompt(
     nyika (savanna/bush): "The nyika is that wide, open land — dry grass stretching for miles, dotted with acacia trees — where the great animals of Africa roam! Lions, elephants, giraffes — the nyika is their home. Have you ever seen a nyika landscape?"
     mchanga (sand):       "Close your eyes — imagine sinking your bare feet into warm mchanga on a beach, the grains running between your toes! Mchanga is sand. Have you ever been to a beach or seen mchanga by a river?"
     jiwe (stone/rock):    "A jiwe can be tiny — a pebble in your shoe — or enormous — a cliff face you climb! It takes thousands of years for a rock to form deep inside the earth. What is the most interesting jiwe you have ever found?"
-    udongo (soil):        "Udongo is the dark, rich soil that grows everything we eat — farmers work it, worms live in it, seeds trust it! Udongo has a special smell after mvua. Have you ever held a handful of dark udongo in your hands?"
+    udongo (soil):        "Udongo is the dark, rich soil that grows everything we eat — farmers work it, worms live in it, seeds trust it! Udongo has a special smell after rain. Have you ever held a handful of dark udongo in your hands?"
     upepo (wind):         "Upepo is invisible — you cannot see it, only feel it and hear it! It moves clouds, bends trees, carries seeds across whole countries! What does upepo feel like where you live — gentle or strong?"
-    baridi (cold):        "Baridi is that sharp, cool feeling — on a rainy morning, high in the mlima, or before dawn! In some parts of East Africa it gets so baridi at night you can see your breath. Do you like baridi weather or do you prefer joto?"
-    joto (heat/warmth):   "Joto is the warm, heavy heat of the East African afternoon — when the jua is directly overhead and the air shimmers! Sometimes joto is pleasant and comforting; sometimes it is too much! What time of day is joto at its worst where you live?"
-    anga (sky):           "The anga above you changes all day — from pink dawn to blue midday to orange sunset to black night with a million nyota! It is one of the most beautiful things to watch. What is your favourite time of day to look up at the anga?"
-    nyota (star):         "On a clear night away from town lights, the anga fills with thousands of nyota — tiny points of fire so far away that their light takes years to reach us! Have you ever lain on your back and counted nyota?"
+    baridi (cold):        "Baridi is that sharp, cool feeling — on a rainy morning, high in the mountain, or before dawn! In some parts of East Africa it gets so baridi at night you can see your breath. Do you like baridi weather or do you prefer warm weather?"
+    joto (heat/warmth):   "Joto is the warm, heavy heat of the East African afternoon — when the sun is directly overhead and the air shimmers! Sometimes joto is pleasant and comforting; sometimes it is too much! What time of day is joto at its worst where you live?"
+    anga (sky):           "The anga above you changes all day — from pink dawn to blue midday to orange sunset to black night with a million stars! It is one of the most beautiful things to watch. What is your favourite time of day to look up at the anga?"
+    nyota (star):         "On a clear night away from town lights, the sky fills with thousands of nyota — tiny points of fire so far away that their light takes years to reach us! Have you ever lain on your back and counted nyota?"
     mwezi (moon):         "The mwezi changes shape every night — from a tiny sliver to a perfect round circle and back again! In East Africa, a full mwezi was how people knew when to hold celebrations and when to plant crops. Have you ever watched the mwezi rise on a clear night?"
-    wingu (cloud):        "Wingu float and drift and change shape — sometimes white and fluffy, sometimes dark and heavy with mvua! Have you ever looked at a wingu and seen a shape — an animal, a face, something familiar?"
-    ngurumo (thunder):    "NGURUMO — that massive, rolling BOOM in the sky that makes the windows shake and your chest vibrate! It comes after radi — first you see the flash, then you count the seconds until ngurumo reaches you. How many seconds is ngurumo from where you are usually?"
+    wingu (cloud):        "Wingu float and drift and change shape — sometimes white and fluffy, sometimes dark and heavy with rain! Have you ever looked at a wingu and seen a shape — an animal, a face, something familiar?"
+    ngurumo (thunder):    "NGURUMO — that massive, rolling BOOM in the sky that makes the windows shake and your chest vibrate! It comes after the lightning — first you see the flash, then you count the seconds until ngurumo reaches you. How many seconds is ngurumo from where you are usually?"
     radi (lightning):     "Radi is a bolt of electricity so powerful it lights up the entire sky for a split second! It is beautiful and a little frightening at the same time. Are you excited by radi or do you find it a bit scary?"
-    mwanga (light):       "Without mwanga, nothing exists — plants cannot grow, eyes cannot see, colours disappear! The jua is the biggest source of mwanga. What is your favourite source of mwanga — sunlight, candle, fire?"
-    giza (darkness):      "When all the mwanga is gone — when the jua has set and the nyota are behind clouds — there is giza. Pure darkness! What is giza like where you live at night — completely dark or do you have lights?"
+    mwanga (light):       "Without mwanga, nothing exists — plants cannot grow, eyes cannot see, colours disappear! The sun is the biggest source of mwanga. What is your favourite source of mwanga — sunlight, candle, fire?"
+    giza (darkness):      "When all the light is gone — when the sun has set and the stars are behind clouds — there is giza. Pure darkness! What is giza like where you live at night — completely dark or do you have lights?"
     moto (fire):          "MOTO! Imagine the crackling, dancing flames — orange and red, warm and hypnotic — that every fire makes! In East Africa, moto is where families gather at night — stories are told, food is cooked, and everything feels safe. What do you love most about sitting around a moto?"
-    moshi (smoke):        "When moto burns, moshi rises — thin grey spirals twisting up into the sky! Moshi is the signal of life — it means someone is cooking, keeping warm, or clearing land. What does moshi smell like where you live — firewood, charcoal, or something else?"
+    moshi (smoke):        "When fire burns, moshi rises — thin grey spirals twisting up into the sky! Moshi is the signal of life — it means someone is cooking, keeping warm, or clearing land. What does moshi smell like where you live — firewood, charcoal, or something else?"
     maporomoko (waterfall):"Imagine standing at the bottom of a MAPOROMOKO — tonnes of water roaring down from high above, the spray soaking your face, the thunder shaking the ground! A waterfall is one of the most powerful things in nature. Have you ever seen a real maporomoko?"
     ziwa (lake):          "A ziwa is a huge body of water — still and flat and deep — sitting in the middle of land! Lake Victoria, the biggest ziwa in Africa, is right here in East Africa! Have you ever seen a great ziwa — what did it look like?"
-    kisiwa (island):      "A kisiwa is land completely surrounded by water — like a little world of its own floating in the sea or a ziwa! Zanzibar is a famous kisiwa just off the coast of Tanzania! If you had your own kisiwa, what would you put on it?"
-    jangwa (desert):      "A jangwa is the driest, hottest place on earth — sand stretching forever, no trees, no mto, almost no life — the sun is brutal and the nights are freezing! Have you ever seen a jangwa — and what do you think it feels like to be in the middle of one?"
-    bonde (valley):       "A bonde is a low, sunken land between two hills or mlima — and it is often the most beautiful, green, and fertile place around! The Great Rift Valley, one of the biggest bonde in the world, runs right through East Africa! Have you ever looked down into a deep bonde?"
-    pwani (coast/beach):  "The pwani is where land and bahari meet — soft mchanga, gentle waves, salty breeze, colourful fish just below the surface! East Africa has some of the most beautiful pwani in the world. Have you ever been to the pwani — and what is the first thing you would do there?"
+    kisiwa (island):      "A kisiwa is land completely surrounded by water — like a little world of its own floating in the sea or a lake! Zanzibar is a famous kisiwa just off the coast of Tanzania! If you had your own kisiwa, what would you put on it?"
+    jangwa (desert):      "A jangwa is the driest, hottest place on earth — sand stretching forever, no trees, no river, almost no life — the sun is brutal and the nights are freezing! Have you ever seen a jangwa — and what do you think it feels like to be in the middle of one?"
+    bonde (valley):       "A bonde is a low, sunken land between two hills or mountains — and it is often the most beautiful, green, and fertile place around! The Great Rift Valley, one of the biggest bonde in the world, runs right through East Africa! Have you ever looked down into a deep bonde?"
+    pwani (coast/beach):  "The pwani is where land and the ocean meet — soft sand, gentle waves, salty breeze, colourful fish just below the surface! East Africa has some of the most beautiful pwani in the world. Have you ever been to the pwani — and what is the first thing you would do there?"
     barafu (ice/glacier): "Barafu — ice — is so rare in East Africa that most children have never touched it! Yet right on top of Mlima Kilimanjaro, even in the tropical heat, there is real barafu — a glacier! Have you ever touched barafu — what did it feel like?"` : `    mti (tree):           "Mti ni moja ya vitu vya ajabu zaidi duniani — ulianza kama mbegu ndogo kuliko ukucha wako, na ukakua juu ya jengo! Unatoa kivuli, matunda, mbao, hewa — kila kitu! Mti wako unaoupenda zaidi ni upi — ule unaopanda, wenye matunda, au karibu na nyumba yako?"
     jua (sun):            "Kila asubuhi, bila kukosea, jua linaandaa — likipaka anga rangi ya machungwa na waridi — na dunia nzima inajipasha joto! Afrika Mashariki, jua lina nguvu na ni zuri. Unajisikiaje siku ya jua inayong'aa kwa nguvu?"
     mvua (rain):          "Dakika matone ya kwanza ya mvua yanapoanguka ardhi kavu — harufu ile! Petrichor — moja ya harufu nzuri zaidi duniani! Afrika Mashariki, mvua inamaanisha maisha — wanyama, mazao, mito, kila kitu inategemea hiyo. Unachopenda zaidi kuhusu mvua ni nini?"
@@ -1170,7 +1170,7 @@ function getSystemPrompt(
     ndege (bird):     "If you could be a ndege for one day — where in the world would you fly?"
     mbuzi (goat):     "What is ONE thing in your house you would NOT want a mbuzi to eat?"
     ng'ombe (cow):    "Every morning we drink milk — what else do we get from an ng'ombe?"
-    punda (donkey):   "If you had to carry heavy bags up a big hill — would you ask a punda or a farasi for help?"
+    punda (donkey):   "If you had to carry heavy bags up a big hill — would you ask a punda or a horse for help?"
     farasi (horse):   "If you could ride a farasi anywhere in the world — where would you go?"
     kondoo (sheep):   "Kondoo wool keeps us warm — what warm thing do you wear that might be made from wool?"
     kuku (chicken):   "If YOUR kuku woke you up at 4am — what would you say to it?"
@@ -1196,7 +1196,7 @@ function getSystemPrompt(
     pweza (octopus):  "Pweza has eight arms — if YOU had eight arms, what eight things would you do all at the same time?"
     pundamilia (zebra):"Every pundamilia has a completely unique stripe pattern — like a fingerprint! What makes YOU completely unique — something no one else has?"
     nyati (buffalo):  "Nyati lives in huge herds for safety — who are YOUR herd, the people you feel safest with?"
-    swala (gazelle):  "Swala zigzags at full speed to escape the duma — when YOU face a really tough situation, do you zigzag and find another way, or run straight through?"
+    swala (gazelle):  "Swala zigzags at full speed to escape a cheetah — when YOU face a really tough situation, do you zigzag and find another way, or run straight through?"
     korongo (crane):  "Korongo is on the Ugandan flag — if you could put ANY animal on a flag for your town or country, what animal would you choose?"
     kobe (tortoise):  "Kobe is slow but lives the longest — do you think living slowly and carefully is sometimes better than rushing?"
     nge (scorpion):   "Nge glows under ultraviolet light — what is one hidden thing about YOU that most people do not know?"
@@ -1212,7 +1212,7 @@ function getSystemPrompt(
     sita:  "There are sita sides on a dice — have you ever played a game with a dice?"
     saba:  "There are saba days in a week — which day do you love the most and why?"
     nane:  "A spider has nane legs — if YOU had nane legs instead of two, what is the first thing you would do with all of them?"
-    tisa:         "Tisa plus one more makes kumi — if someone gave you ten sweets, what would you do with them?"
+    tisa:         "Tisa plus one more makes ten — if someone gave you ten sweets, what would you do with them?"
     kumi:         "You have exactly kumi fingers on both hands — if each one could do one superpower, which finger would you give the best superpower to, and what would it be?"
     kumi na moja: "Kumi na moja — if you found kumi na moja coins on your pillow tomorrow morning, what is the first thing you would spend them on?"
     kumi na mbili:"Kumi na mbili months in a year — which month is your birthday in?"
@@ -1226,18 +1226,18 @@ function getSystemPrompt(
     ishirini:     "${isSwahili ? "Count all the way from one to twenty — the full count — let's hear it!" : "Count all the way from moja to ishirini — the full count — let's hear it!"}"
     thelathini:   "${isSwahili ? "Can you count from twenty all the way up to thirty — all ten steps — let's hear it!" : "Can you count from ishirini all the way up to thelathini — all ten steps — let's hear it!"}"
     arobaini:     "If you had arobaini biscuits to share with your whole class, how many students are in your class — would there be enough for everyone to get one?"
-    hamsini:      "If you had hamsini shillings and each sweet costs tano — how many sweets could you buy with all your hamsini?"
+    hamsini:      "If you had hamsini shillings and each sweet costs five — how many sweets could you buy with all your hamsini?"
     sitini:       "There are sitini minutes in one hour — what do you usually do with the sitini minutes after you get home from school?"
     sabini:       "Name someone you know who might be close to sabini years old — and what is the most interesting thing about them?"
     themanini:    "${isSwahili ? "Count backwards from eighty in tens all the way down to zero — eighty, seventy, sixty… ready? Go!" : "Count backwards from themanini in tens all the way down to sifuri — themanini, sabini, sitini… ready? Go!"}"
-    tisini:       "You are at tisini — just ten more to reach mia moja! What is something you are very close to finishing or achieving right now?"
+    tisini:       "You are at tisini — just ten more to reach one hundred! What is something you are very close to finishing or achieving right now?"
     mia moja:     "If you could spend mia moja minutes doing anything — just over an hour and a half — what would you do for the whole time?"
     sifuri:       "What is something in your life that started at sifuri — absolutely nothing — and grew into something you love?"
     wa kwanza:    "What is one thing where you would love to come wa kwanza — is there a race, a test, or a competition you dream of winning?"
     wa pili:      "Is coming wa pili ever good enough — or do you always want to be wa kwanza? What do you think is the right answer?"
     wa tatu:      "What is one thing where you honestly think you are the wa tatu best in your family — what are the two things where others beat you?"
     nusu:         "Would you rather have nusu of something really big, or all of something really small — which is the better deal and why?"
-    robo:         "If a keki was cut into robo nne and you could take one robo — who would you share the other three robo with?"
+    robo:         "If a cake was cut into four robo pieces and you could take one robo — who would you share the other three robo with?"
     elfu:         "${isSwahili ? "Count in hundreds from one hundred all the way to one thousand — one hundred, two hundred, three hundred, all the way! Ready? Go!" : "Count in hundreds from mia moja all the way to elfu — mia moja, mia mbili, mia tatu, all the way! Ready? Go!"}"`;
 
     if (game === "body") return `  BODY PARTS — per-part questions (use action where possible — point, touch, move):
@@ -1288,7 +1288,7 @@ function getSystemPrompt(
     nyeupe:   "Name the most nyeupe thing inside your house right now — milk, sugar, a wall, something else?"
     nyeusi:   "The night sky is nyeusi — what else around you is that dark?"
     waridi:   "Have you ever seen a waridi flower or a flamingo — which one is more waridi?"
-    zambarau: "Biringanya is zambarau — that deep purple colour you do not see every day! Have you ever tasted biringanya — what did you think of it?"
+    zambarau: "Eggplant is zambarau — that deep purple colour you do not see every day! Have you ever tasted eggplant — what did you think of it?"
     kahawia:  "Look at the ground outside your window — is the soil kahawia where you live?"
     kijivu:   "Rain clouds are kijivu — what is one kijivu thing inside your house right now?"`;
 
@@ -1303,39 +1303,39 @@ function getSystemPrompt(
     ndizi:       "How many ndizi can you eat in one sitting — and do you prefer them sweet or cooked?"
     embe:        "When is mango season where you live — and how many embe can you eat in one day?"
     mboga:       "Which mboga do you actually enjoy — and which one do you try to avoid?"
-    chai:        "Do you have chai every morning — and how many spoons of sukari do you add?"
+    chai:        "Do you have chai every morning — and how many spoons of sugar do you add?"
     maziwa:      "Do you drink maziwa cold or warm — and where does the maziwa in your home come from?"
     mayai:       "How do you like your mayai best — fried, boiled, or scrambled?"
-    mahindi:     "Have you ever eaten mahindi roasted on a jiko — what did it taste like?"
-    nyanya:      "Which food do you eat that always has nyanya in it — mchuzi, salad, or fried with eggs?"
+    mahindi:     "Have you ever eaten mahindi roasted on a charcoal grill — what did it taste like?"
+    nyanya:      "Which food do you eat that always has nyanya in it — stew, salad, or fried with eggs?"
     vitunguu:    "Does the smell of vitunguu cooking make you hungry — or do your eyes just start watering?"
-    viazi:       "Would you rather have viazi boiled, mashed, or as chipsi?"
-    maharagwe:   "Do you eat maharagwe with wali or with ugali — which is better?"
-    sukari:      "How many spoons of sukari do you usually put in your chai — and have you ever put in too much?"
+    viazi:       "Would you rather have viazi boiled, mashed, or as fries?"
+    maharagwe:   "Do you eat maharagwe with rice or with cornmeal porridge — which is better?"
+    sukari:      "How many spoons of sukari do you usually put in your tea — and have you ever put in too much?"
     chumvi:      "Have you ever put too much chumvi in food — what happened when you tasted it?"
     mafuta:      "What does your family cook in mafuta at home — what is the best thing that comes out of that pan?"
     asali:       "Have you ever tasted real asali — and what did you put it on?"
-    uji:         "Do you have uji for breakfast — and do you prefer it with sukari or maziwa?"
-    pilau:       "Have you ever eaten pilau at a special occasion — what made it taste so different from regular wali?"
+    uji:         "Do you have uji for breakfast — and do you prefer it with sugar or milk?"
+    pilau:       "Have you ever eaten pilau at a special occasion — what made it taste so different from regular rice?"
     keki:        "What is your dream keki flavour for your next birthday — and who would you share it with?"
-    biskuti:     "Do you ever dip biskuti in chai — and which biskuti is your favourite?"
+    biskuti:     "Do you ever dip biskuti in tea — and which biskuti is your favourite?"
     pipi:        "What is your go-to pipi — the one you would always choose if you had options?"
     juisi:       "What is your favourite flavour of juisi — orange, mango, or something else?"
     soda:        "Which soda do you always choose when you get to pick — and does the fizz tickle your nose?"
-    nazi:        "Have you ever drunk fresh maji ya nazi straight from the shell — what did it taste like?"
+    nazi:        "Have you ever drunk fresh coconut water straight from the shell — what did it taste like?"
     papai:       "Do you eat papai plain or with lime — and do you like it fully ripe or still a little firm?"
     tikiti_maji: "When did you last eat tikiti maji on a hot day — and did the juice run down your chin?"
     zabibu:      "Which colour of zabibu do you prefer — green, red, or purple?"
     karoti:      "Have you ever eaten a raw karoti as a snack — crunchy right from the market?"
     kabichi:     "Does your family eat kabichi a lot — in salad or cooked soft in a pot?"
     chipsi:      "How often do you eat chipsi — and do you prefer them with tomato sauce or plain?"
-    mchuzi:      "What kind of mchuzi does your family make most often — with nyama, maharagwe, or samaki?"
-    mandazi:     "Have you ever eaten mandazi fresh and hot — and do you prefer them with chai or on their own?"
+    mchuzi:      "What kind of mchuzi does your family make most often — with meat, beans, or fish?"
+    mandazi:     "Have you ever eaten mandazi fresh and hot — and do you prefer them with tea or on their own?"
     samaki:      "Do you like samaki — and how does your family usually cook it at home?"`;
 
     if (game === "vitenzi") return `  VITENZI — per-verb questions (use TPR — encourage acting it out):
     kula:        "Act out eating your favourite meal right now — what are you pretending to eat?"
-    kunywa:      "Mime taking a huge sip of maji — what is the first thing you always kunywa in the morning?"
+    kunywa:      "Mime taking a huge sip of water — what is the first thing you always kunywa in the morning?"
     kulala:      "What time do you kulala at night — and do you fall asleep quickly or do you stay awake thinking?"
     kucheza:     "What is your absolute favourite game to kucheza — the one you could play for hours?"
     kukimbia:    "Can you kukimbia fast — who is the fastest person you know and could you beat them?"
@@ -1367,37 +1367,37 @@ function getSystemPrompt(
     kupanda:     "Have you ever kupanda a really tall tree — how high did you get before you stopped?"
     kuosha:      "Do you kuosha your hands before every single meal — or do you sometimes forget?"
     kuvaa:       "What is your favourite thing to kuvaa — the one outfit that makes you feel your absolute best?"
-    kulima:      "If you had your own shamba to kulima, what is the very first thing you would plant in it?"
+    kulima:      "If you had your own field to kulima, what is the very first thing you would plant in it?"
     kupiga:      "What is your favourite thing to kupiga — a football, a drum, or something else entirely?"`;
 
     if (game === "shule") return `  SHULE — per-word questions (connected to the child's daily school experience):
     shule:       "What is the ONE thing you love most about going to shule every day?"
     kitabu:      "What is your favourite kitabu — the one you would read again and again?"
-    kalamu:      "Do you prefer writing with a kalamu or a penseli — and why?"
+    kalamu:      "Do you prefer writing with a kalamu or a pencil — and why?"
     darasa:      "How many students are in your darasa — and where do you like to sit?"
-    begi:        "What is always in your begi when you go to shule — what is the most important thing you carry?"
+    begi:        "What is always in your begi when you go to school — what is the most important thing you carry?"
     ubao:        "Does your teacher write on the ubao every day — what subject fills the ubao the most?"
     penseli:     "Do you always have a sharp penseli — or does yours always break at the wrong moment?"
-    meza:        "Do you have your own meza at shule or do you share with someone — who sits next to you?"
-    kiti:        "Is your kiti comfortable at shule — or do you ever fall off it trying to see the ubao?"
+    meza:        "Do you have your own meza at school or do you share with someone — who sits next to you?"
+    kiti:        "Is your kiti comfortable at school — or do you ever fall off it trying to see the board?"
     mwalimu:     "If you could be a mwalimu for one day — which subject would you teach and how would you do it?"
     mtihani:     "What subject do you find the hardest when there is a mtihani — and how do you prepare?"
     hesabu:      "Is hesabu your favourite subject or the one that makes your brain hurt — which is it?"
     sayansi:     "What is the most amazing thing you have learned in sayansi so far?"
     sanaa:       "What do you love making in sanaa class — drawing, painting, or something with your hands?"
-    historia:    "What is the most interesting historia story you have ever learned at shule?"
-    jiografia:   "What is the furthest place you have seen on a ramani in jiografia class?"
+    historia:    "What is the most interesting historia story you have ever learned at school?"
+    jiografia:   "What is the furthest place you have seen on a map in jiografia class?"
     muziki:      "Do you play any instrument or sing in muziki class — what do you enjoy most?"
     lugha:       "How many lugha do you speak — even just a little?"
-    mchezo:      "What is your favourite mchezo at shule — football, netball, or something else?"
+    mchezo:      "What is your favourite mchezo at school — football, netball, or something else?"
     lepe:        "Do you use a lepe a lot — what do you erase the most, mistakes or whole sentences?"
     rula:        "What do you use your rula for most — measuring or drawing straight lines?"
-    chaki:       "Have you ever been asked to write on the ubao with chaki — what did you write?"
-    sare:        "What colour is your shule sare — and do you like wearing it?"
+    chaki:       "Have you ever been asked to write on the board with chaki — what did you write?"
+    sare:        "What colour is your sare — and do you like wearing it?"
     ratiba:      "Which subject on your ratiba do you look forward to most every week?"
     likizo:      "What do you love doing most during likizo — where do you go and who do you see?"
     somo:        "Which somo are you best at right now — the one where your hand always goes up first?"
-    dirisha:     "Does your classroom have a dirisha — and do you ever catch yourself looking through it instead of listening to the mwalimu?"
+    dirisha:     "Does your classroom have a dirisha — and do you ever catch yourself looking through it instead of listening to the teacher?"
     ramani:      "If you could jump into a ramani and go anywhere in the world right now, where would you go first?"
     picha:       "What is the most important picha you have at home — the one you would save if you could only save one?"
     tuzo:        "What is the biggest tuzo you have ever won — or what tuzo do you really want to win one day?"
@@ -1454,7 +1454,7 @@ function getSystemPrompt(
     upepo:       "How strong is the upepo where you are right now — is it just a breeze or something strong?"
     baridi:      "How does baridi feel where you live — is it really cold in the mornings or evenings?"
     joto:        "What is the most joto time of day where you live — and what do you do to cool down?"
-    anga:        "Look up at the anga right now — describe what you see: blue, cloudy, or full of nyota?"
+    anga:        "Look up at the anga right now — describe what you see: blue, cloudy, or full of stars?"
     nyota:       "Can you see nyota at night from where you live — how many can you count?"
     mwezi:       "What does the mwezi look like tonight — full, half, or just a sliver?"
     wingu:       "What shape is the most interesting wingu you have ever seen — what did it look like?"
@@ -1872,22 +1872,22 @@ EXCHANGE 3 — Lock it in (after they have said the word at least once):
     Body:      "Do you use your mguu more for walking or jumping?" | "Is your moyo in your kichwa or your kifua?" | "Do you use your mkono or your mguu to write?"
     People:    "Does your mama or baba cook most of the time at home?" | "Is your bibi older than your mama — yes or no?" | "Would you rather spend the day with your kaka or your rafiki?"
     Food:      "Would you rather have wali or ugali for dinner tonight?" | "Is chai hot or cold?" | "If you had to pick — would you eat ndizi or embe right now?"
-    Verbs:     "Would you rather kukimbia or kuruka — which is more fun?" | "Is kusoma easier sitting at a meza or lying on a bed?" | "Would you rather kuimba a song or kucheza a game?"
-    School:    "Do you use a penseli or a kalamu more at school?" | "Would you rather have a long likizo or a big tuzo at school?" | "Is mwalimu stricter or friendlier than a baba?"
+    Verbs:     "Would you rather kukimbia or kuruka — which is more fun?" | "Is kusoma easier sitting at a table or lying on a bed?" | "Would you rather kuimba a song or kucheza a game?"
+    School:    "Do you use a penseli or a kalamu more at school?" | "Would you rather have a long likizo or a big tuzo at school?" | "Is mwalimu stricter or friendlier than your father?"
     Feelings:  "Is furaha or shangwe — which one feels bigger and more bouncy?" | "Do you feel uchovu more in the morning or in the evening?" | "Is upendo a feeling you feel every day — yes or no?"
     Nature:    "Is jua hotter at midday or in the morning?" | "Would you rather live near a mto or near a bahari?" | "After mvua, does ardhi smell good — yes or no?"
   ` : `
   Mifano ya maswali ya chaguo (Kiswahili — lugha yako ya kufundishia):
-    Wanyama:   "Ungependa kuwa na simba au mbwa kama rafiki?" | "Je, tembo ni mkubwa kuliko nyumba yako — ndio au hapana?" | "Paka au mbwa — ni mnyama gani bora zaidi?"
+    Wanyama:   "Ungependa kuwa na 'lion' au 'dog' kama rafiki?" | "Je, 'elephant' ni mkubwa kuliko nyumba yako — ndio au hapana?" | "Je, 'cat' au 'dog' — ni mnyama gani bora zaidi?"
     Rangi:     "Je, anga ni 'blue' au 'green'?" | "Je, nyasi ni 'green' — ndio au hapana?" | "Je, maziwa ni 'white' au 'black'?"
-    Nambari:   "Kama nikukupa pipi tano, ungezila zote au kushiriki?" | "Je, una vidole zaidi ya kumi — ndio au hapana?" | "Je, tatu ni zaidi ya mbili — ndio au hapana?"
+    Nambari:   "Kama nikukupa pipi 'five', ungezila zote au kushiriki?" | "Je, una vidole zaidi ya 'ten' — ndio au hapana?" | "Je, 'three' ni zaidi ya 'two' — ndio au hapana?"
     Mwili:     "Je, unatumia 'leg' yako zaidi kutembea au kuruka?" | "Je, 'heart' yako iko katika 'head' au 'chest'?" | "Je, unatumia 'hand' au 'leg' yako kuandika?"
     Watu:      "Ni 'mother' au 'father' anayepika mara nyingi nyumbani?" | "Je, 'grandmother' yako ni mzee kuliko 'mother' yako — ndio au hapana?" | "Ungependa kutumia siku na 'brother' au 'friend' yako?"
-    Chakula:   "Ungependa kula wali au ugali kwa chakula cha jioni leo usiku?" | "Je, chai ni moto au baridi?" | "Kama ungelazimika kuchagua — ungekula ndizi au embe sasa hivi?"
-    Vitenzi:   "Ungependa kukimbia au kuruka — lipi ni la kufurahisha zaidi?" | "Je, kusoma ni rahisi zaidi ukikaa mezani au ukilala kitandani?" | "Ungependa zaidi kuimba wimbo au kucheza mchezo?"
-    Shule:     "Je, unatumia penseli au kalamu zaidi shuleni?" | "Ungependa zaidi kuwa na likizo ndefu au tuzo kubwa shuleni?" | "Je, mwalimu ni mkali zaidi au mwenye upole zaidi kuliko baba?"
-    Hisia:     "Je, furaha au shangwe — lipi linahisi kubwa zaidi?" | "Je, unahisi uchovu zaidi asubuhi au jioni?" | "Je, upendo ni hisia unayohisi kila siku — ndio au hapana?"
-    Mazingira: "Je, jua linawaka zaidi adhuhuri au asubuhi?" | "Ungependa zaidi kuishi karibu na mto au karibu na bahari?" | "Baada ya mvua, ardhi inanuka vizuri — ndio au hapana?"
+    Chakula:   "Ungependa kula 'rice' au 'ugali' kwa chakula cha jioni leo usiku?" | "Je, 'tea' ni moto au baridi?" | "Kama ungelazimika kuchagua — ungekula 'banana' au 'mango' sasa hivi?"
+    Vitenzi:   "Ungependa zaidi 'run' au 'jump' — lipi ni la kufurahisha zaidi?" | "Je, 'read' ni rahisi zaidi ukikaa mezani au ukilala kitandani?" | "Ungependa zaidi 'sing' wimbo au 'play' mchezo?"
+    Shule:     "Je, unatumia 'pencil' au 'pen' zaidi shuleni?" | "Ungependa zaidi kuwa na 'school holiday' ndefu au 'prize' kubwa shuleni?" | "Je, 'teacher' ni mkali zaidi au mwenye upole zaidi kuliko baba?"
+    Hisia:     "Je, 'happiness' au 'excitement' — lipi linahisi kubwa zaidi na chenye nguvu zaidi?" | "Je, unahisi 'tiredness' zaidi asubuhi au jioni?" | "Je, 'love' ni hisia unayohisi kila siku — ndio au hapana?"
+    Mazingira: "Je, 'sun' inawaka zaidi adhuhuri au asubuhi?" | "Ungependa zaidi kuishi karibu na 'river' au karibu na 'ocean'?" | "Baada ya 'rain', 'earth' inanuka vizuri — ndio au hapana?"
   `}
   For ages 7 and above: use the per-word open-ended questions below as normal.
   Use your judgement always — if a young child is clearly responding well to open questions, keep them; if they go quiet or give nothing, switch to binary immediately.
@@ -1983,9 +1983,12 @@ SHOW ME RULES — non-negotiable:
 
 WORD CONNECTIONS — natural callbacks between words:
 As you move through the 5 words, find natural bridges between them — one sentence per transition is enough.
-  Animals: "Remember tembo? Well, the ndege lives in the same trees the tembo walks past every morning!"
-  Animals: "We learned simba — well, chui is a big cat just like simba, but instead of a mane it has spots and it hides in the trees!"
-  Animals: "Remember mbwa? Well, farasi is also tamed by humans just like mbwa — but instead of fetching sticks, it carries people!"
+  Animals ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"Remember tembo? Well, the ndege lives in the same trees the tembo walks past every morning!"
+  "We learned simba — well, chui is a big cat just like simba, but instead of a mane it has spots and it hides in the trees!"
+  "Remember mbwa? Well, farasi is also tamed by humans just like mbwa — but instead of fetching sticks, it carries people!"` : `"Kumbuka 'elephant'? Sasa 'bird' inaishi kwenye miti ambayo 'elephant' inapita kila asubuhi!"
+  "Tulijifunza 'lion' — sasa 'leopard' ni paka mkubwa kama 'lion', lakini badala ya mane ina madoa na inajificha kwenye miti!"
+  "Kumbuka 'dog'? Sasa 'horse' pia imefugwa na wanadamu kama 'dog' — lakini badala ya kuleta vijiti, inabeba watu!"`}
   Body parts ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
   ${isSwahili ? `"We learned kichwa — now here is what is INSIDE it: your jicho sees the world from right there!"
   "Remember mkono? Well, kidole is just the tip of mkono — five of them, all working together!"
@@ -1995,9 +1998,9 @@ As you move through the 5 words, find natural bridges between them — one sente
   Numbers ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
   ${isSwahili ? `"You know tatu — well, nne is just one more — can you picture adding one more?"
   "Remember kumi? Well, kumi na moja is just kumi with one extra added on top — ten and one more!"
-  "We learned ishirini — well, thelathini is ishirini plus kumi more — the bigger the number, the longer the journey!"` : `"Unajua tatu — sasa nne ni moja tu zaidi — unaweza kuifikiria ukiongeza moja?"
-  "Kumbuka kumi? Sasa kumi na moja ni kumi tu na moja juu yake — kumi na moja zaidi!"
-  "Tulijifunza ishirini — sasa thelathini ni ishirini na kumi zaidi — kadri nambari inavyokuwa kubwa, ndivyo safari inavyokuwa ndefu!"`}
+  "We learned ishirini — well, thelathini is ishirini plus kumi more — the bigger the number, the longer the journey!"` : `"Unajua 'three' — sasa 'four' ni moja tu zaidi — unaweza kuifikiria ukiongeza moja?"
+  "Kumbuka 'ten'? Sasa 'eleven' ni 'ten' tu na moja zaidi juu yake — 'ten' na moja!"
+  "Tulijifunza 'twenty' — sasa 'thirty' ni 'twenty' na kumi zaidi — kadri nambari inavyokuwa kubwa, ndivyo safari inavyokuwa ndefu!"`}
   Colors ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
   ${isSwahili
     ? `Level 1 connections (between nyekundu/bluu/njano/kijani/nyeupe):
@@ -2022,21 +2025,36 @@ As you move through the 5 words, find natural bridges between them — one sente
   "We learned mwalimu — well, mwanafunzi is the reason the mwalimu comes to school every day — you cannot have one without the other!"` : `"Tulizungumza kuhusu 'mother' — sasa 'grandmother' ni mama wa 'mother' wako — ndiye aliyemfundisha 'mother' wako kila kitu anachokijua!"
   "Kumbuka 'brother'? Sasa 'cousin' ni kama 'brother' anayeishi nyumba tofauti — binamu ni familia ambayo hukuishi nayo kila siku!"
   "Tulijifunza 'teacher' — sasa 'student' ni sababu 'teacher' anakuja shuleni kila siku — huwezi kuwa na mmoja bila mwingine!"`}
-  Food: "We learned maji — well, chai is just hot maji with tea leaves and sukari added in! Same base, totally different drink."
-  Food: "Remember wali? Well, ugali is made the same way — you cook it in maji — but with maize flour instead of rice. Both fill you up!"
-  Food: "We learned ndizi — well, embe is another fruit just like it — you peel it, the juice drips everywhere, and it grows right here in East Africa!"
-  Verbs: "We learned kula — well, kupika comes BEFORE kula. Someone has to make the food before you can eat it!"
-  Verbs: "Remember kulala? Well, kuimba is the opposite energy — one is quiet and still, the other is loud and full of life!"
-  Verbs: "We learned kusoma — well, kuandika goes hand in hand with it. You read what someone wrote, and you write what someone will read!"
-  School: "We learned kitabu — well, kalamu is what you need BEFORE you can use a kitabu. You write in one, you read from the other!"
-  School: "Remember darasa? Well, mwalimu is the reason the darasa exists — without the mwalimu, the room is just an empty space!"
-  School: "We learned hesabu — well, sayansi uses hesabu all the time. Numbers are the language of science!"
-  Feelings: "We learned furaha — well, shangwe is furaha turned up to maximum — so excited you want to jump and shout!"
-  Feelings: "Remember huzuni? Well, huruma is what happens when you SEE someone else's huzuni and your heart hurts for them too."
-  Feelings: "We learned hofu — well, ujasiri is doing the thing anyway, even when hofu is there. Brave people are not fearless — they just act despite the fear!"
-  Nature: "We learned mti — well, msitu is just thousands of mti all growing together in one place. One tree is a mti; a whole world of them is a msitu!"
-  Nature: "Remember jua? Well, mwanga is what jua gives us. Jua is the source; mwanga is the gift it sends down to us every morning!"
-  Nature: "We learned mvua — well, mto is where all that mvua ends up! Rain falls, runs down the mlima, and fills the rivers."
+  Food ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"We learned maji — well, chai is just hot maji with tea leaves and sugar added in! Same base, totally different drink."
+  "Remember wali? Well, ugali is made the same way — you cook it in maji — but with maize flour instead of rice. Both fill you up!"
+  "We learned ndizi — well, embe is another fruit just like it — you peel it, the juice drips everywhere, and it grows right here in East Africa!"` : `"Tulijifunza 'water' — sasa 'tea' ni tu 'water' ya moto yenye majani ya chai na sukari ndani! Msingi mmoja, kinywaji tofauti kabisa."
+  "Kumbuka 'rice'? Sasa 'ugali' inatengenezwa vivyo hivyo — unaipika kwa 'water' — lakini kwa unga wa mahindi badala ya mchele. Zote zinakushibisha!"
+  "Tulijifunza 'banana' — sasa 'mango' ni tunda lingine kama hiyo — unalimenyua, juisi inatiririka kila mahali, na linakua hapa Afrika Mashariki!"`}
+  Verbs ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"We learned kula — well, kupika comes BEFORE kula. Someone has to make the food before you can eat it!"
+  "Remember kulala? Well, kuimba is the opposite energy — one is quiet and still, the other is loud and full of life!"
+  "We learned kusoma — well, kuandika goes hand in hand with it. You read what someone wrote, and you write what someone will read!"` : `"Tulijifunza 'eat' — sasa 'cook' inakuja KABLA ya 'eat'. Lazima mtu apike chakula kabla hujaweza kula!"
+  "Kumbuka 'sleep'? Sasa 'sing' ni nguvu kinyume chake — moja ni ya kimya na utulivu, nyingine ni ya kelele na uzima!"
+  "Tulijifunza 'read' — sasa 'write' inakwenda mkono kwa mkono nazo. Unasoma kilichoandikwa na mtu, na unaandika ambacho mtu atasoma!"`}
+  School ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"We learned kitabu — well, kalamu is what you need BEFORE you can use a kitabu. You write in one, you read from the other!"
+  "Remember darasa? Well, mwalimu is the reason the darasa exists — without the mwalimu, the room is just an empty space!"
+  "We learned hesabu — well, sayansi uses hesabu all the time. Numbers are the language of science!"` : `"Tulijifunza 'book' — sasa 'pen' ni unachohitaji KABLA ya kutumia 'book'. Unaandika katika moja, unasoma kutoka nyingine!"
+  "Kumbuka 'classroom'? Sasa 'teacher' ndiye sababu ya 'classroom' kuwepo — bila 'teacher', chumba ni nafasi tupu tu!"
+  "Tulijifunza 'maths' — sasa 'science' inatumia 'maths' kila wakati. Nambari ndiyo lugha ya 'science'!"`}
+  Feelings ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"We learned furaha — well, shangwe is furaha turned up to maximum — so excited you want to jump and shout!"
+  "Remember huzuni? Well, huruma is what happens when you SEE someone else's huzuni and your heart hurts for them too."
+  "We learned hofu — well, ujasiri is doing the thing anyway, even when hofu is there. Brave people are not fearless — they just act despite the fear!"` : `"Tulijifunza 'happiness' — sasa 'excitement' ni 'happiness' imezidishwa hadi kiwango cha juu kabisa — furaha sana kiasi kwamba unataka kuruka na kupiga kelele!"
+  "Kumbuka 'sadness'? Sasa 'sympathy' ni kinachotokezea unapoona 'sadness' ya mtu mwingine na moyo wako unaumia nazo."
+  "Tulijifunza 'fear' — sasa 'courage' ni kufanya jambo hata 'fear' ikiwepo. Watu jasiri si wale wasio na 'fear' — wanafanya tu licha ya 'fear'!"`}
+  Nature ${isSwahili ? `(English — your instructional language)` : `(Swahili — lugha yako ya kufundishia)`}:
+  ${isSwahili ? `"We learned mti — well, msitu is just thousands of mti all growing together in one place. One tree is a mti; a whole world of them is a msitu!"
+  "Remember jua? Well, mwanga is what jua gives us. Jua is the source; mwanga is the gift it sends down to us every morning!"
+  "We learned mvua — well, mto is where all that mvua ends up! Rain falls, runs down the mountain, and fills the rivers."` : `"Tulijifunza 'tree' — sasa 'forest' ni tu 'tree' elfu zinazoota pamoja mahali pamoja. Mti mmoja ni 'tree'; ulimwengu wao wote ni 'forest'!"
+  "Kumbuka 'sun'? Sasa 'light' ni kile ambacho 'sun' inatupa. 'Sun' ndiyo chanzo; 'light' ndiyo zawadi inayotushuka kila asubuhi!"
+  "Tulijifunza 'rain' — sasa 'river' ndipo 'rain' yote inaishia! Inanyesha kutoka angani, inashuka mlimani, na kuunda 'river' kubwa!"`}
 These connections are optional but powerful — use them when they arise naturally, never force them.
 
 ━━━ TRANSITION SCRIPTS — use these to move naturally between moments ━━━
@@ -2478,7 +2496,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const [celebrationData, setCelebrationData] = useState<{ stars: number; words: number } | null>(null);
   const [debugLog, setDebugLog]           = useState<string[]>([]);
   const [revealCard, setRevealCard] = useState<{ primary: string; secondary: string; emoji: string; dismissing: boolean } | null>(null);
-  const revealedWordsRef = useRef<Set<string>>(new Set());
+  const revealedWordsRef  = useRef<Set<string>>(new Set());
+  const dismissTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Words fixed for this session
   const lessonWords = useMemo(() => getWordBatch(game, childXp, childAge), [game, childXp, childAge]);
@@ -3200,7 +3220,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     });
   }, [lessonEmojis]);
 
-  // Detect newly introduced words and animate a card reveal
+  // Detect newly introduced words and animate a card reveal.
+  // Timer IDs live in refs (not local vars) so they are not cancelled by the React
+  // cleanup when the effect re-runs on unrelated transcript updates (e.g. child speaks
+  // while the card is still on screen). Without refs, the cleanup would clear the
+  // dismiss timers and leave the card permanently visible.
   useEffect(() => {
     if (!sessionStarted) return;
     const raw = transcript.filter(t => t.role === "ticha").map(t => t.text).join(" ");
@@ -3224,13 +3248,20 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     const secondary = language === "sw" ? newlyIntroduced.en : newlyIntroduced.sw;
     setRevealCard({ primary, secondary, emoji, dismissing: false });
 
-    const dismissTimer = setTimeout(() => {
+    if (dismissTimerRef.current)   clearTimeout(dismissTimerRef.current);
+    if (revealClearTimerRef.current) clearTimeout(revealClearTimerRef.current);
+    dismissTimerRef.current = setTimeout(() => {
       setRevealCard(prev => prev ? { ...prev, dismissing: true } : null);
     }, 3000);
-    const clearTimer = setTimeout(() => setRevealCard(null), 3400);
-    return () => { clearTimeout(dismissTimer); clearTimeout(clearTimer); };
+    revealClearTimerRef.current = setTimeout(() => setRevealCard(null), 3400);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcript]);
+
+  // Clean up reveal timers on unmount
+  useEffect(() => () => {
+    if (dismissTimerRef.current)   clearTimeout(dismissTimerRef.current);
+    if (revealClearTimerRef.current) clearTimeout(revealClearTimerRef.current);
+  }, []);
 
   const sessionLevel = getLessonLevel(childXp);
   const levelLabel =
