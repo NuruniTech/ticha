@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Child } from "@/types";
 import TichaAvatar from "@/components/TichaAvatar";
-import QuizOverlay from "@/components/QuizOverlay";
+import WordMatchGame from "@/components/WordMatchGame";
 import LottieEmoji from "@/components/LottieEmoji";
 import { WORD_LISTS } from "@/lib/wordLists";
 import { useLanguage } from "@/context/LanguageContext";
@@ -214,7 +214,7 @@ export default function ChildPage() {
 
     const quizWords = [...(WORD_LISTS[game] || WORD_LISTS.animals)].sort(() => Math.random() - 0.5).slice(0, 5);
     return (
-      <QuizOverlay
+      <WordMatchGame
         words={quizWords}
         language={child.primary_language}
         childId={child.id}
