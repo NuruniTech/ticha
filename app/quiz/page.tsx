@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import QuizOverlay from "@/components/QuizOverlay";
+import WordMatchGame from "@/components/WordMatchGame";
 import { WORD_LISTS, QuizWord } from "@/lib/wordLists";
 
 function QuizContent() {
@@ -28,7 +28,7 @@ function QuizContent() {
   }
 
   return (
-    <QuizOverlay
+    <WordMatchGame
       words={words}
       language={lang}
       childId={childId}
