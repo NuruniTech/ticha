@@ -5,11 +5,12 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Child } from "@/types";
 import TichaAvatar from "@/components/TichaAvatar";
-import WordMatchGame from "@/components/WordMatchGame";
+import GameSession from "@/components/GameSession";
 import LottieEmoji from "@/components/LottieEmoji";
 import { WORD_LISTS } from "@/lib/wordLists";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
+import { getLevel, nextLevelXp } from "@/lib/levels";
 
 const GAMES = [
   { id: "animals",   labelEn: "Animals",    labelSw: "Wanyama",   emoji: "🦁", bg: "#FF8C00", shadow: "rgba(255,140,0,0.35)"   },
@@ -110,7 +111,7 @@ export default function ChildPage() {
       setChild(data);
 
       // Detect level-up since last visit
-      const currentLevel = data.xp < 50 ? 1 : data.xp < 150 ? 2 : data.xp < 300 ? 3 : 4;
+      const currentLevel = getLevel(data.xp);
       const levelKey = `ticha_level_${childId}`;
       try {
         const storedLevel = parseInt(localStorage.getItem(levelKey) || "0", 10);
@@ -127,14 +128,23 @@ export default function ChildPage() {
         supabase.from("sessions").select("xp_earned").eq("child_id", childId).gte("created_at", todayStart.toISOString()),
         supabase.from("sessions").select("id", { count: "exact", head: true }).eq("child_id", childId),
         supabase.from("children").select("id, name, avatar, xp").eq("parent_id", user.id).order("xp", { ascending: false }),
-        supabase.from("sessions").select("game").eq("child_id", childId),
+        supabase.from("sessions").select("game, xp_earned, duration_seconds").eq("child_id", childId),
       ]);
       setSiblings((sibs || []).filter(s => s.id !== childId));
       const earned = (sessions || []).reduce((s: number, r: { xp_earned?: number }) => s + (r.xp_earned || 0), 0);
       setTodayStars(earned);
       setTotalSessions(sessionCount ?? 0);
 
-      const done = new Set((gameSessions || []).map((s: { game: string }) => s.game));
+      // A topic only counts as "completed" if the lesson genuinely happened:
+      // XP is awarded on natural completion, so xp_earned > 0 is the primary
+      // signal; a 4+ minute session covers the rare real lesson with 0 stars.
+      // Pressing End after a few seconds no longer unlocks the next level.
+      const done = new Set(
+        (gameSessions || [])
+          .filter((s: { xp_earned?: number; duration_seconds?: number }) =>
+            (s.xp_earned || 0) > 0 || (s.duration_seconds || 0) >= 240)
+          .map((s: { game: string }) => s.game)
+      );
       const recommended = CURRICULUM.flat().find(g => {
         const lvl = CURRICULUM.findIndex(l => l.includes(g));
         return levelUnlocked(lvl, done) && !done.has(g);
@@ -214,11 +224,12 @@ export default function ChildPage() {
 
     const quizWords = [...(WORD_LISTS[game] || WORD_LISTS.animals)].sort(() => Math.random() - 0.5).slice(0, 5);
     return (
-      <WordMatchGame
+      <GameSession
         words={quizWords}
         language={child.primary_language}
         childId={child.id}
         sessionStars={todayStars}
+        childAge={child.age ?? 7}
         onComplete={() => {
           incrementQuizCount();
           checkQuizCooldown();
@@ -230,10 +241,9 @@ export default function ChildPage() {
   }
 
   // ── Computed stats ─────────────────────────────────────────────────────────
-  const LEVEL_THRESHOLDS = [0, 50, 150, 300];
-  const levelNum    = child.xp < 50 ? 1 : child.xp < 150 ? 2 : child.xp < 300 ? 3 : 4;
-  const nextLevelXp = levelNum < 4 ? LEVEL_THRESHOLDS[levelNum] : null;
-  const starsToNext = nextLevelXp !== null ? nextLevelXp - child.xp : null;
+  const levelNum    = getLevel(child.xp);
+  const nextXp      = nextLevelXp(child.xp);
+  const starsToNext = nextXp !== null ? nextXp - child.xp : null;
   const todayPct   = Math.min(100, Math.round((todayStars / 50) * 100));
   const wordsGoal  = 5;
   const wordsDone  = Math.min(wordsGoal, Math.floor(todayStars / 10));
@@ -334,7 +344,7 @@ export default function ChildPage() {
     { emoji: "🌟", color: "#3B82F6", nameEn: "Rising Star",    nameSw: "Nyota Mpya",       hintEn: "Reach 150 stars — you're a superstar!",       hintSw: "Fikia nyota 150 — wewe ni nyota!",         descEn: "Earn 150 stars",       descSw: "Nyota 150",        unlocked: child.xp >= 150     },
     { emoji: "🎯", color: "#EF4444", nameEn: "Streak Master",  nameSw: "Bingwa wa Siku",   hintEn: "7 days in a row? You're unstoppable!",        hintSw: "Siku 7 mfululizo? Huwezi kusimamishwa!",   descEn: "7-day streak",         descSw: "Siku 7 mfululizo", unlocked: child.streak >= 7   },
     { emoji: "💪", color: "#0D9488", nameEn: "Word Master",    nameSw: "Bingwa wa Maneno", hintEn: "Complete 20 lessons to master this badge!",   hintSw: "Maliza masomo 20 kushinda beji hii!",       descEn: "Complete 20 sessions", descSw: "Masomo 20",        unlocked: totalSessions >= 20 },
-    { emoji: "🏆", color: "#D97706", nameEn: "Champion",       nameSw: "Bingwa",           hintEn: "Reach the top level — the ultimate champion!", hintSw: "Fikia kiwango cha juu — bingwa mkubwa!",   descEn: "Reach max level",      descSw: "Kiwango cha juu",  unlocked: child.xp >= 300     },
+    { emoji: "🏆", color: "#D97706", nameEn: "Champion",       nameSw: "Bingwa",           hintEn: "Reach the top level — the ultimate champion!", hintSw: "Fikia kiwango cha juu — bingwa mkubwa!",   descEn: "Reach max level",      descSw: "Kiwango cha juu",  unlocked: getLevel(child.xp) >= 4 },
   ];
 
   // ── Topics view ────────────────────────────────────────────────────────────
@@ -470,7 +480,7 @@ export default function ChildPage() {
     const trophy = { id: "trophy", emoji: "🏆", nameEn: "Gold Trophy",    nameSw: "Kombe la Dhahabu", unlockEn: "Reach 150 stars!",                      unlockSw: "Fikia nyota 150!",                      unlocked: child.xp >= 150     };
     const mobile = { id: "mobile", emoji: "🌟", nameEn: "Star Mobile",    nameSw: "Mapambo ya Nyota", unlockEn: "Keep a 7-day streak — you're amazing!", unlockSw: "Siku 7 mfululizo — wewe ni bora!",      unlocked: child.streak >= 7   };
     const music  = { id: "music",  emoji: "🎵", nameEn: "Music Player",   nameSw: "Mchezaji Muziki",  unlockEn: "Complete 20 lessons!",                  unlockSw: "Maliza masomo 20!",                     unlocked: totalSessions >= 20 };
-    const crown  = { id: "crown",  emoji: "👑", nameEn: "Champion Crown", nameSw: "Taji la Bingwa",   unlockEn: "Reach 300 stars — ultimate champion!",  unlockSw: "Fikia nyota 300 — bingwa mkubwa!",     unlocked: child.xp >= 300     };
+    const crown  = { id: "crown",  emoji: "👑", nameEn: "Champion Crown", nameSw: "Taji la Bingwa",   unlockEn: "Reach 500 stars — ultimate champion!",  unlockSw: "Fikia nyota 500 — bingwa mkubwa!",     unlocked: getLevel(child.xp) >= 4 };
     const DECORATIONS = [plant, poster, books, canvas, trophy, mobile, music, crown];
     const unlockedCount = DECORATIONS.filter(d => d.unlocked).length;
     type Decor = typeof plant;

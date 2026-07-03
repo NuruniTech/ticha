@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Child, Session } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
+import { getLevel, nextLevelXp, levelProgressPct, LEVEL_META } from "@/lib/levels";
 
 function StatCard({ emoji, value, label, color }: { emoji: string; value: string | number; label: string; color: string }) {
   return (
@@ -89,8 +90,9 @@ export default function ProgressPage() {
   const totalSessions = sessions.length;
   const totalMinutes  = Math.round(sessions.reduce((s, x) => s + (x.duration_seconds || 0), 0) / 60);
   const allWords      = [...new Set(sessions.flatMap((s) => s.words_practiced || []))];
-  const nextLevel     = child.xp < 50 ? 50 : child.xp < 150 ? 150 : child.xp < 300 ? 300 : "MAX";
-  const levelLabel    = child.xp < 50 ? "🌱 Mwanafunzi" : child.xp < 150 ? "⭐ Msomi" : child.xp < 300 ? "🌟 Hodari" : "🏆 Bingwa";
+  const meta          = LEVEL_META[getLevel(child.xp)];
+  const nextLevel     = nextLevelXp(child.xp) ?? "MAX";
+  const levelLabel    = `${meta.emoji} ${meta.label}`;
 
   return (
     <div style={{ minHeight: "100vh", background: "#FFFBF0" }}>
@@ -144,13 +146,13 @@ export default function ProgressPage() {
               </p>
               <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{t.levelInfo(child.xp, nextLevel)}</p>
             </div>
-            <span style={{ fontSize: "32px" }}>{child.xp < 50 ? "🌱" : child.xp < 150 ? "⭐" : child.xp < 300 ? "🌟" : "🏆"}</span>
+            <span style={{ fontSize: "32px" }}>{meta.emoji}</span>
           </div>
           <div style={{ height: "10px", background: "#E5E7EB", borderRadius: "9999px", overflow: "hidden" }}>
             <div style={{
               height: "100%", background: "linear-gradient(90deg, #F59E0B, #D97706)",
               borderRadius: "9999px",
-              width: `${Math.min(100, child.xp < 50 ? (child.xp / 50) * 100 : child.xp < 150 ? ((child.xp - 50) / 100) * 100 : child.xp < 300 ? ((child.xp - 150) / 150) * 100 : 100)}%`,
+              width: `${levelProgressPct(child.xp)}%`,
               transition: "width 1s ease",
             }} />
           </div>

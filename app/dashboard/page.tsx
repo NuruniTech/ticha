@@ -9,18 +9,14 @@ import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { usePostHog } from "posthog-js/react";
+import { getLevel, levelProgressPct, LEVEL_META } from "@/lib/levels";
 
 const CHILDREN_CACHE_KEY = "ticha_children_cache";
 const PARENT_NAME_KEY    = "ticha_parent_name";
 
 const AVATARS = ["🦁", "🐘", "🦒", "🦓", "🐆", "🦏", "🦋", "🌺", "⭐", "🌍", "🎵", "🚀"];
 
-const LEVEL = (xp: number) => {
-  if (xp < 50)  return { label: "Mwanafunzi", emoji: "🌱", color: "#22C55E", bg: "#F0FDF4" };
-  if (xp < 150) return { label: "Msomi",      emoji: "⭐", color: "#F59E0B", bg: "#FFFBEB" };
-  if (xp < 300) return { label: "Hodari",     emoji: "🌟", color: "#8B5CF6", bg: "#F5F3FF" };
-  return              { label: "Bingwa",      emoji: "🏆", color: "#EF4444", bg: "#FEF2F2" };
-};
+const LEVEL = (xp: number) => LEVEL_META[getLevel(xp)];
 
 const CARD_GRADIENTS = [
   "linear-gradient(135deg, #FF8C00 0%, #FFB347 100%)",
@@ -74,9 +70,9 @@ export default function DashboardPage() {
         const alerts: { key: string; msg: string; msgSw: string; childName: string }[] = [];
         for (const child of (kids || [])) {
           const checks = [
-            { key: `ms_${child.id}_xp50`,  cond: child.xp >= 50,   msg: `🌟 ${child.name} reached Level 2!`,        msgSw: `🌟 ${child.name} amefika Kiwango 2!`        },
-            { key: `ms_${child.id}_xp150`, cond: child.xp >= 150,  msg: `🌟 ${child.name} reached Level 3!`,        msgSw: `🌟 ${child.name} amefika Kiwango 3!`        },
-            { key: `ms_${child.id}_xp300`, cond: child.xp >= 300,  msg: `🏆 ${child.name} reached the top level!`, msgSw: `🏆 ${child.name} amefika kiwango cha juu!` },
+            { key: `ms_${child.id}_lvl2`,  cond: getLevel(child.xp) >= 2, msg: `🌟 ${child.name} reached Level 2!`,        msgSw: `🌟 ${child.name} amefika Kiwango 2!`        },
+            { key: `ms_${child.id}_lvl3`,  cond: getLevel(child.xp) >= 3, msg: `🌟 ${child.name} reached Level 3!`,        msgSw: `🌟 ${child.name} amefika Kiwango 3!`        },
+            { key: `ms_${child.id}_lvl4`,  cond: getLevel(child.xp) >= 4, msg: `🏆 ${child.name} reached the top level!`, msgSw: `🏆 ${child.name} amefika kiwango cha juu!` },
             { key: `ms_${child.id}_str3`,  cond: child.streak >= 3, msg: `🔥 ${child.name} is on a 3-day streak!`,  msgSw: `🔥 ${child.name} ana mfululizo wa siku 3!`  },
             { key: `ms_${child.id}_str7`,  cond: child.streak >= 7, msg: `🔥 ${child.name} is on a 7-day streak!`,  msgSw: `🔥 ${child.name} ana mfululizo wa siku 7!`  },
           ];
@@ -279,7 +275,7 @@ export default function DashboardPage() {
                           <span style={{ fontSize: "11px", fontWeight: 800, color: "#374151" }}>⭐ {child.xp}</span>
                         </div>
                         <div style={{ height: "6px", background: "#F3F4F6", borderRadius: "9999px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", background: lvl.color, borderRadius: "9999px", width: `${child.xp < 50 ? (child.xp / 50) * 100 : child.xp < 150 ? ((child.xp - 50) / 100) * 100 : child.xp < 300 ? ((child.xp - 150) / 150) * 100 : 100}%`, transition: "width 0.5s" }} />
+                          <div style={{ height: "100%", background: lvl.color, borderRadius: "9999px", width: `${levelProgressPct(child.xp)}%`, transition: "width 0.5s" }} />
                         </div>
                       </div>
                       <button style={{ width: "100%", padding: "10px", background: "#FF8C00", color: "white", border: "none", borderRadius: "12px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 3px 0 #CC6A00" }}

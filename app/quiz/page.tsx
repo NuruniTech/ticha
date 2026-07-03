@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import WordMatchGame from "@/components/WordMatchGame";
+import GameSession from "@/components/GameSession";
 import { WORD_LISTS, QuizWord } from "@/lib/wordLists";
 
 function QuizContent() {
@@ -13,6 +13,8 @@ function QuizContent() {
   const childId      = searchParams.get("childId") || null;
   const sessionStars = parseInt(searchParams.get("xp") || "0");
   const wordsParam   = searchParams.get("words")   || "";
+  const ageParam     = searchParams.get("age");
+  const childAge     = ageParam ? parseInt(ageParam) : undefined;
 
   const allWords = WORD_LISTS[game] || WORD_LISTS.animals;
 
@@ -28,11 +30,12 @@ function QuizContent() {
   }
 
   return (
-    <WordMatchGame
+    <GameSession
       words={words}
       language={lang}
       childId={childId}
       sessionStars={sessionStars}
+      childAge={childAge}
       onComplete={() => router.push(childId ? `/child/${childId}` : "/dashboard")}
     />
   );

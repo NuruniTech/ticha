@@ -10,8 +10,9 @@ import { T } from "@/lib/translations";
 import TichaAvatar from "./TichaAvatar";
 import FluentEmoji from "./FluentEmoji";
 import LottieEmoji from "./LottieEmoji";
-import { WORD_LISTS as QUIZ_WORD_LISTS } from "@/lib/wordLists";
+import { WORD_LISTS, type QuizWord } from "@/lib/wordLists";
 import { getAnimatedUrl, getFluentUrl } from "@/lib/fluentEmoji";
+import { getLevel } from "@/lib/levels";
 import { usePostHog } from "posthog-js/react";
 import Image from "next/image";
 
@@ -57,377 +58,8 @@ const PRAISE_WORDS = [
 // "kwa heri" is intentionally excluded: it can appear mid-lesson as a casual social phrase.
 const GOODBYE_PHRASES = ["tutaonana", "see you next time"];
 
-// ── Vocabulary with per-word Swahili phonetic guides ─────────────────────────
-// swPhonetic is used internally for reference; it is NOT injected into the word
-// list given to the model (doing so caused the model to read bracket notation aloud).
-const WORD_LISTS: Record<string, { sw: string; swPhonetic: string; en: string }[]> = {
-  animals: [
-    // Level 1 — words 0-4
-    { sw: "simba",       swPhonetic: "SEEM-bah",              en: "lion"        },
-    { sw: "tembo",       swPhonetic: "TEM-bo",                en: "elephant"    },
-    { sw: "twiga",       swPhonetic: "TWEE-gah",              en: "giraffe"     },
-    { sw: "mbwa",        swPhonetic: "M-bwah",                en: "dog"         },
-    { sw: "paka",        swPhonetic: "PAH-kah",               en: "cat"         },
-    // Level 2 — words 5-9
-    { sw: "ndege",       swPhonetic: "n-DEH-geh",             en: "bird"        },
-    { sw: "mbuzi",       swPhonetic: "m-BOO-zee",             en: "goat"        },
-    { sw: "ng'ombe",     swPhonetic: "ng-OM-beh",             en: "cow"         },
-    { sw: "punda",       swPhonetic: "POON-dah",              en: "donkey"      },
-    { sw: "farasi",      swPhonetic: "fah-RAH-see",           en: "horse"       },
-    // Advanced pool — words 10+
-    { sw: "kondoo",      swPhonetic: "kon-DOH-oh",            en: "sheep"       },
-    { sw: "kuku",        swPhonetic: "KOO-koo",               en: "chicken"     },
-    { sw: "bata",        swPhonetic: "BAH-tah",               en: "duck"        },
-    { sw: "kasuku",      swPhonetic: "kah-SOO-koo",           en: "parrot"      },
-    { sw: "nyani",       swPhonetic: "NYAH-nee",              en: "monkey"      },
-    { sw: "chui",        swPhonetic: "CHOO-ee",               en: "leopard"     },
-    { sw: "fisi",        swPhonetic: "FEE-see",               en: "hyena"       },
-    { sw: "kiboko",      swPhonetic: "kee-BOH-koh",           en: "hippo"       },
-    { sw: "sungura",     swPhonetic: "soon-GOO-rah",          en: "rabbit"      },
-    { sw: "panya",       swPhonetic: "PAH-nyah",              en: "mouse / rat" },
-    { sw: "nyuki",       swPhonetic: "NYOO-kee",              en: "bee"         },
-    { sw: "kipepeo",     swPhonetic: "kee-peh-PEH-oh",        en: "butterfly"   },
-    { sw: "mbu",         swPhonetic: "M-boo",                 en: "mosquito"    },
-    { sw: "duma",        swPhonetic: "DOO-mah",               en: "cheetah"     },
-    { sw: "faru",        swPhonetic: "FAH-roo",               en: "rhino"       },
-    { sw: "nguruwe",     swPhonetic: "ngoo-ROO-weh",          en: "pig"         },
-    { sw: "papa",        swPhonetic: "PAH-pah",               en: "shark"       },
-    { sw: "nyangumi",    swPhonetic: "nyahn-GOO-mee",         en: "whale"       },
-    { sw: "tai",         swPhonetic: "TAH-ee",                en: "eagle"       },
-    { sw: "kasa",        swPhonetic: "KAH-sah",               en: "turtle"      },
-    { sw: "ngiri",       swPhonetic: "NGEE-ree",              en: "warthog"     },
-    { sw: "pweza",       swPhonetic: "PWEH-zah",              en: "octopus"     },
-    { sw: "pundamilia",  swPhonetic: "poon-dah-mee-LEE-ah",   en: "zebra"       },
-    { sw: "nyati",       swPhonetic: "NYAH-tee",              en: "buffalo"     },
-    { sw: "swala",       swPhonetic: "SWAH-lah",              en: "gazelle"     },
-    { sw: "korongo",     swPhonetic: "koh-RON-goh",           en: "crane"       },
-    { sw: "kobe",        swPhonetic: "KOH-beh",               en: "tortoise"    },
-    { sw: "nge",         swPhonetic: "N-geh",                 en: "scorpion"    },
-    { sw: "samaki",      swPhonetic: "sah-MAH-kee",           en: "fish"        },
-    { sw: "nyoka",       swPhonetic: "NYOH-kah",              en: "snake"       },
-  ],
-  numbers: [
-    // Level 1 — 1 to 5 (words 0–4)
-    { sw: "moja",          swPhonetic: "MOH-jah",                 en: "one"       },
-    { sw: "mbili",         swPhonetic: "m-BEE-lee",               en: "two"       },
-    { sw: "tatu",          swPhonetic: "TAH-too",                 en: "three"     },
-    { sw: "nne",           swPhonetic: "N-neh",                   en: "four"      },
-    { sw: "tano",          swPhonetic: "TAH-no",                  en: "five"      },
-    // Level 2 — 6 to 10 (words 5–9)
-    { sw: "sita",          swPhonetic: "SEE-tah",                 en: "six"       },
-    { sw: "saba",          swPhonetic: "SAH-bah",                 en: "seven"     },
-    { sw: "nane",          swPhonetic: "NAH-neh",                 en: "eight"     },
-    { sw: "tisa",          swPhonetic: "TEE-sah",                 en: "nine"      },
-    { sw: "kumi",          swPhonetic: "KOO-mee",                 en: "ten"       },
-    // Advanced pool — words 10+
-    { sw: "kumi na moja",  swPhonetic: "KOO-mee nah MOH-jah",    en: "eleven"       },
-    { sw: "kumi na mbili", swPhonetic: "KOO-mee nah m-BEE-lee",  en: "twelve"       },
-    { sw: "kumi na tatu",  swPhonetic: "KOO-mee nah TAH-too",    en: "thirteen"     },
-    { sw: "kumi na nne",   swPhonetic: "KOO-mee nah N-neh",      en: "fourteen"     },
-    { sw: "kumi na tano",  swPhonetic: "KOO-mee nah TAH-no",     en: "fifteen"      },
-    { sw: "kumi na sita",  swPhonetic: "KOO-mee nah SEE-tah",    en: "sixteen"      },
-    { sw: "kumi na saba",  swPhonetic: "KOO-mee nah SAH-bah",    en: "seventeen"    },
-    { sw: "kumi na nane",  swPhonetic: "KOO-mee nah NAH-neh",    en: "eighteen"     },
-    { sw: "kumi na tisa",  swPhonetic: "KOO-mee nah TEE-sah",    en: "nineteen"     },
-    { sw: "ishirini",      swPhonetic: "ee-shee-REE-nee",         en: "twenty"       },
-    { sw: "thelathini",    swPhonetic: "theh-lah-THEE-nee",       en: "thirty"       },
-    { sw: "arobaini",      swPhonetic: "ah-roh-bah-EE-nee",       en: "forty"        },
-    { sw: "hamsini",       swPhonetic: "ham-SEE-nee",             en: "fifty"        },
-    { sw: "sitini",        swPhonetic: "see-TEE-nee",             en: "sixty"        },
-    { sw: "sabini",        swPhonetic: "sah-BEE-nee",             en: "seventy"      },
-    { sw: "themanini",     swPhonetic: "theh-mah-NEE-nee",        en: "eighty"       },
-    { sw: "tisini",        swPhonetic: "tee-SEE-nee",             en: "ninety"       },
-    { sw: "mia moja",      swPhonetic: "MEE-ah MOH-jah",          en: "one hundred"  },
-    { sw: "sifuri",        swPhonetic: "see-FOO-ree",             en: "zero"         },
-    { sw: "wa kwanza",     swPhonetic: "wah KWAHN-zah",           en: "first"        },
-    { sw: "wa pili",       swPhonetic: "wah PEE-lee",             en: "second"       },
-    { sw: "wa tatu",       swPhonetic: "wah TAH-too",             en: "third"        },
-    { sw: "nusu",          swPhonetic: "NOO-soo",                 en: "half"         },
-    { sw: "robo",          swPhonetic: "ROH-boh",                 en: "quarter"      },
-    { sw: "elfu",          swPhonetic: "EL-foo",                  en: "thousand"     },
-  ],
-  colors: [
-    // Level 1 — words 0-4: primary + common colours
-    { sw: "nyekundu",  swPhonetic: "nyeh-KOON-doo",  en: "red"    },
-    { sw: "bluu",      swPhonetic: "BLOO",            en: "blue"   },
-    { sw: "njano",     swPhonetic: "NJAH-no",         en: "yellow" },
-    { sw: "kijani",    swPhonetic: "kee-JAH-nee",     en: "green"  },
-    { sw: "nyeupe",    swPhonetic: "nyeh-OO-peh",     en: "white"  },
-    // Level 2 — words 5-9 (all 10 colors used across L1+L2; no advanced pool needed for this category)
-    { sw: "nyeusi",    swPhonetic: "nyeh-OO-see",     en: "black"  },
-    { sw: "waridi",    swPhonetic: "wah-REE-dee",     en: "pink"   },
-    { sw: "zambarau",  swPhonetic: "zam-bah-RAH-oo",  en: "purple" },
-    { sw: "kahawia",   swPhonetic: "kah-HAH-wee-ah",  en: "brown"  },
-    { sw: "kijivu",    swPhonetic: "kee-JEE-voo",     en: "gray"   },
-  ],
-  body: [
-    // Level 1 — face (words 0–4)
-    { sw: "kichwa",       swPhonetic: "KEE-chwah",            en: "head"       },
-    { sw: "jicho",        swPhonetic: "JEE-cho",              en: "eye"        },
-    { sw: "masikio",      swPhonetic: "mah-see-KEE-oh",       en: "ears"       },
-    { sw: "pua",          swPhonetic: "POO-ah",               en: "nose"       },
-    { sw: "mdomo",        swPhonetic: "m-DOH-mo",             en: "mouth"      },
-    // Level 2 — hands and torso (words 5–9)
-    { sw: "mkono",        swPhonetic: "m-KOH-no",             en: "hand"       },
-    { sw: "kidole",       swPhonetic: "kee-DOH-leh",          en: "finger"     },
-    { sw: "tumbo",        swPhonetic: "TOOM-bo",              en: "stomach"    },
-    { sw: "mguu",         swPhonetic: "m-GOO",                en: "leg"        },
-    { sw: "mgongo",       swPhonetic: "m-GON-go",             en: "back"       },
-    // Advanced pool — words 10+
-    { sw: "uso",          swPhonetic: "OO-soh",               en: "face"       },
-    { sw: "meno",         swPhonetic: "MEH-noh",              en: "teeth"      },
-    { sw: "shingo",       swPhonetic: "SHEEN-goh",            en: "neck"       },
-    { sw: "bega",         swPhonetic: "BEH-gah",              en: "shoulder"   },
-    { sw: "kifua",        swPhonetic: "kee-FOO-ah",           en: "chest"      },
-    { sw: "moyo",         swPhonetic: "MOH-yoh",              en: "heart"      },
-    { sw: "goti",         swPhonetic: "GOH-tee",              en: "knee"       },
-    { sw: "nywele",       swPhonetic: "nyeh-WEH-leh",         en: "hair"       },
-    { sw: "ngozi",        swPhonetic: "NGO-zee",              en: "skin"       },
-    { sw: "damu",         swPhonetic: "DAH-moo",              en: "blood"      },
-    { sw: "ulimi",        swPhonetic: "oo-LEE-mee",           en: "tongue"     },
-    { sw: "mfupa",        swPhonetic: "m-FOO-pah",            en: "bone"       },
-    { sw: "ubongo",       swPhonetic: "oo-BON-goh",           en: "brain"      },
-    { sw: "mapafu",       swPhonetic: "mah-PAH-foo",          en: "lungs"      },
-    { sw: "ini",          swPhonetic: "EE-nee",               en: "liver"      },
-    { sw: "figo",         swPhonetic: "FEE-goh",              en: "kidney"     },
-    { sw: "mapaja",       swPhonetic: "mah-PAH-jah",          en: "thighs"     },
-    { sw: "kiuno",        swPhonetic: "kee-OO-noh",           en: "waist"      },
-    { sw: "pumzi",        swPhonetic: "POOM-zee",             en: "breath"     },
-    { sw: "jasho",        swPhonetic: "JAH-shoh",             en: "sweat"      },
-    { sw: "machozi",      swPhonetic: "mah-CHOH-zee",         en: "tears"      },
-    { sw: "msuli",        swPhonetic: "m-SOO-lee",            en: "muscle"     },
-    { sw: "kiganja",      swPhonetic: "kee-GAHN-jah",         en: "palm"       },
-    { sw: "taya",         swPhonetic: "TAH-yah",              en: "jaw"        },
-    { sw: "shavu",        swPhonetic: "SHAH-voo",             en: "cheek"      },
-    { sw: "paji",         swPhonetic: "PAH-jee",              en: "forehead"   },
-    { sw: "kisigino",     swPhonetic: "kee-see-GEE-noh",      en: "heel"       },
-    { sw: "kidole gumba", swPhonetic: "kee-DOH-leh GOOM-bah", en: "thumb"      },
-  ],
-  people: [
-    // Level 1 — immediate family (words 0–4)
-    { sw: "mama",       swPhonetic: "MAH-mah",          en: "mother"         },
-    { sw: "baba",       swPhonetic: "BAH-bah",          en: "father"         },
-    { sw: "kaka",       swPhonetic: "KAH-kah",          en: "brother"        },
-    { sw: "dada",       swPhonetic: "DAH-dah",          en: "sister"         },
-    { sw: "bibi",       swPhonetic: "BEE-bee",          en: "grandmother"    },
-    // Level 2 — extended family + close community (words 3–7 overlap)
-    { sw: "babu",       swPhonetic: "BAH-boo",          en: "grandfather"    },
-    { sw: "mtoto",      swPhonetic: "m-TOH-toh",        en: "child / baby"   },
-    { sw: "rafiki",     swPhonetic: "rah-FEE-kee",      en: "friend"         },
-    { sw: "mjomba",     swPhonetic: "m-JOM-bah",        en: "uncle"          },
-    { sw: "shangazi",   swPhonetic: "shan-GAH-zee",     en: "aunt"           },
-    // Level 3 — school, health, church (random from all)
-    { sw: "binamu",     swPhonetic: "bee-NAH-moo",      en: "cousin"         },
-    { sw: "jirani",     swPhonetic: "jee-RAH-nee",      en: "neighbor"       },
-    { sw: "mwalimu",    swPhonetic: "mwah-LEE-moo",     en: "teacher"        },
-    { sw: "mwanafunzi", swPhonetic: "mwah-nah-FOON-zee",en: "student"        },
-    { sw: "daktari",    swPhonetic: "dahk-TAH-ree",     en: "doctor"         },
-    // Level 4 — community professionals (random from all)
-    { sw: "muuguzi",    swPhonetic: "moo-oo-GOO-zee",   en: "nurse"          },
-    { sw: "kasisi",     swPhonetic: "kah-SEE-see",      en: "pastor / priest"},
-    { sw: "polisi",     swPhonetic: "poh-LEE-see",      en: "police officer" },
-    { sw: "mkulima",    swPhonetic: "m-koo-LEE-mah",    en: "farmer"         },
-    { sw: "dereva",     swPhonetic: "deh-REH-vah",      en: "driver"         },
-  ],
-  chakula: [
-    // Level 1 — words 0-4
-    { sw: "maji",        swPhonetic: "MAH-jee",              en: "water"          },
-    { sw: "chakula",     swPhonetic: "chah-KOO-lah",         en: "food"           },
-    { sw: "mkate",       swPhonetic: "m-KAH-teh",            en: "bread"          },
-    { sw: "matunda",     swPhonetic: "mah-TOON-dah",         en: "fruit"          },
-    { sw: "nyama",       swPhonetic: "NYAH-mah",             en: "meat"           },
-    // Level 2 — words 5-9
-    { sw: "wali",        swPhonetic: "WAH-lee",              en: "rice"           },
-    { sw: "ugali",       swPhonetic: "oo-GAH-lee",           en: "ugali"          },
-    { sw: "ndizi",       swPhonetic: "n-DEE-zee",            en: "banana"         },
-    { sw: "embe",        swPhonetic: "EM-beh",               en: "mango"          },
-    { sw: "mboga",       swPhonetic: "m-BOH-gah",            en: "vegetables"     },
-    // Advanced pool — words 10+
-    { sw: "chai",        swPhonetic: "CHAH-ee",              en: "tea"            },
-    { sw: "maziwa",      swPhonetic: "mah-ZEE-wah",          en: "milk"           },
-    { sw: "mayai",       swPhonetic: "mah-YAH-ee",           en: "eggs"           },
-    { sw: "mahindi",     swPhonetic: "mah-HEEN-dee",         en: "maize / corn"   },
-    { sw: "nyanya",      swPhonetic: "NYAH-nyah",            en: "tomato"         },
-    { sw: "vitunguu",    swPhonetic: "vee-toon-GOO-oo",      en: "onions"         },
-    { sw: "viazi",       swPhonetic: "vee-AH-zee",           en: "potatoes"       },
-    { sw: "maharagwe",   swPhonetic: "mah-hah-RAH-gweh",     en: "beans"          },
-    { sw: "sukari",      swPhonetic: "soo-KAH-ree",          en: "sugar"          },
-    { sw: "chumvi",      swPhonetic: "CHOOM-vee",            en: "salt"           },
-    { sw: "mafuta",      swPhonetic: "mah-FOO-tah",          en: "oil"            },
-    { sw: "asali",       swPhonetic: "ah-SAH-lee",           en: "honey"          },
-    { sw: "uji",         swPhonetic: "OO-jee",               en: "porridge"       },
-    { sw: "pilau",       swPhonetic: "pee-LAH-oo",           en: "pilau"          },
-    { sw: "keki",        swPhonetic: "KEH-kee",              en: "cake"           },
-    { sw: "biskuti",     swPhonetic: "bee-SKOO-tee",         en: "biscuits"       },
-    { sw: "pipi",        swPhonetic: "PEE-pee",              en: "sweets / candy" },
-    { sw: "juisi",       swPhonetic: "joo-EE-see",           en: "juice"          },
-    { sw: "soda",        swPhonetic: "SOH-dah",              en: "soda"           },
-    { sw: "nazi",        swPhonetic: "NAH-zee",              en: "coconut"        },
-    { sw: "papai",       swPhonetic: "pah-PAH-ee",           en: "papaya"         },
-    { sw: "tikiti maji", swPhonetic: "tee-KEE-tee MAH-jee",  en: "watermelon"     },
-    { sw: "zabibu",      swPhonetic: "zah-BEE-boo",          en: "grapes"         },
-    { sw: "karoti",      swPhonetic: "kah-ROH-tee",          en: "carrot"         },
-    { sw: "kabichi",     swPhonetic: "kah-BEE-chee",         en: "cabbage"        },
-    { sw: "chipsi",      swPhonetic: "CHEEP-see",            en: "chips / fries"  },
-    { sw: "mchuzi",      swPhonetic: "m-CHOO-zee",           en: "stew / sauce"   },
-    { sw: "mandazi",     swPhonetic: "mahn-DAH-zee",         en: "mandazi"        },
-    { sw: "samaki",      swPhonetic: "sah-MAH-kee",          en: "fish"           },
-  ],
-  vitenzi: [
-    // Level 1 — words 0-4
-    { sw: "kula",        swPhonetic: "KOO-lah",              en: "eat"            },
-    { sw: "kunywa",      swPhonetic: "koo-NYWA",             en: "drink"          },
-    { sw: "kulala",      swPhonetic: "koo-LAH-lah",          en: "sleep"          },
-    { sw: "kucheza",     swPhonetic: "koo-CHEH-zah",         en: "play"           },
-    { sw: "kukimbia",    swPhonetic: "koo-keem-BEE-ah",      en: "run"            },
-    // Level 2 — words 5-9
-    { sw: "kuruka",      swPhonetic: "koo-ROO-kah",          en: "jump"           },
-    { sw: "kusoma",      swPhonetic: "koo-SOH-mah",          en: "read"           },
-    { sw: "kuimba",      swPhonetic: "koo-EEM-bah",          en: "sing"           },
-    { sw: "kupika",      swPhonetic: "koo-PEE-kah",          en: "cook"           },
-    { sw: "kutembea",    swPhonetic: "koo-tem-BEH-ah",       en: "walk"           },
-    // Advanced pool — words 10+
-    { sw: "kuja",        swPhonetic: "KOO-jah",              en: "come"           },
-    { sw: "kwenda",      swPhonetic: "KWEN-dah",             en: "go"             },
-    { sw: "kuona",       swPhonetic: "koo-OH-nah",           en: "see"            },
-    { sw: "kusikia",     swPhonetic: "koo-see-KEE-ah",       en: "hear"           },
-    { sw: "kusema",      swPhonetic: "koo-SEH-mah",          en: "speak"          },
-    { sw: "kuandika",    swPhonetic: "koo-ahn-DEE-kah",      en: "write"          },
-    { sw: "kucheka",     swPhonetic: "koo-CHEH-kah",         en: "laugh"          },
-    { sw: "kulia",       swPhonetic: "koo-LEE-ah",           en: "cry"            },
-    { sw: "kupenda",     swPhonetic: "koo-PEN-dah",          en: "love"           },
-    { sw: "kufanya",     swPhonetic: "koo-FAH-nyah",         en: "do / make"      },
-    { sw: "kutaka",      swPhonetic: "koo-TAH-kah",          en: "want"           },
-    { sw: "kujua",       swPhonetic: "koo-JOO-ah",           en: "know"           },
-    { sw: "kufungua",    swPhonetic: "koo-foon-GOO-ah",      en: "open"           },
-    { sw: "kufunga",     swPhonetic: "koo-FOON-gah",         en: "close"          },
-    { sw: "kusaidia",    swPhonetic: "koo-sah-ee-DEE-ah",    en: "help"           },
-    { sw: "kuchukua",    swPhonetic: "koo-choo-KOO-ah",      en: "take"           },
-    { sw: "kuweka",      swPhonetic: "koo-WEH-kah",          en: "put / keep"     },
-    { sw: "kurudi",      swPhonetic: "koo-ROO-dee",          en: "return"         },
-    { sw: "kuingia",     swPhonetic: "koo-een-GEE-ah",       en: "enter"          },
-    { sw: "kutoka",      swPhonetic: "koo-TOH-kah",          en: "leave / exit"   },
-    { sw: "kupanda",     swPhonetic: "koo-PAHN-dah",         en: "climb"          },
-    { sw: "kuosha",      swPhonetic: "koo-OH-shah",          en: "wash"           },
-    { sw: "kuvaa",       swPhonetic: "koo-VAH-ah",           en: "wear"           },
-    { sw: "kulima",      swPhonetic: "koo-LEE-mah",          en: "farm"           },
-    { sw: "kupiga",      swPhonetic: "koo-PEE-gah",          en: "hit / kick"     },
-  ],
-  shule: [
-    // Level 1 — words 0-4
-    // Note: "shule" (school) is intentionally NOT first — the topic IS shule, so the
-    // opening question is already about school. Teaching "shule" as Word 1 right after
-    // causes the model to confuse natural conversation with formal teaching.
-    { sw: "kitabu",      swPhonetic: "kee-TAH-boo",          en: "book"           },
-    { sw: "kalamu",      swPhonetic: "kah-LAH-moo",          en: "pen"            },
-    { sw: "darasa",      swPhonetic: "dah-RAH-sah",          en: "classroom"      },
-    { sw: "begi",        swPhonetic: "BEH-gee",              en: "bag"            },
-    { sw: "mwalimu",     swPhonetic: "mwah-LEE-moo",         en: "teacher"        },
-    // Level 2 — words 5-9
-    { sw: "ubao",        swPhonetic: "oo-BAH-oh",            en: "blackboard"     },
-    { sw: "penseli",     swPhonetic: "pen-SEH-lee",          en: "pencil"         },
-    { sw: "meza",        swPhonetic: "MEH-zah",              en: "table / desk"   },
-    { sw: "kiti",        swPhonetic: "KEE-tee",              en: "chair"          },
-    { sw: "shule",       swPhonetic: "SHOO-leh",             en: "school"         },
-    // Advanced pool — words 10+
-    { sw: "mtihani",     swPhonetic: "m-tee-HAH-nee",        en: "exam / test"    },
-    { sw: "hesabu",      swPhonetic: "heh-SAH-boo",          en: "maths"          },
-    { sw: "sayansi",     swPhonetic: "sah-YAHN-see",         en: "science"        },
-    { sw: "sanaa",       swPhonetic: "sah-NAH-ah",           en: "art"            },
-    { sw: "historia",    swPhonetic: "hee-stoh-REE-ah",      en: "history"        },
-    { sw: "jiografia",   swPhonetic: "jee-oh-grah-FEE-ah",   en: "geography"      },
-    { sw: "muziki",      swPhonetic: "moo-ZEE-kee",          en: "music"          },
-    { sw: "lugha",       swPhonetic: "LOO-ghah",             en: "language"       },
-    { sw: "mchezo",      swPhonetic: "m-CHEH-zo",            en: "game / sport"   },
-    { sw: "lepe",        swPhonetic: "LEH-peh",              en: "eraser"         },
-    { sw: "rula",        swPhonetic: "ROO-lah",              en: "ruler"          },
-    { sw: "chaki",       swPhonetic: "CHAH-kee",             en: "chalk"          },
-    { sw: "sare",        swPhonetic: "SAH-reh",              en: "school uniform" },
-    { sw: "ratiba",      swPhonetic: "rah-TEE-bah",          en: "timetable"      },
-    { sw: "likizo",      swPhonetic: "lee-KEE-zo",           en: "school holiday" },
-    { sw: "somo",        swPhonetic: "SOH-moh",              en: "lesson"         },
-    { sw: "dirisha",     swPhonetic: "dee-REE-shah",         en: "window"         },
-    { sw: "ramani",      swPhonetic: "rah-MAH-nee",          en: "map"            },
-    { sw: "picha",       swPhonetic: "PEE-chah",             en: "picture"        },
-    { sw: "tuzo",        swPhonetic: "TOO-zo",               en: "prize / award"  },
-    { sw: "masomo",      swPhonetic: "mah-SOH-moh",          en: "studies"        },
-    { sw: "elimu",       swPhonetic: "eh-LEE-moo",           en: "education"      },
-  ],
-  hisia: [
-    // Level 1 — words 0-4
-    { sw: "furaha",      swPhonetic: "foo-RAH-hah",          en: "happiness / joy"    },
-    { sw: "huzuni",      swPhonetic: "hoo-ZOO-nee",          en: "sadness"            },
-    { sw: "hasira",      swPhonetic: "hah-SEE-rah",          en: "anger"              },
-    { sw: "hofu",        swPhonetic: "HOH-foo",              en: "fear"               },
-    { sw: "upendo",      swPhonetic: "oo-PEN-doh",           en: "love"               },
-    // Level 2 — words 5-9
-    { sw: "uchovu",      swPhonetic: "oo-CHOH-voo",          en: "tiredness"          },
-    { sw: "shangwe",     swPhonetic: "SHAN-gweh",            en: "excitement"         },
-    { sw: "aibu",        swPhonetic: "ah-EE-boo",            en: "shame"              },
-    { sw: "fahari",      swPhonetic: "fah-HAH-ree",          en: "pride"              },
-    { sw: "wasiwasi",    swPhonetic: "wah-see-WAH-see",      en: "worry"              },
-    // Advanced pool — words 10+
-    { sw: "mshangao",    swPhonetic: "m-shah-NGA-oh",        en: "surprise"           },
-    { sw: "ujasiri",     swPhonetic: "oo-jah-SEE-ree",       en: "courage"            },
-    { sw: "huruma",      swPhonetic: "hoo-ROO-mah",          en: "compassion"         },
-    { sw: "wivu",        swPhonetic: "WEE-voo",              en: "jealousy"           },
-    { sw: "upole",       swPhonetic: "oo-POH-leh",           en: "gentleness"         },
-    { sw: "heshima",     swPhonetic: "heh-SHEE-mah",         en: "respect"            },
-    { sw: "shukrani",    swPhonetic: "shoo-KRAH-nee",        en: "gratitude"          },
-    { sw: "matumaini",   swPhonetic: "mah-too-mah-EE-nee",   en: "hope"               },
-    { sw: "amani",       swPhonetic: "ah-MAH-nee",           en: "peace"              },
-    { sw: "imani",       swPhonetic: "ee-MAH-nee",           en: "faith / trust"      },
-    { sw: "subira",      swPhonetic: "soo-BEE-rah",          en: "patience"           },
-    { sw: "shauku",      swPhonetic: "shah-OO-koo",          en: "enthusiasm"         },
-    { sw: "tamaa",       swPhonetic: "tah-MAH-ah",           en: "desire"             },
-    { sw: "starehe",     swPhonetic: "stah-REH-heh",         en: "comfort"            },
-    { sw: "burudani",    swPhonetic: "boo-roo-DAH-nee",      en: "fun / entertainment"},
-    { sw: "roho",        swPhonetic: "ROH-hoh",              en: "spirit / soul"      },
-    { sw: "pendo",       swPhonetic: "PEN-doh",              en: "affection"          },
-    { sw: "hamu",        swPhonetic: "HAH-moo",              en: "longing"            },
-    { sw: "kiburi",      swPhonetic: "kee-BOO-ree",          en: "arrogance"          },
-    { sw: "utulivu",     swPhonetic: "oo-too-LEE-voo",       en: "calmness"           },
-  ],
-  mazingira: [
-    // Level 1 — words 0-4
-    { sw: "mti",         swPhonetic: "M-tee",                en: "tree"               },
-    { sw: "jua",         swPhonetic: "JOO-ah",               en: "sun"                },
-    { sw: "mvua",        swPhonetic: "M-voo-ah",             en: "rain"               },
-    { sw: "ardhi",       swPhonetic: "AR-dee",               en: "ground / earth"     },
-    { sw: "maua",        swPhonetic: "mah-OO-ah",            en: "flowers"            },
-    // Level 2 — words 5-9
-    { sw: "mto",         swPhonetic: "M-toh",                en: "river"              },
-    { sw: "mlima",       swPhonetic: "m-LEE-mah",            en: "mountain"           },
-    { sw: "bahari",      swPhonetic: "bah-HAH-ree",          en: "ocean / sea"        },
-    { sw: "shamba",      swPhonetic: "SHAM-bah",             en: "farm / field"       },
-    { sw: "msitu",       swPhonetic: "m-SEE-too",            en: "forest"             },
-    // Advanced pool — words 10+
-    { sw: "nyika",       swPhonetic: "NYEE-kah",             en: "savanna / bush"     },
-    { sw: "mchanga",     swPhonetic: "m-CHAHN-gah",          en: "sand"               },
-    { sw: "jiwe",        swPhonetic: "JEE-weh",              en: "stone / rock"       },
-    { sw: "udongo",      swPhonetic: "oo-DON-goh",           en: "soil / mud"         },
-    { sw: "upepo",       swPhonetic: "oo-PEH-poh",           en: "wind"               },
-    { sw: "baridi",      swPhonetic: "bah-REE-dee",          en: "cold"               },
-    { sw: "joto",        swPhonetic: "JOH-toh",              en: "heat / warmth"      },
-    { sw: "anga",        swPhonetic: "AHN-gah",              en: "sky"                },
-    { sw: "nyota",       swPhonetic: "NYOH-tah",             en: "star"               },
-    { sw: "mwezi",       swPhonetic: "MWEH-zee",             en: "moon"               },
-    { sw: "wingu",       swPhonetic: "WEEN-goo",             en: "cloud"              },
-    { sw: "ngurumo",     swPhonetic: "ngoo-ROO-moh",         en: "thunder"            },
-    { sw: "radi",        swPhonetic: "RAH-dee",              en: "lightning"          },
-    { sw: "mwanga",      swPhonetic: "MWAHN-gah",            en: "light"              },
-    { sw: "giza",        swPhonetic: "GEE-zah",              en: "darkness"           },
-    { sw: "moto",        swPhonetic: "MOH-toh",              en: "fire"               },
-    { sw: "moshi",       swPhonetic: "MOH-shee",             en: "smoke"              },
-    { sw: "maporomoko",  swPhonetic: "mah-poh-roh-MOH-koh",  en: "waterfall"          },
-    { sw: "ziwa",        swPhonetic: "ZEE-wah",              en: "lake"               },
-    { sw: "kisiwa",      swPhonetic: "kee-SEE-wah",          en: "island"             },
-    { sw: "jangwa",      swPhonetic: "JAHN-gwah",            en: "desert"             },
-    { sw: "bonde",       swPhonetic: "BON-deh",              en: "valley"             },
-    { sw: "pwani",       swPhonetic: "PWAH-nee",             en: "coast / beach"      },
-    { sw: "barafu",      swPhonetic: "bah-RAH-foo",          en: "ice / glacier"      },
-  ],
-};
+// Vocabulary (word order, English glosses, emoji, phonetics) lives in
+// lib/wordLists.ts — the single source of truth shared with quizzes and games.
 
 // Safety backstop only — session is terminated if it runs this long with no natural ending.
 // This is NOT the intended session length. Sessions end when Ticha judges the child is ready,
@@ -441,13 +73,10 @@ const SESSION_SAFETY_TIMEOUT_MS = 45 * 60 * 1000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAYS = [3000, 6000, 12000, 20000, 30000] as const; // ms
 
-// Returns 1–4 based on XP, capped by age so young children don't advance too fast
+// Returns 1–4 based on XP (shared thresholds in lib/levels.ts),
+// capped by age so young children don't advance too fast
 function getLessonLevel(childXp: number, childAge?: number): 1 | 2 | 3 | 4 {
-  let level: number;
-  if (childXp < 100) level = 1;
-  else if (childXp < 300) level = 2;
-  else if (childXp < 500) level = 3;
-  else level = 4;
+  let level: number = getLevel(childXp);
 
   // Age caps — very young children stay at simpler levels regardless of XP
   if (childAge !== undefined) {
@@ -459,7 +88,7 @@ function getLessonLevel(childXp: number, childAge?: number): 1 | 2 | 3 | 4 {
   return level as 1 | 2 | 3 | 4;
 }
 
-function getWordBatch(game: string, childXp: number, childAge?: number): { sw: string; swPhonetic: string; en: string }[] {
+function getWordBatch(game: string, childXp: number, childAge?: number): QuizWord[] {
   const all   = WORD_LISTS[game] || WORD_LISTS.people;
   const batch = 5;
   const level = getLessonLevel(childXp, childAge);
@@ -476,7 +105,7 @@ function getSystemPrompt(
   childName: string,
   language: string,
   game: string,
-  lessonWords: { sw: string; swPhonetic: string; en: string }[],
+  lessonWords: QuizWord[],
   childAge?: number,
   childXp?: number,
   slowSpeech?: boolean,
@@ -2616,6 +2245,22 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     setTimeout(() => setStarsFlash(false), 900);
   }, []);
 
+  // Track exactly WHICH lesson words Ticha has introduced (by index).
+  // Normalise apostrophes so ng'ombe (curly) matches ng'ombe (straight) in the transcript.
+  // Defined before endSession, which depends on wordsIntroduced for analytics.
+  const introducedWordIndices = useMemo(() => {
+    const raw = transcript.filter(t => t.role === "ticha").map(t => t.text).join(" ");
+    const tichaText = raw.toLowerCase().replace(/[‘’ʼ′]/g, "'");
+    const set = new Set<number>();
+    lessonWords.forEach((w, i) => {
+      const target = (language === "sw" ? w.sw : w.en).toLowerCase();
+      if (tichaText.includes(target)) set.add(i);
+    });
+    return set;
+  }, [transcript, lessonWords, language]);
+
+  const wordsIntroduced = introducedWordIndices.size;
+
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
       frameIntervalRef.current && clearInterval(frameIntervalRef.current);
@@ -2743,11 +2388,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         // Only update XP and streak for naturally completed lessons.
         // Manual end = child walked away — no reward, no streak credit.
         if (child && !manualEnd) {
+          // Streak by calendar days (device-local): exactly 1 day since the
+          // last session extends the streak, same day keeps it, anything
+          // older resets it. The previous 48-hour-window check let a session
+          // from two calendar days ago still count as "yesterday".
+          const startOfDay  = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
           const lastDate    = child.last_session_at ? new Date(child.last_session_at) : null;
           const today       = new Date();
-          const isNewDay    = !lastDate || lastDate.toDateString() !== today.toDateString();
-          const isYesterday = lastDate && (today.getTime() - lastDate.getTime()) < 172800000;
-          const newStreak   = isNewDay ? (isYesterday ? child.streak + 1 : 1) : child.streak;
+          const dayDiff     = lastDate ? Math.round((startOfDay(today) - startOfDay(lastDate)) / 86400000) : null;
+          const isNewDay    = dayDiff === null || dayDiff >= 1;
+          const newStreak   = isNewDay ? (dayDiff === 1 ? child.streak + 1 : 1) : child.streak;
           await withRetry(async () => {
             const { error } = await supabase.from("children").update({
               xp: child.xp + earnedStars,
@@ -2799,13 +2449,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         setStars(0);
         if (childId) {
           const wordsParam = lessonWords.map(w => w.sw).join(",");
-          router.push(`/quiz?game=${encodeURIComponent(game)}&lang=${encodeURIComponent(language)}&childId=${encodeURIComponent(childId)}&xp=${earnedStars}&words=${encodeURIComponent(wordsParam)}`);
+          const ageParam   = childAge ? `&age=${childAge}` : "";
+          router.push(`/quiz?game=${encodeURIComponent(game)}&lang=${encodeURIComponent(language)}&childId=${encodeURIComponent(childId)}&xp=${earnedStars}&words=${encodeURIComponent(wordsParam)}${ageParam}`);
         } else {
           router.push("/dashboard");
         }
       }, 3000);
     }
-  }, [router, childId, game, language, lessonWords]);
+  // wordsIntroduced/childXp/childAge/posthog are included so the PostHog
+  // events report current values instead of the ones captured at mount.
+  }, [router, childId, game, language, lessonWords, wordsIntroduced, childXp, childAge, posthog]);
 
   // Keep endSessionRef in sync so callbacks can call it without stale closure
   useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
@@ -2936,14 +2589,17 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       await micCtx.audioWorklet.addModule("/mic-processor.js");
       const processor = new AudioWorkletNode(micCtx, "mic-processor");
 
-      // Fetch the Gemini API key from the server — key is never bundled into the client
+      // Fetch a short-lived, single-use ephemeral token from the server.
+      // The real Gemini API key never reaches the browser — this token only
+      // works for one Live session and expires on its own.
       const keyRes = await fetch("/api/gemini-key");
       if (!keyRes.ok) throw new Error("Could not initialise session. Please try again.");
-      const { key: geminiKey } = await keyRes.json();
+      const { token: geminiToken } = await keyRes.json();
 
       const client = new GoogleGenAI({
-        apiKey: geminiKey,
-        httpOptions: { apiVersion: "v1beta" },
+        apiKey: geminiToken,
+        // Ephemeral tokens are only accepted on the v1alpha API surface
+        httpOptions: { apiVersion: "v1alpha" },
       });
 
       const session: LiveSession = await client.live.connect({
@@ -3196,25 +2852,10 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     });
   }, []);
 
-  // Track exactly WHICH lesson words Ticha has introduced (by index).
-  // Normalise apostrophes so ng'ombe (curly) matches ng'ombe (straight) in the transcript.
-  const introducedWordIndices = useMemo(() => {
-    const raw = transcript.filter(t => t.role === "ticha").map(t => t.text).join(" ");
-    const tichaText = raw.toLowerCase().replace(/[‘’ʼ′]/g, "'");
-    const set = new Set<number>();
-    lessonWords.forEach((w, i) => {
-      const target = (language === "sw" ? w.sw : w.en).toLowerCase();
-      if (tichaText.includes(target)) set.add(i);
-    });
-    return set;
-  }, [transcript, lessonWords, language]);
-
-  const wordsIntroduced = introducedWordIndices.size;
-
-  // Emoji for each lesson word (looked up from QUIZ_WORD_LISTS by Swahili match)
+  // Emoji for each lesson word — carried on the word entry itself
   const lessonEmojis = useMemo(() =>
-    lessonWords.map(lw => QUIZ_WORD_LISTS[game]?.find(w => w.sw === lw.sw)?.emoji ?? "✨"),
-    [lessonWords, game],
+    lessonWords.map(lw => lw.emoji),
+    [lessonWords],
   );
 
   // Preload all 5 lesson-word APNG/PNG images as soon as the word list is known,
@@ -3249,7 +2890,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
     if (!newlyIntroduced) return;
     revealedWordsRef.current.add(newlyIntroduced.sw);
-    const emoji = QUIZ_WORD_LISTS[game]?.find(w => w.sw === newlyIntroduced.sw)?.emoji ?? "✨";
+    const emoji = newlyIntroduced.emoji;
     // primary = vocabulary target (what the child is learning); secondary = known-language translation
     // sw session: teaching Swahili → Swahili word big, English small
     // en session: teaching English → English word big, Swahili small
