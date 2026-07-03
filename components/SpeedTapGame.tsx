@@ -23,12 +23,22 @@ function pickDistractors(correct: QuizWord, pool: QuizWord[], count: number): Qu
   return shuffled.slice(0, count);
 }
 
+// One round = one target word with its shuffled options and start time.
+// Built in event/timeout callbacks (never during render) so the shuffle
+// stays out of the render phase.
+interface Round { idx: number; options: QuizWord[]; startedAt: number; }
+function makeRound(idx: number, gameWords: QuizWord[]): Round {
+  const target = gameWords[idx];
+  const options = [...pickDistractors(target, gameWords, DISTRACTORS), target]
+    .sort(() => Math.random() - 0.5);
+  return { idx, options, startedAt: Date.now() };
+}
+
 export default function SpeedTapGame({ words, language, onComplete }: Props) {
   const isSwahili = language === "sw";
   const gameWords = useMemo(() => words.slice(0, 5), [words]);
 
-  const [wordIdx,    setWordIdx]    = useState(0);
-  const [options,    setOptions]    = useState<QuizWord[]>([]);
+  const [round,      setRound]      = useState<Round>(() => makeRound(0, gameWords));
   const [result,     setResult]     = useState<"correct" | "wrong" | "timeout" | null>(null);
   const [tapKey,     setTapKey]     = useState<string | null>(null);   // which option was tapped
   const [timeLeft,   setTimeLeft]   = useState(TIME_LIMIT_MS);
@@ -40,22 +50,10 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
   const missedRef  = useRef<QuizWord[]>([]);
   const lockedRef  = useRef(false);  // prevents double-tap during result flash
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startedRef = useRef(0);      // timestamp when current word began
 
+  const wordIdx     = round.idx;
+  const options     = round.options;
   const currentWord = gameWords[wordIdx];
-
-  // ── Build options for current word ───────────────────────────────────────
-  useEffect(() => {
-    if (!currentWord) return;
-    const distractors = pickDistractors(currentWord, gameWords, DISTRACTORS);
-    const opts = [...distractors, currentWord].sort(() => Math.random() - 0.5);
-    setOptions(opts);
-    setResult(null);
-    setTapKey(null);
-    lockedRef.current = false;
-    setTimeLeft(TIME_LIMIT_MS);
-    startedRef.current = Date.now();
-  }, [wordIdx]); // wordIdx drives all resets; currentWord/gameWords are stable within a mount
 
   // ── Advance to next word (or finish) ─────────────────────────────────────
   const scheduleAdvance = useCallback(() => {
@@ -64,7 +62,12 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
       if (next >= gameWords.length) {
         onComplete(missedRef.current, bonusRef.current);
       } else {
-        setWordIdx(next);
+        // New round + reset — runs in a timeout callback, not in render/effect
+        setRound(makeRound(next, gameWords));
+        setResult(null);
+        setTapKey(null);
+        setTimeLeft(TIME_LIMIT_MS);
+        lockedRef.current = false;
       }
     }, RESULT_SHOW_MS);
   }, [wordIdx, gameWords, onComplete]);
@@ -74,7 +77,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
     if (result !== null || !currentWord) return;
 
     timerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startedRef.current;
+      const elapsed = Date.now() - round.startedAt;
       const remaining = Math.max(0, TIME_LIMIT_MS - elapsed);
       setTimeLeft(remaining);
 
@@ -91,7 +94,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
     }, 50);
 
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [wordIdx, result, scheduleAdvance]);
+  }, [round, result, currentWord, scheduleAdvance]);
 
   const handleTap = useCallback((opt: QuizWord) => {
     if (lockedRef.current || result !== null) return;

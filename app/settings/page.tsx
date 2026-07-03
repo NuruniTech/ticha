@@ -9,34 +9,35 @@ import { Theme, FontSize, VoiceName } from "@/types";
 const VOICE_NAMES: VoiceName[] = ["Aoede", "Kore"];
 const VOICE_ICONS = ["👩🏾", "👩🏿"];
 const THEME_IDS: Theme[] = ["default", "high-contrast", "colorblind"];
+const TOGGLE_ICONS = ["🐢", "👁️", "🌗", "✋"];
+
+// Module scope — defining components inside another component recreates them
+// on every render and resets their internal state.
+function Toggle({ label, desc, checked, onChange, icon }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; icon: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid #F3F4F6" }}>
+      <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        <span style={{ fontSize: "22px" }}>{icon}</span>
+        <div>
+          <p style={{ fontWeight: 700, fontSize: "15px", color: "#1E3A5F" }}>{label}</p>
+          <p style={{ fontSize: "13px", color: "#9CA3AF", marginTop: "2px" }}>{desc}</p>
+        </div>
+      </div>
+      <button
+        role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
+        style={{ width: "48px", height: "26px", borderRadius: "9999px", background: checked ? "#10B981" : "#D1D5DB", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
+      >
+        <span style={{ position: "absolute", top: "3px", left: checked ? "25px" : "3px", width: "20px", height: "20px", borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+      </button>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
   const { settings, updateSetting } = useAccessibility();
   const { lang, setLang } = useLanguage();
   const t = T[lang].settings;
-
-  function Toggle({ label, desc, checked, onChange, icon }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; icon: string }) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid #F3F4F6" }}>
-        <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-          <span style={{ fontSize: "22px" }}>{icon}</span>
-          <div>
-            <p style={{ fontWeight: 700, fontSize: "15px", color: "#1E3A5F" }}>{label}</p>
-            <p style={{ fontSize: "13px", color: "#9CA3AF", marginTop: "2px" }}>{desc}</p>
-          </div>
-        </div>
-        <button
-          role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-          style={{ width: "48px", height: "26px", borderRadius: "9999px", background: checked ? "#10B981" : "#D1D5DB", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
-        >
-          <span style={{ position: "absolute", top: "3px", left: checked ? "25px" : "3px", width: "20px", height: "20px", borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-        </button>
-      </div>
-    );
-  }
-
-  const TOGGLE_ICONS = ["🐢", "👁️", "🌗", "✋"];
 
   return (
     <div style={{ minHeight: "100vh", background: "#FFFBF0" }}>

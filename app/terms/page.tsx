@@ -22,7 +22,7 @@ export default function TermsOfService() {
       <p>All content, design, and code in Ticha is owned by Nuruni Tech / Grow Wise Africa. You may not copy, modify, or distribute any part of the app without written permission.</p>
 
       <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>5. Disclaimer</h2>
-      <p>Ticha is provided "as is" without warranties of any kind. We are not liable for any damages arising from use of the app. Language learning outcomes may vary.</p>
+      <p>Ticha is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages arising from use of the app. Language learning outcomes may vary.</p>
 
       <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>6. Changes</h2>
       <p>We may update these terms at any time. Continued use of Ticha after changes constitutes acceptance of the new terms.</p>

@@ -24,12 +24,12 @@ export default function PrivacyPolicy() {
 
       <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>4. Third-Party Services</h2>
       <ul>
-        <li><strong>Google Gemini API</strong> — processes voice audio for real-time language tutoring. Subject to <a href="https://policies.google.com/privacy" style={{ color: "#16a34a" }}>Google's Privacy Policy</a>.</li>
+        <li><strong>Google Gemini API</strong> — processes voice audio for real-time language tutoring. Subject to <a href="https://policies.google.com/privacy" style={{ color: "#16a34a" }}>Google&apos;s Privacy Policy</a>.</li>
         <li><strong>Supabase</strong> — stores account and session data securely with Row Level Security.</li>
         <li><strong>Google OAuth</strong> — optional sign-in method. We only receive your email and name.</li>
       </ul>
 
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>5. Children's Privacy</h2>
+      <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>5. Children&apos;s Privacy</h2>
       <p>Ticha is designed for use by children under parental supervision. Parents create and manage all child profiles. We do not knowingly collect personal data directly from children without parental consent.</p>
 
       <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 32 }}>6. Data Retention</h2>

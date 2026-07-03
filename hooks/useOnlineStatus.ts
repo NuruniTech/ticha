@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
+
+// Online/offline status via useSyncExternalStore — the canonical pattern for
+// subscribing to browser state (no setState-in-effect, SSR-safe: the server
+// snapshot reports "online" so pages never render the offline wall during SSR).
+function subscribe(callback: () => void) {
+  window.addEventListener("online", callback);
+  window.addEventListener("offline", callback);
+  return () => {
+    window.removeEventListener("online", callback);
+    window.removeEventListener("offline", callback);
+  };
+}
 
 export function useOnlineStatus(): boolean {
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    setIsOnline(navigator.onLine);
-    const up   = () => setIsOnline(true);
-    const down = () => setIsOnline(false);
-    window.addEventListener("online",  up);
-    window.addEventListener("offline", down);
-    return () => {
-      window.removeEventListener("online",  up);
-      window.removeEventListener("offline", down);
-    };
-  }, []);
-
-  return isOnline;
+  return useSyncExternalStore(
+    subscribe,
+    () => navigator.onLine,
+    () => true,
+  );
 }

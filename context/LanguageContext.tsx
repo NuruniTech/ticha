@@ -17,10 +17,14 @@ const LanguageContext = createContext<LanguageContextValue>({
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
+  // Deliberately a setState-in-effect: reading localStorage/navigator in the
+  // initializer would make the first client render differ from the server
+  // render and break hydration.
   useEffect(() => {
     try {
       // If user has already chosen a language, respect that choice
       const saved = localStorage.getItem("ticha_lang") as Lang | null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved === "en" || saved === "sw") { setLangState(saved); return; }
 
       // Auto-detect from browser locale — default to Swahili for East African countries

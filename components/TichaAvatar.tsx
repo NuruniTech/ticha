@@ -31,7 +31,7 @@ export default function TichaAvatar({ state, size = 220, analyser }: Props) {
       // is likely not receiving audio — activate the timer fallback instead.
       let silentFrames = 0;
       let useFallback = false;
-      let fallbackSeq: MouthShape[] = ["smile","small","open","open","small","smile","small","open","small","smile"];
+      const fallbackSeq: MouthShape[] = ["smile","small","open","open","small","smile","small","open","small","smile"];
       let fallbackIdx = 0;
 
       const tick = () => {

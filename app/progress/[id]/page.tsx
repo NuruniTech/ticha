@@ -30,6 +30,9 @@ export default function ProgressPage() {
   const [masteredWords, setMasteredWords] = useState<Set<string>>(new Set());
   const [loading, setLoading]   = useState(true);
   const [hasError, setHasError] = useState(false);
+  // Which session's transcript is expanded (parent trust: see exactly what
+  // Ticha and the child talked about in any lesson)
+  const [openTranscript, setOpenTranscript] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -211,22 +214,61 @@ export default function ProgressPage() {
               {sessions.map((s) => {
                 const gameLabel = t.gameLabels[s.game] || `🎓 ${s.game}`;
                 const gameEmoji = gameLabel.split(" ")[0];
+                const hasTranscript = (s.transcript?.length || 0) > 0;
+                const isOpen = openTranscript === s.id;
                 return (
-                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", background: "#F9FAFB", borderRadius: "12px" }}>
-                    <span style={{ fontSize: "24px" }}>{gameEmoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: 700, fontSize: "14px", color: "#1E3A5F" }}>{gameLabel}</p>
-                      <p style={{ fontSize: "12px", color: "#9CA3AF" }}>
-                        {new Date(s.created_at).toLocaleDateString(lang === "sw" ? "sw-TZ" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                        {" · "}{t.min(Math.round((s.duration_seconds || 0) / 60))}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "16px", fontWeight: 800, color: "#F59E0B" }}>⭐ +{s.xp_earned}</p>
-                      {(s.words_practiced?.length || 0) > 0 && (
-                        <p style={{ fontSize: "11px", color: "#9CA3AF" }}>{t.words(s.words_practiced.length)}</p>
+                  <div key={s.id} style={{ background: "#F9FAFB", borderRadius: "12px", overflow: "hidden" }}>
+                    <div
+                      onClick={() => hasTranscript && setOpenTranscript(isOpen ? null : s.id)}
+                      style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", cursor: hasTranscript ? "pointer" : "default" }}
+                    >
+                      <span style={{ fontSize: "24px" }}>{gameEmoji}</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 700, fontSize: "14px", color: "#1E3A5F" }}>{gameLabel}</p>
+                        <p style={{ fontSize: "12px", color: "#9CA3AF" }}>
+                          {new Date(s.created_at).toLocaleDateString(lang === "sw" ? "sw-TZ" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          {" · "}{t.min(Math.round((s.duration_seconds || 0) / 60))}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "16px", fontWeight: 800, color: "#F59E0B" }}>⭐ +{s.xp_earned}</p>
+                        {(s.words_practiced?.length || 0) > 0 && (
+                          <p style={{ fontSize: "11px", color: "#9CA3AF" }}>{t.words(s.words_practiced.length)}</p>
+                        )}
+                      </div>
+                      {hasTranscript && (
+                        <span style={{ fontSize: "12px", color: "#9CA3AF", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</span>
                       )}
                     </div>
+
+                    {/* Lesson transcript — what Ticha and the child actually said */}
+                    {isOpen && hasTranscript && (
+                      <div style={{ borderTop: "1px solid #E5E7EB", padding: "14px 16px", maxHeight: "320px", overflowY: "auto" }}>
+                        <p style={{ fontSize: "11px", fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+                          {lang === "sw"
+                            ? `Mazungumzo ya Ticha na ${child.name}`
+                            : `What Ticha and ${child.name} talked about`}
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {s.transcript.map((entry, i) => (
+                            <div key={i} style={{ display: "flex", justifyContent: entry.role === "child" ? "flex-end" : "flex-start" }}>
+                              <div style={{
+                                maxWidth: "82%",
+                                padding: "8px 12px",
+                                borderRadius: entry.role === "child" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                                background: entry.role === "child" ? "#DBEAFE" : "white",
+                                border: entry.role === "child" ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+                              }}>
+                                <p style={{ fontSize: "10px", fontWeight: 800, color: entry.role === "child" ? "#2563EB" : "#F59E0B", margin: "0 0 2px" }}>
+                                  {entry.role === "child" ? child.name : "Ticha"}
+                                </p>
+                                <p style={{ fontSize: "13px", color: "#374151", margin: 0, lineHeight: 1.5 }}>{entry.text}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

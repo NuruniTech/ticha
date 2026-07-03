@@ -6,7 +6,6 @@ import LottieEmoji from "./LottieEmoji";
 import WordMatchGame from "./WordMatchGame";
 import FlipCardsGame from "./FlipCardsGame";
 import SpeedTapGame  from "./SpeedTapGame";
-import { supabase } from "@/lib/supabase";
 import type { QuizWord } from "@/lib/wordLists";
 
 // ── Config ─────────────────────────────────────────────────────────────────
@@ -70,15 +69,24 @@ export default function GameSession({ words, language, childId, sessionStars, ch
       round:    i % 3 === 0,
     })), []);
 
-  // ── Supabase save ──────────────────────────────────────────────────────────
+  // ── Server-side save ───────────────────────────────────────────────────────
+  // XP and per-word progress are written by /api/quiz-results (service role),
+  // which verifies the child belongs to the logged-in parent and clamps stars.
   async function saveResults(finalStars: number) {
     if (savedRef.current || !childId) return;
     savedRef.current = true;
-    if (finalStars > 0) {
-      try {
-        const { data: child } = await supabase.from("children").select("xp").eq("id", childId).single();
-        if (child) await supabase.from("children").update({ xp: child.xp + finalStars }).eq("id", childId);
-      } catch {
+    const allMissed = new Set(retryRef.current.flatMap(r => r.words.map(w => w.sw)));
+    const words = gameWords.map(word => ({ sw: word.sw, correct: !allMissed.has(word.sw) }));
+    try {
+      const res = await fetch("/api/quiz-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ childId, language, stars: finalStars, words }),
+      });
+      if (!res.ok) throw new Error(`quiz save failed: ${res.status}`);
+    } catch {
+      // Offline or server hiccup — queue the XP; XpSyncOnLoad flushes it later
+      if (finalStars > 0) {
         try {
           const pending = JSON.parse(localStorage.getItem("ticha_pending_xp") || "[]");
           pending.push({ childId, xp: finalStars, ts: Date.now() });
@@ -86,28 +94,6 @@ export default function GameSession({ words, language, childId, sessionStars, ch
         } catch { /* unavailable */ }
       }
     }
-    // Per-word progress — mark every lesson word as attempted; matched = not in any retry list
-    try {
-      const wordKeys = gameWords.map(w => w.sw);
-      const allMissed = new Set(retryRef.current.flatMap(r => r.words.map(w => w.sw)));
-      const { data: existing } = await supabase.from("progress")
-        .select("word, correct_count, attempt_count")
-        .eq("child_id", childId).in("word", wordKeys).eq("language", language);
-      const existingMap = Object.fromEntries(
-        (existing || []).map(r => [r.word, r as { correct_count: number; attempt_count: number }])
-      );
-      const upserts = gameWords.map(word => {
-        const prev      = existingMap[word.sw];
-        const wasCorrect = !allMissed.has(word.sw);
-        return {
-          child_id:      childId, word: word.sw, language,
-          attempt_count: (prev?.attempt_count || 0) + 1,
-          correct_count: (prev?.correct_count || 0) + (wasCorrect ? 1 : 0),
-          last_seen_at:  new Date().toISOString(),
-        };
-      });
-      await supabase.from("progress").upsert(upserts, { onConflict: "child_id,word,language" });
-    } catch { /* non-critical */ }
   }
 
   // ── Game completion handler ────────────────────────────────────────────────

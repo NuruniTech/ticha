@@ -84,3 +84,18 @@ create policy "Parents manage word progress" on progress
       and children.parent_id = auth.uid()
     )
   );
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- Server-authoritative XP  (added July 2026 — run this AFTER deploying the
+-- /api/complete-session and /api/quiz-results routes)
+--
+-- XP, streaks, session rows, and word progress are now written ONLY by the
+-- server (service role), which verifies child ownership and clamps values —
+-- so scores cannot be forged from the browser with dev tools.
+-- Parents keep: read access everywhere, add/remove children, and editing a
+-- child's profile fields (name, age, avatar, language).
+-- ═════════════════════════════════════════════════════════════════════════════
+revoke update on table children from authenticated;
+grant update (name, age, avatar, primary_language) on table children to authenticated;
+revoke insert, update, delete on table sessions from authenticated;
+revoke insert, update, delete on table progress from authenticated;

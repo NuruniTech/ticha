@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleGenAI, Modality, StartSensitivity, EndSensitivity, type LiveServerMessage } from "@google/genai";
-import { supabase } from "@/lib/supabase";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
@@ -2364,49 +2363,26 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       }
 
       try {
+        // Server-side save: session row, XP (clamped against duration), and
+        // calendar-day streak are all written by /api/complete-session so
+        // scores cannot be forged from the browser.
         await withRetry(async () => {
-          const { error } = await supabase.from("sessions").insert({
-            child_id: childId,
-            game,
-            language,
-            duration_seconds: durationSeconds,
-            xp_earned: earnedStars,
-            words_practiced: wordsPracticed,
-            transcript: currentTranscript,
+          const res = await fetch("/api/complete-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              childId,
+              game,
+              language,
+              durationSeconds,
+              xpEarned: earnedStars,
+              wordsPracticed,
+              transcript: currentTranscript,
+              manualEnd,
+            }),
           });
-          if (error) throw error;
+          if (!res.ok) throw new Error(`Session save failed: ${res.status}`);
         });
-        const child = await withRetry(async () => {
-          const { data, error } = await supabase
-            .from("children")
-            .select("xp, streak, last_session_at")
-            .eq("id", childId)
-            .single();
-          if (error) throw error;
-          return data;
-        });
-        // Only update XP and streak for naturally completed lessons.
-        // Manual end = child walked away — no reward, no streak credit.
-        if (child && !manualEnd) {
-          // Streak by calendar days (device-local): exactly 1 day since the
-          // last session extends the streak, same day keeps it, anything
-          // older resets it. The previous 48-hour-window check let a session
-          // from two calendar days ago still count as "yesterday".
-          const startOfDay  = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-          const lastDate    = child.last_session_at ? new Date(child.last_session_at) : null;
-          const today       = new Date();
-          const dayDiff     = lastDate ? Math.round((startOfDay(today) - startOfDay(lastDate)) / 86400000) : null;
-          const isNewDay    = dayDiff === null || dayDiff >= 1;
-          const newStreak   = isNewDay ? (dayDiff === 1 ? child.streak + 1 : 1) : child.streak;
-          await withRetry(async () => {
-            const { error } = await supabase.from("children").update({
-              xp: child.xp + earnedStars,
-              streak: newStreak,
-              last_session_at: today.toISOString(),
-            }).eq("id", childId);
-            if (error) throw error;
-          });
-        }
       } catch (e) {
         console.error("Failed to save session after retries:", e);
         // Non-blocking — child still sees quiz; progress will be awarded next session

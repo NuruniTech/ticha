@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import GameSession from "@/components/GameSession";
 import { WORD_LISTS, QuizWord } from "@/lib/wordLists";
@@ -16,18 +16,19 @@ function QuizContent() {
   const ageParam     = searchParams.get("age");
   const childAge     = ageParam ? parseInt(ageParam) : undefined;
 
-  const allWords = WORD_LISTS[game] || WORD_LISTS.animals;
-
   // If coming from a session, quiz on exactly the words just taught.
   // Fall back to random selection if the param is missing or unresolvable.
-  let words: QuizWord[];
-  if (wordsParam) {
-    const swList = wordsParam.split(",");
-    const found  = swList.map(sw => allWords.find(w => w.sw === sw)).filter(Boolean) as QuizWord[];
-    words = found.length >= 3 ? found : [...allWords].sort(() => Math.random() - 0.5).slice(0, 5);
-  } else {
-    words = [...allWords].sort(() => Math.random() - 0.5).slice(0, 5);
-  }
+  // Lazy useState initializer: the shuffle runs once per mount, keeping
+  // render pure and the word set stable across re-renders.
+  const [words] = useState<QuizWord[]>(() => {
+    const allWords = WORD_LISTS[game] || WORD_LISTS.animals;
+    if (wordsParam) {
+      const swList = wordsParam.split(",");
+      const found  = swList.map(sw => allWords.find(w => w.sw === sw)).filter(Boolean) as QuizWord[];
+      if (found.length >= 3) return found;
+    }
+    return [...allWords].sort(() => Math.random() - 0.5).slice(0, 5);
+  });
 
   return (
     <GameSession

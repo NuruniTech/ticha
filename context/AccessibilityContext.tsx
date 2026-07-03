@@ -16,10 +16,13 @@ const AccessibilityContext = createContext<AccessibilityContextValue>({
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount. Deliberately a setState-in-effect:
+  // reading localStorage in the initializer would make the first client
+  // render differ from the server render and break hydration.
   useEffect(() => {
     try {
       const saved = localStorage.getItem("ticha_settings");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
     } catch { /* ignore */ }
   }, []);

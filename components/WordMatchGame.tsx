@@ -23,8 +23,10 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
   const isSwahili = language === "sw";
   const gameWords = useMemo(() => words.slice(0, 5), [words]);
 
-  const wordOrder  = useMemo(() => [...gameWords].sort(() => Math.random() - 0.5), [gameWords]);
-  const emojiOrder = useMemo(() => [...gameWords].sort(() => Math.random() - 0.5), [gameWords]);
+  // Shuffles live in lazy useState initializers (run once per mount, not on
+  // every render) — the component remounts via key for each new game/retry.
+  const [wordOrder]  = useState(() => [...gameWords].sort(() => Math.random() - 0.5));
+  const [emojiOrder] = useState(() => [...gameWords].sort(() => Math.random() - 0.5));
 
   const [selection,  setSelection]  = useState<Selection>(null);
   const [matched,    setMatched]    = useState<Set<string>>(new Set());

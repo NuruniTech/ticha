@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 
 interface PendingXp { childId: string; xp: number; ts: number; }
 
 // Flushes any quiz XP that was earned while offline.
 // Runs silently in the background on every page load.
+// XP is awarded through /api/quiz-results (server-side, ownership-checked)
+// rather than by writing to the database directly from the browser.
 export default function XpSyncOnLoad() {
   useEffect(() => {
     if (!navigator.onLine) return;
@@ -21,12 +22,13 @@ export default function XpSyncOnLoad() {
         const remaining: PendingXp[] = [];
         for (const item of pending) {
           try {
-            const { data } = await supabase
-              .from("children").select("xp").eq("id", item.childId).single();
-            if (data) {
-              await supabase.from("children")
-                .update({ xp: data.xp + item.xp }).eq("id", item.childId);
-            }
+            const res = await fetch("/api/quiz-results", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ childId: item.childId, stars: item.xp, words: [] }),
+            });
+            // 404 = child deleted since; drop the entry rather than retry forever
+            if (!res.ok && res.status !== 404) throw new Error(String(res.status));
           } catch {
             remaining.push(item); // keep for next attempt
           }

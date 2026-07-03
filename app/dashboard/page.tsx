@@ -43,6 +43,8 @@ export default function DashboardPage() {
   const [usingCache, setUsingCache]   = useState(false);
   const [milestoneAlerts, setMilestoneAlerts] = useState<{ key: string; msg: string; msgSw: string; childName: string }[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  // Child pending removal — shows the styled confirmation modal
+  const [confirmRemove, setConfirmRemove] = useState<Child | null>(null);
 
   const [newName, setNewName]     = useState("");
   const [newAge, setNewAge]       = useState("");
@@ -101,8 +103,11 @@ export default function DashboardPage() {
       setHasError(true);
       setLoading(false);
     }
-  }, [router]);
+  }, [router, posthog]);
 
+  // Async data fetch on mount — all setState calls happen after awaits,
+  // not synchronously in the effect body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   async function addChild() {
@@ -121,9 +126,9 @@ export default function DashboardPage() {
   }
 
   async function deleteChild(id: string) {
-    if (!confirm(t.removeConfirm)) return;
     await supabase.from("children").delete().eq("id", id);
     setChildren((prev) => prev.filter((c) => c.id !== id));
+    setConfirmRemove(null);
   }
 
   function dismissAlert(key: string) {
@@ -244,7 +249,7 @@ export default function DashboardPage() {
                     {/* Colored top */}
                     <div style={{ background: grad, padding: "20px 18px 24px", position: "relative" }}>
                       <button
-                        onClick={(e) => { e.stopPropagation(); deleteChild(child.id); }}
+                        onClick={(e) => { e.stopPropagation(); setConfirmRemove(child); }}
                         style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(255,255,255,0.25)", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", fontSize: "14px", color: "white", lineHeight: "26px", textAlign: "center" }}
                         aria-label="Remove"
                       >×</button>
@@ -517,6 +522,40 @@ export default function DashboardPage() {
                   </div>
                 ));
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Remove-child confirmation modal (replaces browser confirm()) */}
+      {confirmRemove && (
+        <>
+          <div onClick={() => setConfirmRemove(null)} style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 301, width: "min(320px, calc(100vw - 48px))", background: "white", borderRadius: "24px", padding: "28px 24px 24px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
+            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#FEF2F2", border: "2px solid #FECACA", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", fontSize: "28px" }}>
+              {confirmRemove.avatar}
+            </div>
+            <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A8A", margin: "0 0 8px" }}>
+              {t.removeConfirm}
+            </p>
+            <p style={{ fontSize: "13px", color: "#6B7280", lineHeight: 1.6, margin: "0 0 20px" }}>
+              {lang === "sw"
+                ? `Maendeleo yote ya ${confirmRemove.name} — nyota, mfululizo na historia ya masomo — yatafutwa kabisa.`
+                : `All of ${confirmRemove.name}'s progress — stars, streak and lesson history — will be permanently deleted.`}
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => setConfirmRemove(null)}
+                style={{ flex: 1, background: "#F3F4F6", color: "#374151", border: "none", borderRadius: "9999px", padding: "12px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}
+              >
+                {lang === "sw" ? "Ghairi" : "Cancel"}
+              </button>
+              <button
+                onClick={() => deleteChild(confirmRemove.id)}
+                style={{ flex: 1, background: "#EF4444", color: "white", border: "none", borderRadius: "9999px", padding: "12px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 3px 0 #B91C1C" }}
+              >
+                {lang === "sw" ? "Ondoa" : "Remove"}
+              </button>
             </div>
           </div>
         </>

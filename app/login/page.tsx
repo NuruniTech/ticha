@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Suspense } from "react";
@@ -31,14 +31,12 @@ function LoginForm() {
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError]       = useState("");
+  // Initial error comes from the OAuth redirect (?error=...) — read once at
+  // mount via lazy initializer instead of a setState-in-effect
+  const [error, setError]       = useState(() => searchParams.get("error") ? t.errors.authFailed : "");
   const [resetSent, setResetSent]   = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [view, setView]         = useState<"login" | "forgot">("login");
-
-  useEffect(() => {
-    if (searchParams.get("error")) setError(t.errors.authFailed);
-  }, [searchParams, t.errors.authFailed]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
