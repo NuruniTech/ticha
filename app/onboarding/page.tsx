@@ -50,7 +50,14 @@ export default function OnboardingPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-      await supabase.from("children").insert({
+      // Ensure the parent profile row exists before the child insert (FK).
+      // Normally created by the handle_new_user trigger, but be resilient —
+      // triggers on auth.users can be lost when a Supabase project is restored.
+      await supabase.from("profiles").upsert(
+        { id: user.id, email: user.email ?? "", full_name: user.user_metadata?.full_name ?? "" },
+        { onConflict: "id" }
+      );
+      const { error: insertError } = await supabase.from("children").insert({
         parent_id: user.id,
         name: childName.trim(),
         age: childAge ? parseInt(childAge) : null,
@@ -59,6 +66,7 @@ export default function OnboardingPage() {
         xp: 0,
         streak: 0,
       });
+      if (insertError) throw insertError; // supabase-js returns errors, it doesn't throw
       setStep(3);
     } catch {
       setError(t.savingError);
