@@ -14,19 +14,28 @@ drop policy if exists "Users manage own profile" on profiles;
 create policy "Users manage own profile" on profiles
   for all using (auth.uid() = id);
 
--- Auto-create profile on signup
-create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
+-- Auto-create profile on signup.
+-- MUST be schema-qualified with a pinned search_path: the auth service runs
+-- this trigger with a search path that does not include "public", so a bare
+-- "profiles" reference makes every signup fail with
+-- "Database error saving new user".
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
 begin
-  insert into profiles (id, email, full_name)
-  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name')
+  on conflict (id) do nothing;
   return new;
 end;
 $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
-  for each row execute procedure handle_new_user();
+  for each row execute procedure public.handle_new_user();
 
 -- Children
 create table if not exists children (
