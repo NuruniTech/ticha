@@ -6,7 +6,7 @@ import LottieEmoji from "./LottieEmoji";
 import WordMatchGame from "./WordMatchGame";
 import FlipCardsGame from "./FlipCardsGame";
 import SpeedTapGame  from "./SpeedTapGame";
-import type { QuizWord } from "@/lib/wordLists";
+import type { GameWord } from "@/lib/languages";
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const MAX_HEARTS        = 3;
@@ -28,10 +28,10 @@ const GAME_NAMES_SW = ["Linganisha",  "Pindua Kadi", "Gonga Haraka", "Andika Nen
 
 type Phase = "game" | "between" | "prereplay" | "retry" | "done" | "gameover";
 
-interface RetryItem { words: QuizWord[]; label: string; gameType: number; }
+interface RetryItem { words: GameWord[]; label: string; gameType: number; }
 
 interface Props {
-  words:        QuizWord[];
+  words:        GameWord[];
   language:     string;
   childId:      string | null;
   sessionStars: number;
@@ -75,8 +75,8 @@ export default function GameSession({ words, language, childId, sessionStars, ch
   async function saveResults(finalStars: number) {
     if (savedRef.current || !childId) return;
     savedRef.current = true;
-    const allMissed = new Set(retryRef.current.flatMap(r => r.words.map(w => w.sw)));
-    const words = gameWords.map(word => ({ sw: word.sw, correct: !allMissed.has(word.sw) }));
+    const allMissed = new Set(retryRef.current.flatMap(r => r.words.map(w => w.id)));
+    const words = gameWords.map(word => ({ sw: word.id, correct: !allMissed.has(word.id) }));
     try {
       const res = await fetch("/api/quiz-results", {
         method: "POST",
@@ -97,7 +97,7 @@ export default function GameSession({ words, language, childId, sessionStars, ch
   }
 
   // ── Game completion handler ────────────────────────────────────────────────
-  function onGameComplete(missed: QuizWord[], stars: number) {
+  function onGameComplete(missed: GameWord[], stars: number) {
     totalRef.current += stars;
     setTotalStars(totalRef.current);
 
@@ -138,7 +138,7 @@ export default function GameSession({ words, language, childId, sessionStars, ch
   }
 
   // ── Retry completion handler ───────────────────────────────────────────────
-  function onRetryComplete(missed: QuizWord[], stars: number) {
+  function onRetryComplete(missed: GameWord[], stars: number) {
     totalRef.current += stars;
     setTotalStars(totalRef.current);
 
@@ -316,7 +316,7 @@ export default function GameSession({ words, language, childId, sessionStars, ch
                   <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>{item.words.length} {isSwahili ? "words" : "maneno"}</p>
                 </div>
                 <div style={{ display: "flex", gap: "4px" }}>
-                  {item.words.map(w => <LottieEmoji key={w.sw} emoji={w.emoji} size={24} />)}
+                  {item.words.map(w => <LottieEmoji key={w.id} emoji={w.emoji} size={24} />)}
                 </div>
               </div>
             ))}

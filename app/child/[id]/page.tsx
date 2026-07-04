@@ -7,7 +7,7 @@ import { Child } from "@/types";
 import TichaAvatar from "@/components/TichaAvatar";
 import GameSession from "@/components/GameSession";
 import LottieEmoji from "@/components/LottieEmoji";
-import { WORD_LISTS, type QuizWord } from "@/lib/wordLists";
+import { getCourse, resolveWords, type GameWord } from "@/lib/languages";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import { getLevel, nextLevelXp } from "@/lib/levels";
@@ -75,7 +75,7 @@ export default function ChildPage() {
   const [lockedBadge,   setLockedBadge]   = useState<null | { emoji: string; nameEn: string; nameSw: string; descEn: string; descSw: string; color: string; hintEn: string; hintSw: string }>(null);
   // Words for the standalone quiz — shuffled once when the quiz is started
   // (event handler), never during render
-  const [quizWords,     setQuizWords]     = useState<QuizWord[]>([]);
+  const [quizWords,     setQuizWords]     = useState<GameWord[]>([]);
   const [lockedDecor,   setLockedDecor]   = useState<null | { emoji: string; nameEn: string; nameSw: string; unlockEn: string; unlockSw: string }>(null);
   const [siblings,      setSiblings]      = useState<{ id: string; name: string; avatar: string; xp: number }[]>([]);
 
@@ -976,7 +976,7 @@ export default function ChildPage() {
           </button>
 
           {/* Word Games */}
-          <button onClick={() => { setQuizWords([...(WORD_LISTS[game] || WORD_LISTS.animals)].sort(() => Math.random() - 0.5).slice(0, 5)); setView("quiz"); }} disabled={quizCooldown} style={{ background: quizCooldown ? "#F3F4F6" : "white", borderRadius: "22px", padding: "24px 18px", border: "none", cursor: quizCooldown ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 4px 20px rgba(0,0,0,0.09)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left", opacity: quizCooldown ? 0.6 : 1 }}
+          <button onClick={() => { setQuizWords([...resolveWords(game, getCourse(child.primary_language))].sort(() => Math.random() - 0.5).slice(0, 5)); setView("quiz"); }} disabled={quizCooldown} style={{ background: quizCooldown ? "#F3F4F6" : "white", borderRadius: "22px", padding: "24px 18px", border: "none", cursor: quizCooldown ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 4px 20px rgba(0,0,0,0.09)", transition: "transform 0.15s, box-shadow 0.15s", textAlign: "left", opacity: quizCooldown ? 0.6 : 1 }}
             onMouseEnter={(e) => { if (!quizCooldown) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 10px 28px rgba(0,0,0,0.14)"; } }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.09)"; }}
           >

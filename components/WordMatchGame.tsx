@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
-import type { QuizWord } from "@/lib/wordLists";
+import type { GameWord } from "@/lib/languages";
 
 const STARS_PER_MATCH = 5;
 const COMBO_THRESHOLD = 3;
@@ -13,10 +13,10 @@ const WORD_COLORS     = ["#F97316", "#4B8BF5", "#22C55E", "#EC4899", "#F59E0B"];
 type Selection = { key: string; side: "word" | "emoji" } | null;
 
 interface Props {
-  words:      QuizWord[];
+  words:      GameWord[];
   language:   string;
   // Called when all pairs are processed. Missed = pairs the child got wrong.
-  onComplete: (missed: QuizWord[], starsEarned: number) => void;
+  onComplete: (missed: GameWord[], starsEarned: number) => void;
 }
 
 export default function WordMatchGame({ words, language, onComplete }: Props) {
@@ -71,7 +71,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
 
       if (newMatched.size + dismissed.size >= gameWords.length && !doneRef.current) {
         doneRef.current = true;
-        const missed = gameWords.filter(w => !newMatched.has(w.sw));
+        const missed = gameWords.filter(w => !newMatched.has(w.id));
         setTimeout(() => onComplete(missed, bonusRef.current), 700);
       }
     } else {
@@ -90,7 +90,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
             setMatched(mtch => {
               if (mtch.size + next.size >= gameWords.length && !doneRef.current) {
                 doneRef.current = true;
-                const missed = gameWords.filter(w => !mtch.has(w.sw));
+                const missed = gameWords.filter(w => !mtch.has(w.id));
                 setTimeout(() => onComplete(missed, bonusRef.current), 400);
               }
               return mtch;
@@ -174,7 +174,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
         {/* Word tiles */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
           {wordOrder.map((word, i) => {
-            const key         = word.sw;
+            const key         = word.id;
             const color       = WORD_COLORS[i % WORD_COLORS.length];
             const gone        = matched.has(key) || dismissed.has(key);
             const isShaking   = shaking.has(key);
@@ -193,7 +193,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
                 animation:   isShaking ? "wmShake 0.55s ease-in-out" : isPopping ? "wmPop 0.55s ease-out forwards" : isRevealing ? `wmReveal ${REVEAL_DURATION}ms ease-out` : "none",
               }}>
                 <span style={{ fontFamily: "'Baloo 2', cursive", fontSize: "16px", fontWeight: 800, letterSpacing: "0.01em", color: isRevealing || isSelected ? "white" : color }}>
-                  {isSwahili ? word.sw : word.en}
+                  {word.text}
                 </span>
               </button>
             );
@@ -203,7 +203,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
         {/* Emoji tiles */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
           {emojiOrder.map((word) => {
-            const key         = word.sw;
+            const key         = word.id;
             const gone        = matched.has(key) || dismissed.has(key);
             const isShaking   = shaking.has(key);
             const isPopping   = popping.has(key);

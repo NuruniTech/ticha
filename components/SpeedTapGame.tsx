@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
-import type { QuizWord } from "@/lib/wordLists";
+import type { GameWord } from "@/lib/languages";
 
 const STARS_PER_HIT   = 5;
 const COMBO_THRESHOLD = 3;
@@ -12,13 +12,13 @@ const RESULT_SHOW_MS  = 900;   // how long correct/wrong flash stays before next
 const DISTRACTORS     = 3;     // wrong options shown alongside the correct one
 
 interface Props {
-  words:      QuizWord[];
+  words:      GameWord[];
   language:   string;
-  onComplete: (missed: QuizWord[], starsEarned: number) => void;
+  onComplete: (missed: GameWord[], starsEarned: number) => void;
 }
 
-function pickDistractors(correct: QuizWord, pool: QuizWord[], count: number): QuizWord[] {
-  const others = pool.filter(w => w.sw !== correct.sw);
+function pickDistractors(correct: GameWord, pool: GameWord[], count: number): GameWord[] {
+  const others = pool.filter(w => w.id !== correct.id);
   const shuffled = [...others].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
@@ -26,8 +26,8 @@ function pickDistractors(correct: QuizWord, pool: QuizWord[], count: number): Qu
 // One round = one target word with its shuffled options and start time.
 // Built in event/timeout callbacks (never during render) so the shuffle
 // stays out of the render phase.
-interface Round { idx: number; options: QuizWord[]; startedAt: number; }
-function makeRound(idx: number, gameWords: QuizWord[]): Round {
+interface Round { idx: number; options: GameWord[]; startedAt: number; }
+function makeRound(idx: number, gameWords: GameWord[]): Round {
   const target = gameWords[idx];
   const options = [...pickDistractors(target, gameWords, DISTRACTORS), target]
     .sort(() => Math.random() - 0.5);
@@ -47,7 +47,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
   const [bonusStars, setBonusStars] = useState(0);
 
   const bonusRef   = useRef(0);
-  const missedRef  = useRef<QuizWord[]>([]);
+  const missedRef  = useRef<GameWord[]>([]);
   const lockedRef  = useRef(false);  // prevents double-tap during result flash
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -96,14 +96,14 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [round, result, currentWord, scheduleAdvance]);
 
-  const handleTap = useCallback((opt: QuizWord) => {
+  const handleTap = useCallback((opt: GameWord) => {
     if (lockedRef.current || result !== null) return;
     lockedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    setTapKey(opt.sw);
+    setTapKey(opt.id);
 
-    if (opt.sw === currentWord.sw) {
+    if (opt.id === currentWord.id) {
       const newCombo = combo + 1;
       setCombo(newCombo);
       const stars = STARS_PER_HIT * (newCombo >= COMBO_THRESHOLD ? 2 : 1);
@@ -228,7 +228,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
           animation: result === "timeout" ? "stPulse 0.4s ease-in-out 2" : "none",
         }}>
           <span style={{ fontFamily: "'Baloo 2', cursive", fontSize: "26px", fontWeight: 800, color: "white", letterSpacing: "0.02em" }}>
-            {isSwahili ? currentWord.sw : currentWord.en}
+            {currentWord.text}
           </span>
           {result === "timeout" && (
             <p style={{ fontSize: "11px", color: "#FCA5A5", margin: "4px 0 0", fontWeight: 700 }}>{t.timeout}</p>
@@ -239,8 +239,8 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
       {/* 2×2 emoji grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", maxWidth: "340px", margin: "0 auto", width: "100%" }}>
         {options.map(opt => {
-          const isCorrect  = opt.sw === currentWord.sw;
-          const isTapped   = tapKey === opt.sw;
+          const isCorrect  = opt.id === currentWord.id;
+          const isTapped   = tapKey === opt.id;
           const showReveal = result !== null && isCorrect;  // always highlight correct after result
 
           let anim = "none";
@@ -250,7 +250,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
 
           return (
             <button
-              key={opt.sw}
+              key={opt.id}
               onClick={() => handleTap(opt)}
               style={{
                 height: "100px", borderRadius: "18px",

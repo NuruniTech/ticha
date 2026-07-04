@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
-import type { QuizWord } from "@/lib/wordLists";
+import type { GameWord } from "@/lib/languages";
 
 const STARS_PER_MATCH = 5;
 const COMBO_THRESHOLD = 3;
@@ -16,21 +16,21 @@ interface CardData {
   id:       string;
   key:      string;      // w.sw — links word card ↔ emoji card
   type:     "word" | "emoji";
-  word:     QuizWord;
+  word:     GameWord;
   colorIdx: number;
 }
 
 interface Props {
-  words:      QuizWord[];
+  words:      GameWord[];
   language:   string;
-  onComplete: (missed: QuizWord[], starsEarned: number) => void;
+  onComplete: (missed: GameWord[], starsEarned: number) => void;
 }
 
-function buildDeck(gameWords: QuizWord[]): CardData[] {
+function buildDeck(gameWords: GameWord[]): CardData[] {
   return gameWords
     .flatMap((word, i) => [
-      { id: `w-${word.sw}`, key: word.sw, type: "word"  as const, word, colorIdx: i },
-      { id: `e-${word.sw}`, key: word.sw, type: "emoji" as const, word, colorIdx: i },
+      { id: `w-${word.id}`, key: word.id, type: "word"  as const, word, colorIdx: i },
+      { id: `e-${word.id}`, key: word.id, type: "emoji" as const, word, colorIdx: i },
     ])
     .sort(() => Math.random() - 0.5);
 }
@@ -60,7 +60,7 @@ export default function FlipCardsGame({ words, language, onComplete }: Props) {
   function checkDone() {
     if (matchedRef.current.size + dismissedRef.current.size >= gameWords.length && !doneRef.current) {
       doneRef.current = true;
-      const missed = gameWords.filter(w => dismissedRef.current.has(w.sw));
+      const missed = gameWords.filter(w => dismissedRef.current.has(w.id));
       setTimeout(() => onComplete(missed, bonusRef.current), 400);
       return true;
     }
@@ -276,7 +276,7 @@ export default function FlipCardsGame({ words, language, onComplete }: Props) {
                 >
                   {card.type === "word" ? (
                     <span style={{ fontFamily: "'Baloo 2', cursive", fontSize: "14px", fontWeight: 800, color: "white", textAlign: "center", lineHeight: 1.2, wordBreak: "break-word" }}>
-                      {isSwahili ? card.word.sw : card.word.en}
+                      {card.word.text}
                     </span>
                   ) : (
                     <LottieEmoji emoji={card.word.emoji} size={44} />
