@@ -1,4 +1,6 @@
--- Run this in Supabase SQL Editor
+-- Run this in Supabase SQL Editor.
+-- The whole file is idempotent — safe to re-run on an existing project
+-- (each policy is dropped before being recreated).
 
 -- Profiles (parents)
 create table if not exists profiles (
@@ -8,6 +10,7 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 alter table profiles enable row level security;
+drop policy if exists "Users manage own profile" on profiles;
 create policy "Users manage own profile" on profiles
   for all using (auth.uid() = id);
 
@@ -39,6 +42,7 @@ create table if not exists children (
   created_at timestamptz default now()
 );
 alter table children enable row level security;
+drop policy if exists "Parents manage own children" on children;
 create policy "Parents manage own children" on children
   for all using (auth.uid() = parent_id);
 
@@ -55,6 +59,7 @@ create table if not exists sessions (
   created_at timestamptz default now()
 );
 alter table sessions enable row level security;
+drop policy if exists "Parents view own children sessions" on sessions;
 create policy "Parents view own children sessions" on sessions
   for all using (
     exists (
@@ -76,6 +81,7 @@ create table if not exists progress (
   unique(child_id, word, language)
 );
 alter table progress enable row level security;
+drop policy if exists "Parents manage word progress" on progress;
 create policy "Parents manage word progress" on progress
   for all using (
     exists (
