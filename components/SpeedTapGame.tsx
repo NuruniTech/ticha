@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
 import type { GameWord } from "@/lib/languages";
+import { sfx } from "@/lib/sfx";
 
 const STARS_PER_HIT   = 5;
 const COMBO_THRESHOLD = 3;
@@ -85,6 +86,7 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
         clearInterval(timerRef.current!);
         if (!lockedRef.current) {
           lockedRef.current = true;
+          sfx.timeout();
           missedRef.current = [...missedRef.current, currentWord];
           setCombo(0);
           setResult("timeout");
@@ -104,17 +106,20 @@ export default function SpeedTapGame({ words, language, onComplete }: Props) {
     setTapKey(opt.id);
 
     if (opt.id === currentWord.id) {
+      sfx.correct();
       const newCombo = combo + 1;
       setCombo(newCombo);
       const stars = STARS_PER_HIT * (newCombo >= COMBO_THRESHOLD ? 2 : 1);
       bonusRef.current += stars;
       setBonusStars(bonusRef.current);
       if (newCombo >= COMBO_THRESHOLD) {
+        sfx.combo();
         setComboFlash(true);
         setTimeout(() => setComboFlash(false), 900);
       }
       setResult("correct");
     } else {
+      sfx.wrong();
       missedRef.current = [...missedRef.current, currentWord];
       setCombo(0);
       setResult("wrong");

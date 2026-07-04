@@ -1,15 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import { Theme, FontSize, VoiceName } from "@/types";
+import ParentGate from "@/components/ParentGate";
+import { supabase } from "@/lib/supabase";
+import { hashPin, markPinUnlocked } from "@/lib/pin";
 
 const VOICE_NAMES: VoiceName[] = ["Aoede", "Kore"];
 const VOICE_ICONS = ["👩🏾", "👩🏿"];
 const THEME_IDS: Theme[] = ["default", "high-contrast", "colorblind"];
-const TOGGLE_ICONS = ["🐢", "👁️", "🌗", "✋"];
+const TOGGLE_ICONS = ["🐢", "👁️", "🌗", "✋", "🔊"];
 
 // Module scope — defining components inside another component recreates them
 // on every render and resets their internal state.
@@ -33,11 +37,64 @@ function Toggle({ label, desc, checked, onChange, icon }: { label: string; desc:
   );
 }
 
-export default function SettingsPage() {
+function SettingsInner() {
   const router = useRouter();
   const { settings, updateSetting } = useAccessibility();
   const { lang, setLang } = useLanguage();
   const t = T[lang].settings;
+  const sw = lang === "sw";
+
+  // ── Parent PIN management ──────────────────────────────────────────────────
+  const [pinSet,     setPinSet]     = useState<boolean | null>(null); // null = loading
+  const [pinEditing, setPinEditing] = useState(false);
+  const [pinDraft,   setPinDraft]   = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinError,   setPinError]   = useState("");
+  const [pinBusy,    setPinBusy]    = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from("profiles").select("parent_pin_hash").eq("id", user.id).single();
+        if (!cancelled) setPinSet(Boolean(data?.parent_pin_hash));
+      } catch { if (!cancelled) setPinSet(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function savePin() {
+    setPinError("");
+    if (!/^\d{4}$/.test(pinDraft)) { setPinError(sw ? "PIN lazima iwe tarakimu 4" : "PIN must be exactly 4 digits"); return; }
+    if (pinDraft !== pinConfirm)   { setPinError(sw ? "PIN hazifanani" : "PINs don't match"); return; }
+    setPinBusy(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("no user");
+      const hash = await hashPin(pinDraft, user.id);
+      const { error } = await supabase.from("profiles").update({ parent_pin_hash: hash }).eq("id", user.id);
+      if (error) throw error;
+      markPinUnlocked(); // don't lock the parent out of the page they're on
+      setPinSet(true); setPinEditing(false); setPinDraft(""); setPinConfirm("");
+    } catch {
+      setPinError(sw ? "Imeshindikana — jaribu tena" : "Could not save — try again");
+    } finally { setPinBusy(false); }
+  }
+
+  async function removePin() {
+    setPinBusy(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("no user");
+      const { error } = await supabase.from("profiles").update({ parent_pin_hash: null }).eq("id", user.id);
+      if (error) throw error;
+      setPinSet(false); setPinEditing(false); setPinDraft(""); setPinConfirm("");
+    } catch {
+      setPinError(sw ? "Imeshindikana — jaribu tena" : "Could not remove — try again");
+    } finally { setPinBusy(false); }
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#FFFBF0" }}>
@@ -147,6 +204,68 @@ export default function SettingsPage() {
             icon={TOGGLE_ICONS[3]} label={t.toggles[3].label} desc={t.toggles[3].desc}
             checked={settings.reduceMotion} onChange={(v) => updateSetting("reduceMotion", v)}
           />
+          <Toggle
+            icon={TOGGLE_ICONS[4]} label={t.toggles[4].label} desc={t.toggles[4].desc}
+            checked={settings.soundEffects} onChange={(v) => updateSetting("soundEffects", v)}
+          />
+        </div>
+
+        {/* Parent PIN */}
+        <div className="card" style={{ padding: "24px", marginBottom: "20px" }}>
+          <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: "18px", fontWeight: 800, color: "#1E3A5F", marginBottom: "6px" }}>
+            🔐 {sw ? "PIN ya Mzazi" : "Parent PIN"}
+          </h2>
+          <p style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "16px" }}>
+            {sw
+              ? "Ikiwashwa, kurasa za wazazi (dashibodi, mipangilio, maendeleo) zitahitaji PIN — mtoto anabaki kwenye masomo yake tu."
+              : "When on, grown-up pages (dashboard, settings, progress) ask for a PIN — your child stays in their learning space."}
+          </p>
+
+          {pinSet === null ? (
+            <p style={{ fontSize: "13px", color: "#9CA3AF" }}>…</p>
+          ) : pinSet && !pinEditing ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <span style={{ background: "#DCFCE7", color: "#15803D", borderRadius: "9999px", padding: "6px 14px", fontSize: "13px", fontWeight: 800 }}>
+                ✅ {sw ? "PIN imewekwa" : "PIN is on"}
+              </span>
+              <button onClick={() => { setPinEditing(true); setPinError(""); }} disabled={pinBusy}
+                style={{ padding: "9px 18px", border: "2px solid #E5E7EB", borderRadius: "12px", background: "white", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "13px", color: "#1E3A5F", cursor: "pointer" }}>
+                {sw ? "Badilisha PIN" : "Change PIN"}
+              </button>
+              <button onClick={removePin} disabled={pinBusy}
+                style={{ padding: "9px 18px", border: "2px solid #FCA5A5", borderRadius: "12px", background: "#FFF1F2", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "13px", color: "#EF4444", cursor: "pointer" }}>
+                {sw ? "Ondoa PIN" : "Remove PIN"}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "300px" }}>
+              <input
+                type="password" inputMode="numeric" maxLength={4} value={pinDraft}
+                onChange={(e) => setPinDraft(e.target.value.replace(/\D/g, ""))}
+                placeholder={sw ? "PIN mpya (tarakimu 4)" : "New PIN (4 digits)"}
+                style={{ padding: "12px 16px", border: "2px solid #E5E7EB", borderRadius: "12px", fontSize: "16px", letterSpacing: "0.3em", fontWeight: 800 }}
+              />
+              <input
+                type="password" inputMode="numeric" maxLength={4} value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))}
+                placeholder={sw ? "Rudia PIN" : "Repeat PIN"}
+                style={{ padding: "12px 16px", border: "2px solid #E5E7EB", borderRadius: "12px", fontSize: "16px", letterSpacing: "0.3em", fontWeight: 800 }}
+              />
+              {pinError && <p style={{ fontSize: "12px", fontWeight: 700, color: "#EF4444", margin: 0 }}>{pinError}</p>}
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button onClick={savePin} disabled={pinBusy}
+                  style={{ flex: 1, padding: "12px", background: pinBusy ? "#9CA3AF" : "#FF8C00", color: "white", border: "none", borderRadius: "12px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "14px", cursor: pinBusy ? "default" : "pointer", boxShadow: pinBusy ? "none" : "0 3px 0 #CC6A00" }}>
+                  {pinBusy ? "…" : sw ? "Hifadhi PIN" : "Save PIN"}
+                </button>
+                {pinSet && (
+                  <button onClick={() => { setPinEditing(false); setPinDraft(""); setPinConfirm(""); setPinError(""); }} disabled={pinBusy}
+                    style={{ padding: "12px 18px", background: "#F3F4F6", color: "#374151", border: "none", borderRadius: "12px", fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>
+                    {sw ? "Ghairi" : "Cancel"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <p style={{ textAlign: "center", fontSize: "12px", color: "#9CA3AF", lineHeight: 1.7 }}>
@@ -154,5 +273,15 @@ export default function SettingsPage() {
         </p>
       </main>
     </div>
+  );
+}
+
+// PIN-gated: these pages are for grown-ups. The gate only engages when the
+// parent has set a PIN in Settings.
+export default function SettingsPage() {
+  return (
+    <ParentGate>
+      <SettingsInner />
+    </ParentGate>
   );
 }

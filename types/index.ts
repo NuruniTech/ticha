@@ -66,6 +66,7 @@ export interface AppSettings {
   visualMode: boolean;        // For deaf/hard-of-hearing: text + emoji instead of audio
   highContrast: boolean;
   reduceMotion: boolean;
+  soundEffects: boolean;      // Game chimes + haptics (never during voice lessons)
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -76,4 +77,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   visualMode: false,
   highContrast: false,
   reduceMotion: false,
+  soundEffects: true,
 };

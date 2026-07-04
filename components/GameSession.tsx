@@ -7,6 +7,7 @@ import WordMatchGame from "./WordMatchGame";
 import FlipCardsGame from "./FlipCardsGame";
 import SpeedTapGame  from "./SpeedTapGame";
 import type { GameWord } from "@/lib/languages";
+import { sfx } from "@/lib/sfx";
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const MAX_HEARTS        = 3;
@@ -165,6 +166,7 @@ export default function GameSession({ words, language, childId, sessionStars, ch
 
   // ── Finalize ───────────────────────────────────────────────────────────────
   function finalize(outcome: "done" | "gameover") {
+    if (outcome === "done") sfx.complete(); else sfx.gameover();
     const bonus = outcome === "gameover" ? COMPLETION_BONUS.partial
                 : !hadMissesRef.current  ? COMPLETION_BONUS.perfect
                 :                          COMPLETION_BONUS.cleared;

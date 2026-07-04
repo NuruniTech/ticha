@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useRef } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
 import type { GameWord } from "@/lib/languages";
+import { sfx } from "@/lib/sfx";
 
 const STARS_PER_MATCH = 5;
 const COMBO_THRESHOLD = 3;
@@ -45,7 +46,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
     if (matched.has(key) || dismissed.has(key)) return;
     if (shaking.size > 0 || revealKey !== null) return;
 
-    if (!selection)                                       { setSelection({ key, side }); return; }
+    if (!selection)                                       { sfx.tap(); setSelection({ key, side }); return; }
     if (selection.key === key && selection.side === side) { setSelection(null); return; }
     if (selection.side === side)                          { setSelection({ key, side }); return; }
 
@@ -54,6 +55,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
 
     if (correctKey === key) {
       // ✓ Correct
+      sfx.correct();
       const newMatched = new Set([...matched, key]);
       setMatched(newMatched);
       setPopping(p => { const n = new Set(p); n.add(key); return n; });
@@ -65,6 +67,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
       bonusRef.current += stars;
       setBonusStars(bonusRef.current);
       if (newCombo >= COMBO_THRESHOLD) {
+        sfx.combo();
         setComboFlash(true);
         setTimeout(() => setComboFlash(false), 900);
       }
@@ -76,6 +79,7 @@ export default function WordMatchGame({ words, language, onComplete }: Props) {
       }
     } else {
       // ✗ Wrong — shake, then reveal correct pair, then dismiss it
+      sfx.wrong();
       setShaking(new Set([correctKey, key]));
       setCombo(0);
 

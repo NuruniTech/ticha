@@ -7,6 +7,7 @@ import { Child, Session } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import { getLevel, nextLevelXp, levelProgressPct, LEVEL_META } from "@/lib/levels";
+import ParentGate from "@/components/ParentGate";
 
 function StatCard({ emoji, value, label, color }: { emoji: string; value: string | number; label: string; color: string }) {
   return (
@@ -18,7 +19,7 @@ function StatCard({ emoji, value, label, color }: { emoji: string; value: string
   );
 }
 
-export default function ProgressPage() {
+function ProgressInner() {
   const router  = useRouter();
   const params  = useParams();
   const childId = params.id as string;
@@ -277,5 +278,15 @@ export default function ProgressPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// PIN-gated: these pages are for grown-ups. The gate only engages when the
+// parent has set a PIN in Settings.
+export default function ProgressPage() {
+  return (
+    <ParentGate>
+      <ProgressInner />
+    </ParentGate>
   );
 }

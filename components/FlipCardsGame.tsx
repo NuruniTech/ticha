@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import TichaAvatar from "./TichaAvatar";
 import LottieEmoji from "./LottieEmoji";
 import type { GameWord } from "@/lib/languages";
+import { sfx } from "@/lib/sfx";
 
 const STARS_PER_MATCH = 5;
 const COMBO_THRESHOLD = 3;
@@ -87,7 +88,7 @@ export default function FlipCardsGame({ words, language, onComplete }: Props) {
 
     const newSel = [...selected, card.id];
     setSelected(newSel);
-    if (newSel.length < 2) return;
+    if (newSel.length < 2) { sfx.tap(); return; }
 
     // Two cards face-up — evaluate
     setIsLocked(true);
@@ -96,12 +97,14 @@ export default function FlipCardsGame({ words, language, onComplete }: Props) {
 
     if (c1.key === c2.key) {
       // ✓ Match
+      sfx.correct();
       const newCombo = combo + 1;
       setCombo(newCombo);
       const stars = STARS_PER_MATCH * (newCombo >= COMBO_THRESHOLD ? 2 : 1);
       bonusRef.current += stars;
       setBonusStars(bonusRef.current);
       if (newCombo >= COMBO_THRESHOLD) {
+        sfx.combo();
         setComboFlash(true);
         setTimeout(() => setComboFlash(false), 900);
       }
@@ -116,6 +119,7 @@ export default function FlipCardsGame({ words, language, onComplete }: Props) {
       }, 550);
     } else {
       // ✗ Wrong — increment wrong counts for both pair keys
+      sfx.wrong();
       setCombo(0);
       wrongRef.current[c1.key] = (wrongRef.current[c1.key] || 0) + 1;
       wrongRef.current[c2.key] = (wrongRef.current[c2.key] || 0) + 1;

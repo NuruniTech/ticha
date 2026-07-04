@@ -114,3 +114,8 @@ revoke update on table children from authenticated;
 grant update (name, age, avatar, primary_language) on table children to authenticated;
 revoke insert, update, delete on table sessions from authenticated;
 revoke insert, update, delete on table progress from authenticated;
+
+-- ── Parent PIN (added July 2026) ─────────────────────────────────────────────
+-- Optional 4-digit gate for parent pages, stored as SHA-256(userId:pin).
+-- A child gate, not account security — managed from Settings in the app.
+alter table profiles add column if not exists parent_pin_hash text;

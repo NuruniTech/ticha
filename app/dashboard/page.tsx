@@ -10,6 +10,7 @@ import { T } from "@/lib/translations";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { usePostHog } from "posthog-js/react";
 import { getLevel, levelProgressPct, LEVEL_META } from "@/lib/levels";
+import ParentGate from "@/components/ParentGate";
 
 const CHILDREN_CACHE_KEY = "ticha_children_cache";
 const PARENT_NAME_KEY    = "ticha_parent_name";
@@ -27,7 +28,7 @@ const CARD_GRADIENTS = [
   "linear-gradient(135deg, #0D9488 0%, #2DD4BF 100%)",
 ];
 
-export default function DashboardPage() {
+function DashboardInner() {
   const router = useRouter();
   const { lang } = useLanguage();
   const t        = T[lang].dashboard;
@@ -561,5 +562,15 @@ export default function DashboardPage() {
         </>
       )}
     </div>
+  );
+}
+
+// PIN-gated: these pages are for grown-ups. The gate only engages when the
+// parent has set a PIN in Settings.
+export default function DashboardPage() {
+  return (
+    <ParentGate>
+      <DashboardInner />
+    </ParentGate>
   );
 }
