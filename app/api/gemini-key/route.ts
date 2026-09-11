@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { GoogleGenAI } from "@google/genai";
+import { serviceClient } from "@/lib/apiAuth";
 
 // Mints a short-lived, single-use ephemeral Gemini token for one Live session.
 // The real GEMINI_API_KEY never leaves the server — a leaked token expires on
@@ -12,14 +13,13 @@ import { GoogleGenAI } from "@google/genai";
 //   - Anonymous visitors (the /demo "Try Without Signing Up" flow): 3 tokens
 //     per IP per minute — enough for one demo session + reconnects.
 //
-// In-memory rate limiter: on Vercel serverless this state is per-instance, so
-// it is a soft limit only. The single-use + 50-minute expiry on each token is
-// the real abuse ceiling. If demo abuse ever shows up in billing, swap this
-// for a Redis-backed limiter (e.g. @upstash/ratelimit).
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+// The limiter counts in Postgres (public.check_rate_limit, see lib/schema.sql)
+// rather than in memory. On Vercel serverless, in-process state is per-instance
+// and resets on every cold start, so an in-memory Map was effectively no limit
+// at all — and this route bills real money for anonymous callers.
 const RATE_LIMIT_USER = 10;
 const RATE_LIMIT_DEMO = 3;
-const RATE_WINDOW_MS  = 60_000;
+const RATE_WINDOW_SEC = 60;
 
 // Token lifetime must outlive the longest possible lesson —
 // VoiceSession's safety timeout is 45 min, so 50 min covers it.
@@ -27,16 +27,30 @@ const TOKEN_LIFETIME_MS     = 50 * 60 * 1000;
 // A fetched token must be used to start a session almost immediately.
 const NEW_SESSION_WINDOW_MS = 2 * 60 * 1000;
 
-function isRateLimited(id: string, limit: number): boolean {
-  const now   = Date.now();
-  const entry = rateLimitMap.get(id);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(id, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
+// Returns true when this caller should be rejected.
+//
+// If the limiter itself is broken (Supabase down, migration not run) we have to
+// choose which way to fail. Anonymous callers fail CLOSED: they are the billing
+// exposure, and losing the demo for a few minutes is cheaper than an unmetered
+// token faucet. Signed-in parents fail OPEN: they are known, already capped at
+// 10/min, and a database blip should not break a lesson mid-session.
+async function isRateLimited(
+  id: string,
+  limit: number,
+  failClosed: boolean
+): Promise<boolean> {
+  try {
+    const { data, error } = await serviceClient().rpc("check_rate_limit", {
+      p_id: id,
+      p_limit: limit,
+      p_window_seconds: RATE_WINDOW_SEC,
+    });
+    if (error) throw error;
+    return data === true;
+  } catch (err) {
+    console.error("Rate limit check failed for", id, "-", err);
+    return failClosed;
   }
-  if (entry.count >= limit) return true;
-  entry.count++;
-  return false;
 }
 
 export async function GET() {
@@ -73,7 +87,7 @@ export async function GET() {
     limit     = RATE_LIMIT_DEMO;
   }
 
-  if (isRateLimited(limiterId, limit)) {
+  if (await isRateLimited(limiterId, limit, !user)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 

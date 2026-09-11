@@ -119,3 +119,79 @@ revoke insert, update, delete on table progress from authenticated;
 -- Optional 4-digit gate for parent pages, stored as SHA-256(userId:pin).
 -- A child gate, not account security — managed from Settings in the app.
 alter table profiles add column if not exists parent_pin_hash text;
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- Durable rate limiting  (added September 2026 — run this BEFORE deploying the
+-- updated /api/gemini-key route)
+--
+-- /api/gemini-key mints Gemini Live tokens for anonymous demo visitors, so its
+-- rate limiter is a billing control, not just a politeness measure. The old
+-- in-memory Map was per-serverless-instance and therefore effectively no limit
+-- under real traffic. This table moves the counter into Postgres, where every
+-- instance shares it.
+--
+-- Service role only: the route reads/writes it through serviceClient().
+-- ═════════════════════════════════════════════════════════════════════════════
+create table if not exists rate_limits (
+  id       text primary key,       -- e.g. 'user:<uuid>' or 'ip:1.2.3.4'
+  count    int not null default 0,
+  reset_at timestamptz not null    -- when the current window expires
+);
+alter table rate_limits enable row level security;
+
+-- No policies are defined, so RLS denies anon and authenticated outright.
+-- The service role bypasses RLS; these revokes make the intent explicit and
+-- also cover the PostgREST grants Supabase hands out by default.
+revoke all on table rate_limits from anon, authenticated;
+
+-- Supports the cleanup sweep below.
+create index if not exists rate_limits_reset_at_idx on rate_limits (reset_at);
+
+-- Atomically count one hit against a limiter and report whether the caller has
+-- gone over. Returns true = over the limit (reject), false = allowed.
+--
+-- The counting is ONE statement on purpose. "insert .. on conflict do update"
+-- takes a row lock, so concurrent requests for the same id queue up and each
+-- sees the previous one's increment. A read-then-write pair would let two
+-- simultaneous requests both read a stale count and both be allowed through.
+--
+-- An expired window is reset in the same statement rather than deleted first,
+-- so there is no gap where a second caller could slip in on a fresh row.
+create or replace function public.check_rate_limit(
+  p_id             text,
+  p_limit          int,
+  p_window_seconds int
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count int;
+begin
+  -- Cheap opportunistic cleanup: roughly one call in 100 sweeps rows whose
+  -- window closed over an hour ago. Keeps the table small with no cron job
+  -- and no measurable cost on the other 99 calls.
+  if random() < 0.01 then
+    delete from rate_limits where reset_at < now() - interval '1 hour';
+  end if;
+
+  insert into rate_limits as r (id, count, reset_at)
+  values (p_id, 1, now() + make_interval(secs => p_window_seconds))
+  on conflict (id) do update
+    set count = case when r.reset_at <= now() then 1 else r.count + 1 end,
+        reset_at = case
+          when r.reset_at <= now() then now() + make_interval(secs => p_window_seconds)
+          else r.reset_at
+        end
+  returning r.count into v_count;
+
+  return v_count > p_limit;
+end;
+$$;
+
+-- security definer means the function runs as its owner, so lock it down to
+-- the service role — a browser-side client must never be able to call it.
+revoke all on function public.check_rate_limit(text, int, int) from public, anon, authenticated;
+grant execute on function public.check_rate_limit(text, int, int) to service_role;
