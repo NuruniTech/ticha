@@ -555,15 +555,15 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // reported. Matching the context to 24 kHz removes per-chunk resampling
       // entirely; the device resamples the continuous output stream once, in
       // hardware, which is what it is designed to do.
-      let playCtx: AudioContext;
-      try {
-        playCtx = new AudioContext({ sampleRate: 24000 });
-      } catch {
-        // Very old browsers reject a non-native rate — fall back rather than
-        // failing the whole session.
-        playCtx = new AudioContext();
-        log("⚠️ 24 kHz playback context unavailable — using system rate");
-      }
+      // NOTE: do NOT request sampleRate 24000 here. Matching Gemini's output
+      // rate removes the per-chunk resampling that causes clicking, but some
+      // Android builds ACCEPT the constructor and then output silence — the
+      // tablet played Ticha's animation with no sound at all. There is no
+      // reliable feature test for that (the context reports sampleRate 24000
+      // and state "running"), so silence is strictly worse than crackle.
+      // The per-chunk resampling artefact needs fixing with a stateful
+      // resampler on our side instead.
+      const playCtx = new AudioContext(); // system native rate
       await playCtx.resume();
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;

@@ -1,4 +1,4 @@
-const CACHE = "ticha-v1";
+const CACHE = "ticha-v2";
 const OFFLINE_PAGE = "/offline.html";
 
 // ── Install: pre-cache the offline fallback page ──────────────────────────
@@ -37,7 +37,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       caches.match(req).then(
         (hit) => hit || fetch(req).then((res) => {
-          caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          // Clone SYNCHRONOUSLY. caches.open() is async, so cloning inside its
+          // .then() ran after the body had already been handed to the page —
+          // "Failed to execute 'clone' on 'Response': Response body is already
+          // used", and nothing was ever actually cached.
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           return res;
         })
       )
@@ -50,7 +55,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       caches.match(req).then(
         (hit) => hit || fetch(req).then((res) => {
-          caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          // Clone SYNCHRONOUSLY. caches.open() is async, so cloning inside its
+          // .then() ran after the body had already been handed to the page —
+          // "Failed to execute 'clone' on 'Response': Response body is already
+          // used", and nothing was ever actually cached.
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           return res;
         })
       )
@@ -63,7 +73,8 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           return res;
         })
         .catch(() =>
