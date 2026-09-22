@@ -184,6 +184,31 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Gemini (session greets, then never replies).
   const audioChunkCountRef = useRef(0);
   const micSendCountRef    = useRef(0);
+
+  // Which Live model this session connects to.
+  //
+  // Default is PINNED rather than the "-latest" alias: an alias lets Google
+  // change the model under a running product with no deploy on our side, and
+  // "latest" currently resolves to this same snapshot anyway.
+  //
+  // ?model=half switches to the half-cascade model (native audio in, TTS out).
+  // Native-audio models have a documented, unresolved server-side bug where the
+  // model ends its own turn early and gets progressively less responsive as a
+  // session runs — which is exactly the shape of our logs: two or three replies,
+  // then permanent silence while the mic is still streaming. Google lists
+  // non-English languages and growing context as aggravating factors, and we
+  // are Swahili with a 20k-token system prompt. Half-cascade does not use that
+  // generation path. Its trade-off is a 32k context window (vs 128k), so a long
+  // lesson can run out of room — which is why this is a switch to measure with,
+  // not a silent default change.
+  const liveModelRef = useRef("gemini-2.5-flash-native-audio-preview-12-2025");
+  useEffect(() => {
+    try {
+      const m = new URLSearchParams(window.location.search).get("model");
+      if (m === "half") liveModelRef.current = "gemini-live-2.5-flash-preview";
+      else if (m === "flash2") liveModelRef.current = "gemini-2.0-flash-live-001";
+    } catch { /* leave the pinned default */ }
+  }, []);
   useEffect(() => {
     // Sticky per device: ?debug=1 turns it on and remembers, ?debug=0 turns it
     // off again. The session URL already carries name/lang/game/childId, so the
@@ -619,6 +644,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
+      log(`🤖 model ${liveModelRef.current}`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
@@ -655,7 +681,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       });
 
       const session: LiveSession = await client.live.connect({
-        model: "gemini-2.5-flash-native-audio-latest",
+        model: liveModelRef.current,
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: {
