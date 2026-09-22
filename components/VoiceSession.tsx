@@ -239,6 +239,24 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
   const wordsIntroduced = introducedWordIndices.size;
 
+  // What the CHILD is allowed to see, which lags what Gemini has said.
+  //
+  // introducedWordIndices is derived from outputTranscription, and Gemini sends
+  // that text BEFORE it has finished streaming the audio for the same turn (the
+  // goodbye handling below relies on the same fact). Rendering the cards
+  // straight from it lit up the next animal seconds before the child heard
+  // Ticha say it — the "animal displays earlier before the lesson starts"
+  // report. Here we hold the reveal back until the audio already queued for
+  // that turn has actually played out.
+  const [revealedWordIndices, setRevealedWordIndices] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    const ctx = playCtxRef.current;
+    const backlogMs = ctx ? Math.max(0, (playHeadRef.current - ctx.currentTime) * 1000) : 0;
+    if (backlogMs < 50) { setRevealedWordIndices(introducedWordIndices); return; }
+    const t = setTimeout(() => setRevealedWordIndices(introducedWordIndices), backlogMs);
+    return () => clearTimeout(t);
+  }, [introducedWordIndices]);
+
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
       frameIntervalRef.current && clearInterval(frameIntervalRef.current);
@@ -499,11 +517,19 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Fast-fail if the device has no network at all — saves a confusing timeout.
       if (!navigator.onLine) {
         throw new Error(
-          language === "en"
+          language === "sw"
             ? "Hakuna mtandao. Tafadhali angalia muunganiko wako wa intaneti."
             : "No internet connection. Please check your internet and try again."
         );
       }
+
+      // Start the token fetch NOW, in parallel with mic + audio setup, instead
+      // of after it. It is a round trip to our API which in turn calls Google,
+      // and it used to sit behind getUserMedia, two AudioContexts and the
+      // worklet module load — all of that dead time added to the pause between
+      // the child tapping Start and Ticha saying anything. Nothing below needs
+      // the token until live.connect().
+      const keyResPromise = fetch("/api/gemini-key");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -520,7 +546,24 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       await micCtx.resume();
       micCtxRef.current = micCtx;
 
-      const playCtx = new AudioContext(); // system native rate — no downsampling of Gemini's 24 kHz output
+      // Playback context runs AT Gemini's output rate (24 kHz), not the system
+      // native rate. Each chunk below is an AudioBuffer declared at 24 kHz; if
+      // the context runs at 44.1/48 kHz the browser resamples every buffer
+      // INDEPENDENTLY, and the resampler carries no state across buffers — so
+      // every chunk boundary gets a discontinuity. With chunks arriving many
+      // times a second that is continuous clicking: the "scratching" testers
+      // reported. Matching the context to 24 kHz removes per-chunk resampling
+      // entirely; the device resamples the continuous output stream once, in
+      // hardware, which is what it is designed to do.
+      let playCtx: AudioContext;
+      try {
+        playCtx = new AudioContext({ sampleRate: 24000 });
+      } catch {
+        // Very old browsers reject a non-native rate — fall back rather than
+        // failing the whole session.
+        playCtx = new AudioContext();
+        log("⚠️ 24 kHz playback context unavailable — using system rate");
+      }
       await playCtx.resume();
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
@@ -547,7 +590,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Fetch a short-lived, single-use ephemeral token from the server.
       // The real Gemini API key never reaches the browser — this token only
       // works for one Live session and expires on its own.
-      const keyRes = await fetch("/api/gemini-key");
+      const keyRes = await keyResPromise;
       if (!keyRes.ok) throw new Error("Could not initialise session. Please try again.");
       const { token: geminiToken } = await keyRes.json();
 
@@ -1039,8 +1082,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                 {lessonWords.map((lw, i) => {
-                  const done = introducedWordIndices.has(i);
-                  const active = done && !introducedWordIndices.has(i + 1) && introducedWordIndices.size > 0;
+                  const done = revealedWordIndices.has(i);
+                  const active = done && !revealedWordIndices.has(i + 1) && revealedWordIndices.size > 0;
                   return (
                     <div key={i} style={{
                       display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
