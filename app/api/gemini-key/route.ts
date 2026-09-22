@@ -17,8 +17,16 @@ import { serviceClient } from "@/lib/apiAuth";
 // rather than in memory. On Vercel serverless, in-process state is per-instance
 // and resets on every cold start, so an in-memory Map was effectively no limit
 // at all — and this route bills real money for anonymous callers.
+//
+// The demo limit must clear VoiceSession's reconnect ladder. Every reconnect
+// attempt fetches a FRESH token (ephemeral tokens are single-use), and the
+// ladder fires at t=0, 3s, 9s, 21s, 41s — five requests inside one 60 s window
+// before the fifth retry at t=71s lands in the next one. At 3/min a demo user
+// on flaky mobile data got two reconnects and then a hard failure, which is
+// exactly the network this app is built for. 8 covers the full ladder with
+// headroom for a manual retry.
 const RATE_LIMIT_USER = 10;
-const RATE_LIMIT_DEMO = 3;
+const RATE_LIMIT_DEMO = 8;
 const RATE_WINDOW_SEC = 60;
 
 // Token lifetime must outlive the longest possible lesson —

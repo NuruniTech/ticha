@@ -68,9 +68,11 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("anonymous rate limit (3 per IP per minute)", () => {
-  it("allows 3 requests, blocks the 4th inside the window", async () => {
-    for (let i = 1; i <= 3; i++) {
+describe("anonymous rate limit (8 per IP per minute)", () => {
+  it("allows the full reconnect ladder, blocks one past the limit", async () => {
+    // 8 = 1 initial connect + 5 reconnect attempts + headroom. If this ever
+    // drops below 6 again, a flaky-network demo session dies mid-lesson.
+    for (let i = 1; i <= 8; i++) {
       expect((await GET()).status, `request ${i}`).toBe(200);
     }
 
@@ -82,13 +84,13 @@ describe("anonymous rate limit (3 per IP per minute)", () => {
     // It is keyed by IP, at the demo limit — not the logged-in limit.
     expect(rpc).toHaveBeenCalledWith("check_rate_limit", {
       p_id: "ip:203.0.113.7",
-      p_limit: 3,
+      p_limit: 8,
       p_window_seconds: 60,
     });
   });
 
   it("allows the request again once the window has reset", async () => {
-    for (let i = 0; i < 3; i++) await GET();
+    for (let i = 0; i < 8; i++) await GET();
     expect((await GET()).status).toBe(429);
 
     advance(60_001);
