@@ -61,7 +61,17 @@ export function getWordBatch(game: string, childXp: number, childAge?: number): 
   // the same structured introduction before the randomised mastery phase kicks in.
   const advanced = all.slice(10);
   const pool = advanced.length >= batch ? advanced : all;
-  return [...pool].sort(() => Math.random() - 0.5).slice(0, batch);
+  // Fisher-Yates. The previous `.sort(() => Math.random() - 0.5)` is not a
+  // shuffle: the comparator is inconsistent, so V8's sort leaves elements close
+  // to their original positions and the same few words surfaced session after
+  // session. That is why a lesson could feel like it was repeating words from
+  // the previous one — they genuinely were being drawn again.
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, batch);
 }
 
 export function getSystemPrompt(
@@ -188,7 +198,12 @@ If ${childName} wants to revisit a word, tell a story, or ask questions — go w
 ━━━ SWAHILI PRONUNCIATION ━━━
 Pure vowels: a="ah" | e="eh" | i="ee" | o="oh" | u="oo". Never slide or combine.
 Stress: always the second-to-last syllable. simba→SEEM-bah | tembo→TEM-boh | kijani→kee-JAH-nee
+  EXCEPTION — a word-initial hummed nasal is its own syllable but NEVER takes the stress.
+  mbu = m-BOO (two syllables, stress on BOO — never "MM-boo", never one syllable "mboo").
+  nge = n-GEH. mbwa = m-BWAH. Count the nasal as a syllable, then stress the one after it.
 Consonant clusters:
+  ch (chui, chakula): like "ch" in "church" — NEVER "sh", never a hard "k".
+    chui = CHOO-ee, two syllables, never "chwee" and never "koo-ee".
   mb (mbwa, mbili): hummed "mm" + "bwa" — one fluid sound
   nd (ndege): hummed "nn" + "deh-geh"
   ng' (ng'ombe): nasal "ng" as in "singer" + "om-beh"
