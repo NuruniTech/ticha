@@ -185,9 +185,20 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const audioChunkCountRef = useRef(0);
   const micSendCountRef    = useRef(0);
   useEffect(() => {
-    const on =
-      process.env.NODE_ENV === "development" ||
-      new URLSearchParams(window.location.search).has("debug");
+    // Sticky per device: ?debug=1 turns it on and remembers, ?debug=0 turns it
+    // off again. The session URL already carries name/lang/game/childId, so the
+    // flag has to be typed as &debug=1 — not something anyone wants to retype
+    // on a tablet keyboard before every run.
+    let on = process.env.NODE_ENV === "development";
+    try {
+      const q = new URLSearchParams(window.location.search).get("debug");
+      if (q === "0" || q === "false") localStorage.removeItem("ticha_debug");
+      else if (q !== null) localStorage.setItem("ticha_debug", "1");
+      on = on || localStorage.getItem("ticha_debug") === "1";
+    } catch {
+      // Private mode / blocked storage — fall back to the URL for this load only.
+      on = on || new URLSearchParams(window.location.search).has("debug");
+    }
     debugRef.current = on;
     setDebugOn(on);
   }, []);
