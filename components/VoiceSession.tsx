@@ -168,12 +168,40 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   useEffect(() => { starsRef.current = stars; }, [stars]);
   useEffect(() => { transcriptRef.current = transcript; }, [transcript]);
 
-  const log = useCallback((msg: string) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log(msg);
-      setDebugLog((p) => [...p.slice(-6), `${new Date().toLocaleTimeString()} ${msg}`]);
-    }
+  // Debug output is on in dev, or on ANY build via ?debug=1. The failures we
+  // are chasing are device-specific (silent audio on one Android tablet, no
+  // reply on iOS), and those devices cannot run `npm run dev` — so the
+  // deployed app has to be able to show its own log.
+  //
+  // Read through a ref so `log` keeps empty deps: it is a dependency of
+  // reconnectSession and several effects, and changing its identity mid-session
+  // would churn them.
+  const debugRef = useRef(false);
+  const [debugOn, setDebugOn] = useState(false);
+  // Counters for the two things we cannot currently see from the outside:
+  // whether Ticha's audio is actually being scheduled (tablet plays the
+  // animation with no sound) and whether the child's mic is actually reaching
+  // Gemini (session greets, then never replies).
+  const audioChunkCountRef = useRef(0);
+  const micSendCountRef    = useRef(0);
+  useEffect(() => {
+    const on =
+      process.env.NODE_ENV === "development" ||
+      new URLSearchParams(window.location.search).has("debug");
+    debugRef.current = on;
+    setDebugOn(on);
   }, []);
+
+  const log = useCallback((msg: string) => {
+    if (!debugRef.current) return;
+    console.log("[Ticha]", msg);
+    setDebugLog((p) => [...p.slice(-59), `${new Date().toLocaleTimeString()} ${msg}`]);
+  }, []);
+
+  // Callable from hot paths (scheduleAudioChunk, the mic pump) without adding
+  // `log` to their dependency arrays.
+  const logRef = useRef<((m: string) => void) | null>(null);
+  useEffect(() => { logRef.current = log; }, [log]);
 
   // Gapless streaming playback: each chunk is scheduled to start exactly
   // when the previous one ends, using the AudioContext clock.
@@ -194,6 +222,18 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     const startAt = Math.max(ctx.currentTime + 0.01, playHeadRef.current);
     src.start(startAt);
     playHeadRef.current = startAt + buf.duration;
+
+    // If these lines appear but the device is silent, audio IS being scheduled
+    // and the fault is below Web Audio (output routing / silent switch /
+    // context rate), not in our streaming.
+    audioChunkCountRef.current += 1;
+    const n = audioChunkCountRef.current;
+    if (n === 1 || n % 100 === 0) {
+      logRef.current?.(
+        `🔊 audio chunk #${n} @${ctx.sampleRate}Hz state=${ctx.state} ` +
+        `lead=${Math.round((playHeadRef.current - ctx.currentTime) * 1000)}ms`
+      );
+    }
 
     // Track node so it can be cancelled instantly if the child barges in
     scheduledNodesRef.current.push(src);
@@ -565,6 +605,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // resampler on our side instead.
       const playCtx = new AudioContext(); // system native rate
       await playCtx.resume();
+      audioChunkCountRef.current = 0;
+      micSendCountRef.current    = 0;
+      log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
@@ -651,6 +694,15 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               if (!pttActiveRef.current || isMutedRef.current || isPausedRef.current || !sessionRef.current) return;
               const data = encodePcm16Base64(e.data);
               sessionRef.current.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
+
+              // ~1 line every 5 s. If Ticha greets and then never replies while
+              // this counter keeps climbing, the child's audio IS reaching
+              // Gemini and the silence is Gemini's (VAD or turn handling),
+              // not a broken mic path. If it stops climbing, it is ours.
+              micSendCountRef.current += 1;
+              if (micSendCountRef.current % 50 === 0) {
+                logRef.current?.(`🎤 mic batches sent: ${micSendCountRef.current}`);
+              }
             };
             // Connect mic → worklet. No need to connect worklet → destination
             // (ScriptProcessorNode required that; AudioWorkletNode does not).
@@ -735,6 +787,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             }
 
             if (msg.serverContent?.turnComplete) {
+              // A turnComplete arriving seconds before the audio actually runs
+              // out is the signature of the known server-side truncation bug.
+              log(`⏹ turnComplete (audio chunks this session: ${audioChunkCountRef.current})`);
               turnCompleteRef.current = true;
               // If the lesson goodbye was already detected, start the drain timer NOW —
               // turnComplete means Gemini has sent all audio for this turn, so 3 s is
@@ -1348,10 +1403,19 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         </div>
       )}
 
-      {process.env.NODE_ENV === "development" && debugLog.length > 0 && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.85)", padding: "6px 12px", zIndex: 9999 }}>
+      {debugOn && debugLog.length > 0 && (
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, maxHeight: "38vh", overflowY: "auto", background: "rgba(0,0,0,0.88)", padding: "6px 12px 10px", zIndex: 9999 }}>
+          <button
+            onClick={() => {
+              const text = debugLog.join("\n");
+              navigator.clipboard?.writeText(text).catch(() => {});
+            }}
+            style={{ position: "sticky", top: 0, float: "right", fontSize: "10px", padding: "3px 10px", borderRadius: "6px", border: "none", background: "#a3e635", color: "#111", fontWeight: 700 }}
+          >
+            copy
+          </button>
           {debugLog.map((line, i) => (
-            <p key={i} style={{ fontSize: "9px", color: "#a3e635", fontFamily: "monospace", margin: "1px 0" }}>{line}</p>
+            <p key={i} style={{ fontSize: "9px", color: "#a3e635", fontFamily: "monospace", margin: "1px 0", wordBreak: "break-word" }}>{line}</p>
           ))}
         </div>
       )}
