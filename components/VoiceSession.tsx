@@ -188,6 +188,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // would churn them.
   const debugRef = useRef(false);
   const [debugOn, setDebugOn] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false); // collapsed by default so it never covers the controls
   // Counters for the two things we cannot currently see from the outside:
   // whether Ticha's audio is actually being scheduled (tablet plays the
   // animation with no sound) and whether the child's mic is actually reaching
@@ -1638,7 +1639,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         </div>
       )}
 
-      {debugOn && debugLog.length > 0 && (
+      {debugOn && debugLog.length > 0 && !debugOpen && (
+        <button
+          onClick={() => setDebugOpen(true)}
+          aria-label="Show debug log"
+          style={{ position: "fixed", top: 8, left: 8, zIndex: 9999, fontSize: "14px", padding: "4px 8px", borderRadius: "8px", border: "none", background: "rgba(0,0,0,0.6)", color: "#a3e635" }}
+        >
+          🐞
+        </button>
+      )}
+      {debugOn && debugLog.length > 0 && debugOpen && (
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, maxHeight: "38vh", overflowY: "auto", background: "rgba(0,0,0,0.88)", padding: "6px 12px 10px", zIndex: 9999 }}>
           <button
             onClick={() => {
@@ -1648,6 +1658,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             style={{ position: "sticky", top: 0, float: "right", fontSize: "10px", padding: "3px 10px", borderRadius: "6px", border: "none", background: "#a3e635", color: "#111", fontWeight: 700 }}
           >
             copy
+          </button>
+          <button
+            onClick={() => setDebugOpen(false)}
+            style={{ position: "sticky", top: 0, float: "right", marginRight: "8px", fontSize: "10px", padding: "3px 10px", borderRadius: "6px", border: "none", background: "#fca5a5", color: "#111", fontWeight: 700 }}
+          >
+            hide
           </button>
           {debugHeader && (
             <p style={{ position: "sticky", top: 0, fontSize: "10px", color: "#fde047", fontFamily: "monospace", margin: "0 0 4px", fontWeight: 700, background: "rgba(0,0,0,0.95)", padding: "2px 0" }}>{debugHeader}</p>
