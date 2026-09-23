@@ -184,6 +184,14 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Gemini (session greets, then never replies).
   const audioChunkCountRef = useRef(0);
   const micSendCountRef    = useRef(0);
+  // The number that actually matters: how long Gemini took to start replying
+  // after it closed its own turn. We kept deriving this by hand from
+  // timestamps; the app can just measure it.
+  const turnCompleteAtRef  = useRef<number | null>(null);
+  // Pinned at the top of the panel so it cannot scroll away — the model line
+  // is the single most important thing in a session log and it was being
+  // flushed out by routine counters before anyone could read it.
+  const [debugHeader, setDebugHeader] = useState("");
 
   // Which Live model this session connects to.
   //
@@ -235,7 +243,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const log = useCallback((msg: string) => {
     if (!debugRef.current) return;
     console.log("[Ticha]", msg);
-    setDebugLog((p) => [...p.slice(-59), `${new Date().toLocaleTimeString()} ${msg}`]);
+    setDebugLog((p) => [...p.slice(-149), `${new Date().toLocaleTimeString()} ${msg}`]);
   }, []);
 
   // Callable from hot paths (scheduleAudioChunk, the mic pump) without adding
@@ -268,7 +276,17 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     // context rate), not in our streaming.
     audioChunkCountRef.current += 1;
     const n = audioChunkCountRef.current;
-    if (n === 1 || n % 100 === 0) {
+
+    // First audio after a turnComplete = Gemini started a new reply. This gap
+    // is the symptom we are chasing, so measure it explicitly instead of
+    // leaving it to be reconstructed from timestamps.
+    if (turnCompleteAtRef.current !== null) {
+      const waited = ((Date.now() - turnCompleteAtRef.current) / 1000).toFixed(1);
+      turnCompleteAtRef.current = null;
+      logRef.current?.(`💬 REPLY STARTED after ${waited}s of silence`);
+    }
+
+    if (n === 1 || n % 200 === 0) {
       logRef.current?.(
         `🔊 audio chunk #${n} @${ctx.sampleRate}Hz state=${ctx.state} ` +
         `lead=${Math.round((playHeadRef.current - ctx.currentTime) * 1000)}ms`
@@ -648,7 +666,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
-      log(`🤖 model ${liveModelRef.current}`);
+      setDebugHeader(`🤖 ${liveModelRef.current}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
@@ -741,7 +759,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               // Gemini and the silence is Gemini's (VAD or turn handling),
               // not a broken mic path. If it stops climbing, it is ours.
               micSendCountRef.current += 1;
-              if (micSendCountRef.current % 50 === 0) {
+              if (micSendCountRef.current % 200 === 0) {
                 logRef.current?.(`🎤 mic batches sent: ${micSendCountRef.current}`);
               }
             };
@@ -830,7 +848,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             if (msg.serverContent?.turnComplete) {
               // A turnComplete arriving seconds before the audio actually runs
               // out is the signature of the known server-side truncation bug.
-              log(`⏹ turnComplete (audio chunks this session: ${audioChunkCountRef.current})`);
+              turnCompleteAtRef.current = Date.now();
+              log(`⏹ turnComplete — waiting for next reply…`);
               turnCompleteRef.current = true;
               // If the lesson goodbye was already detected, start the drain timer NOW —
               // turnComplete means Gemini has sent all audio for this turn, so 3 s is
@@ -1448,13 +1467,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, maxHeight: "38vh", overflowY: "auto", background: "rgba(0,0,0,0.88)", padding: "6px 12px 10px", zIndex: 9999 }}>
           <button
             onClick={() => {
-              const text = debugLog.join("\n");
+              const text = [debugHeader, ...debugLog].join("\n");
               navigator.clipboard?.writeText(text).catch(() => {});
             }}
             style={{ position: "sticky", top: 0, float: "right", fontSize: "10px", padding: "3px 10px", borderRadius: "6px", border: "none", background: "#a3e635", color: "#111", fontWeight: 700 }}
           >
             copy
           </button>
+          {debugHeader && (
+            <p style={{ position: "sticky", top: 0, fontSize: "10px", color: "#fde047", fontFamily: "monospace", margin: "0 0 4px", fontWeight: 700, background: "rgba(0,0,0,0.95)", padding: "2px 0" }}>{debugHeader}</p>
+          )}
           {debugLog.map((line, i) => (
             <p key={i} style={{ fontSize: "9px", color: "#a3e635", fontFamily: "monospace", margin: "1px 0", wordBreak: "break-word" }}>{line}</p>
           ))}
