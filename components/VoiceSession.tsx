@@ -269,6 +269,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     if (!debugRef.current) return;
     console.log("[Ticha]", msg);
     setDebugLog((p) => [...p.slice(-149), `${new Date().toLocaleTimeString()} ${msg}`]);
+    // Survives the redirect to the quiz, which wipes the on-screen panel.
+    // Read it afterwards at /debug-log.
+    try {
+      const line = `${new Date().toLocaleTimeString()} ${msg}`;
+      const prev: string[] = JSON.parse(localStorage.getItem("ticha_last_log") ?? "[]");
+      localStorage.setItem("ticha_last_log", JSON.stringify([...prev.slice(-599), line]));
+    } catch { /* storage unavailable — on-screen log still works */ }
   }, []);
 
   // Callable from hot paths (scheduleAudioChunk, the mic pump) without adding
@@ -638,6 +645,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setStatus("connecting");
       setErrorMsg("");
       setDebugLog([]);
+      try { localStorage.removeItem("ticha_last_log"); } catch { /* ignore */ }
       log("Starting session...");
 
       // Fast-fail if the device has no network at all — saves a confusing timeout.
@@ -695,6 +703,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
       setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
+      log(`CONFIG ${liveModelRef.current} | ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
