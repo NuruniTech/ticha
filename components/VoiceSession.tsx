@@ -137,6 +137,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     latencies: [] as number[], turns: 0, stalls: 0, nearMisses: 0, nearMissesTicha: 0,
     bargeIns: 0, closes: [] as string[], reconnects: 0, maxFloor: 0, sent: false,
   });
+  const sendFrameRef     = useRef<(() => void) | null>(null); // set while the camera is on
   const replyWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pttActiveRef     = useRef(false); // ref for use inside audio processor callback
   const videoRef         = useRef<HTMLVideoElement>(null);
@@ -401,6 +402,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
       frameIntervalRef.current && clearInterval(frameIntervalRef.current);
+      sendFrameRef.current = null;
       cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
       cameraStreamRef.current = null;
       setIsCameraOn(false);
@@ -422,7 +424,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
         setIsCameraOn(true);
         log("📷 Camera on — sending frames");
-        frameIntervalRef.current = setInterval(() => {
+        const sendFrame = () => {
           if (!videoRef.current || !sessionRef.current) return;
           const canvas = document.createElement("canvas");
           canvas.width = 240; canvas.height = 180;
@@ -431,12 +433,18 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           ctx2d.drawImage(videoRef.current, 0, 0, 240, 180);
           const base64 = canvas.toDataURL("image/jpeg", 0.55).split(",")[1];
           sessionRef.current.sendRealtimeInput({ video: { data: base64, mimeType: "image/jpeg" } });
-        }, 3000);
+        };
+        // With client-driven turns, frames sent between turns may be ignored, so
+        // the VAD also sends a fresh one inside each child turn.
+        sendFrameRef.current = sendFrame;
+        frameIntervalRef.current = setInterval(sendFrame, 3000);
       } catch (err) {
-        log(`📷 Camera error: ${err instanceof Error ? err.message : String(err)}`);
+        const m = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+        log(`📷 Camera error: ${m}`);
+        posthog?.capture("camera_error", { message: m, user_agent: navigator.userAgent });
       }
     }
-  }, [isCameraOn, log]);
+  }, [isCameraOn, log, posthog]);
 
   const sendDiagnostics = useCallback((reason: string) => {
     const d = diagRef.current;
@@ -831,12 +839,14 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             diagRef.current.maxFloor = Math.max(diagRef.current.maxFloor, vad.floor);
             vad.preroll.forEach(sendMic);
             vad.preroll = [];
+            sendFrameRef.current?.();
             logRef.current?.(`🎙️ activityStart rms=${rms.toFixed(3)} thresh=${thresh.toFixed(3)} floor=${vad.floor.toFixed(3)}`);
           }
         } else {
           sendMic(f);
           if (loud) vad.lastLoud = now;
           if (now - vad.lastLoud >= SILENCE_END_MS || now - vad.startedAt >= MAX_TURN_MS) {
+            sendFrameRef.current?.(); // what the child is showing at the end of their turn
             sessionRef.current?.sendRealtimeInput({ activityEnd: {} });
             vad.speaking = false;
             vad.loud = 0;
