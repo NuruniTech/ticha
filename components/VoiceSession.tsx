@@ -191,22 +191,26 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // change the model under a running product with no deploy on our side, and
   // "latest" currently resolves to this same snapshot anyway.
   //
-  // ?model=half switches to the half-cascade model (native audio in, TTS out).
-  // Native-audio models have a documented, unresolved server-side bug where the
-  // model ends its own turn early and gets progressively less responsive as a
-  // session runs — which is exactly the shape of our logs: two or three replies,
-  // then permanent silence while the mic is still streaming. Google lists
-  // non-English languages and growing context as aggravating factors, and we
-  // are Swahili with a 20k-token system prompt. Half-cascade does not use that
-  // generation path. Its trade-off is a 32k context window (vs 128k), so a long
-  // lesson can run out of room — which is why this is a switch to measure with,
-  // not a silent default change.
+  // ?model=prev rolls back to the previous native-audio snapshot.
+  //
+  // Half-cascade is NOT an option here. Connecting with an ephemeral token on
+  // this API surface rejects gemini-live-2.5-flash-preview, gemini-live-2.5-flash
+  // and gemini-2.0-flash-live-001 with "not found for API version v1main".
+  // Verified by waiting for the server's setupComplete rather than the socket
+  // opening — the socket opens for any string, including a model name that does
+  // not exist, so socket-open proves nothing. Only these two answer:
+  //   gemini-2.5-flash-native-audio-preview-12-2025  (default here)
+  //   gemini-2.5-flash-native-audio-preview-09-2025  (?model=prev)
+  //
+  // That matters because the app demonstrably worked in July with no code
+  // change since, and the model string was the floating "-latest" alias — so
+  // the thing most likely to have moved underneath it is the model itself.
+  // Rolling back a snapshot is the one lever left inside Google.
   const liveModelRef = useRef("gemini-2.5-flash-native-audio-preview-12-2025");
   useEffect(() => {
     try {
       const m = new URLSearchParams(window.location.search).get("model");
-      if (m === "half") liveModelRef.current = "gemini-live-2.5-flash-preview";
-      else if (m === "flash2") liveModelRef.current = "gemini-2.0-flash-live-001";
+      if (m === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
     } catch { /* leave the pinned default */ }
   }, []);
   useEffect(() => {
