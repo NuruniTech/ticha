@@ -128,7 +128,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const speakTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMutedRef       = useRef(false);
   const isPausedRef      = useRef(false);
-  // Client-driven turns (?turn=client): server VAD is off; the mic pump below
+  // Client-driven turns (default; ?turn=server opts out): server VAD is off; the mic pump below
   // detects speech itself and sends activityStart/activityEnd. Hands-free.
   const manualTurnRef    = useRef(false);
   const replyWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -243,7 +243,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       const q = new URLSearchParams(window.location.search);
       if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
       if (q.get("vad") === "low") vadProfileRef.current = "low";
-      if (q.get("turn") === "client" || q.get("turn") === "manual") manualTurnRef.current = true;
+      // Client-driven turns are the default (server VAD stalled ~20 s per reply).
+      // &turn=server restores Google's automatic detection for comparison.
+      manualTurnRef.current = q.get("turn") !== "server";
     } catch { /* leave the pinned defaults */ }
   }, []);
   useEffect(() => {
@@ -720,7 +722,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
       const source = micCtx.createMediaStreamSource(stream);
 
-      // ── Client-side turn detection (?turn=client) ──
+      // ── Client-side turn detection (default) ──
       // Google's server VAD cannot close a turn from an always-open mic in a
       // real room (measured: replies land at a fixed ~20 s timeout). With
       // automaticActivityDetection disabled, WE decide when the child starts and
