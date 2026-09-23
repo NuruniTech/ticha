@@ -128,6 +128,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const speakTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMutedRef       = useRef(false);
   const isPausedRef      = useRef(false);
+  // Manual turn mode (?turn=manual): server VAD is off and the child's tap
+  // is what opens and closes each turn. recordingRef gates the mic pump.
+  const manualTurnRef    = useRef(false);
+  const recordingRef     = useRef(false);
+  const replyWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [manualTurn, setManualTurn] = useState(false);
+  const [recording, setRecording]   = useState(false);
   const pttActiveRef     = useRef(false); // ref for use inside audio processor callback
   const videoRef         = useRef<HTMLVideoElement>(null);
   const cameraStreamRef  = useRef<MediaStream | null>(null);
@@ -239,6 +246,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       const q = new URLSearchParams(window.location.search);
       if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
       if (q.get("vad") === "low") vadProfileRef.current = "low";
+      if (q.get("turn") === "manual") { manualTurnRef.current = true; setManualTurn(true); }
     } catch { /* leave the pinned defaults */ }
   }, []);
   useEffect(() => {
@@ -296,6 +304,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     // context rate), not in our streaming.
     audioChunkCountRef.current += 1;
     const n = audioChunkCountRef.current;
+    if (replyWatchdogRef.current) { clearTimeout(replyWatchdogRef.current); replyWatchdogRef.current = null; }
 
     // First audio after a turnComplete = Gemini started a new reply. This gap
     // is the symptom we are chasing, so measure it explicitly instead of
@@ -426,6 +435,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     // "WebSocket is already in CLOSING or CLOSED state".
     pttActiveRef.current = false;
     setPttActive(false);
+    recordingRef.current = false;
+    setRecording(false);
+    replyWatchdogRef.current && clearTimeout(replyWatchdogRef.current);
 
     autoEndTimerRef.current && clearTimeout(autoEndTimerRef.current);
     sessionTimeoutRef.current && clearTimeout(sessionTimeoutRef.current);
@@ -571,6 +583,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     // Lightweight teardown — close WebSocket/audio but preserve stars + transcript
     pttActiveRef.current = false;
     setPttActive(false);
+    recordingRef.current = false;
+    setRecording(false);
+    replyWatchdogRef.current && clearTimeout(replyWatchdogRef.current);
     autoEndTimerRef.current   && clearTimeout(autoEndTimerRef.current);
     sessionTimeoutRef.current && clearTimeout(sessionTimeoutRef.current);
     speakTimerRef.current     && clearTimeout(speakTimerRef.current);
@@ -686,7 +701,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
-      setDebugHeader(`🤖 ${liveModelRef.current}  |  vad=${vadProfileRef.current}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
+      setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=MANUAL" : `vad=${vadProfileRef.current}`}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
@@ -736,7 +751,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           outputAudioTranscription: {},
           inputAudioTranscription: {},
           realtimeInputConfig: {
-            automaticActivityDetection: {
+            automaticActivityDetection: manualTurnRef.current ? { disabled: true } : {
               disabled: false,
               startOfSpeechSensitivity: vadProfileRef.current === "low"
                 ? StartSensitivity.START_SENSITIVITY_LOW
@@ -772,7 +787,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             // AudioWorkletNode posts Float32Array blocks from the audio thread;
             // we forward them to Gemini only when PTT is active.
             processor.port.onmessage = (e: MessageEvent<Float32Array>) => {
-              if (!pttActiveRef.current || isMutedRef.current || isPausedRef.current || !sessionRef.current) return;
+              if (isMutedRef.current || isPausedRef.current || !sessionRef.current) return;
+              if (manualTurnRef.current ? !recordingRef.current : !pttActiveRef.current) return;
               const data = encodePcm16Base64(e.data);
               sessionRef.current.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
 
@@ -976,6 +992,44 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
   // Keep startSessionRef in sync so reconnectSession can call it via ref
   useEffect(() => { startSessionRef.current = startSession; }, [startSession]);
+
+  // Manual turn mode: tap once to start talking, tap again to hand the turn to
+  // Ticha. Server VAD is disabled, so these two signals are the ONLY thing that
+  // starts and ends a child turn — no ambient-noise guessing, no timeout.
+  const toggleTalk = useCallback(() => {
+    const s = sessionRef.current;
+    if (!s || isPausedRef.current || !manualTurnRef.current) return;
+    if (!recordingRef.current) {
+      // Tapping while Ticha is speaking interrupts her: drop queued audio locally
+      // (the server stops generating when the new activity starts).
+      scheduledNodesRef.current.forEach((n) => { try { n.stop(); } catch { /* already ended */ } });
+      scheduledNodesRef.current = [];
+      playHeadRef.current = playCtxRef.current?.currentTime ?? 0;
+      if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
+      if (replyWatchdogRef.current) clearTimeout(replyWatchdogRef.current);
+      s.sendRealtimeInput({ activityStart: {} });
+      recordingRef.current = true;
+      setRecording(true);
+      pttActiveRef.current = true;
+      setPttActive(true);
+      setStatus("listening");
+      logRef.current?.("🎙️ activityStart — child is talking");
+    } else {
+      recordingRef.current = false;
+      setRecording(false);
+      s.sendRealtimeInput({ activityEnd: {} });
+      pttActiveRef.current = false;
+      setPttActive(false);
+      logRef.current?.("🛑 activityEnd — turn handed to Ticha");
+      // If no reply audio arrives, give the mic back rather than leaving the
+      // child stuck on the waiting screen.
+      replyWatchdogRef.current = setTimeout(() => {
+        logRef.current?.("⚠️ No reply 12s after activityEnd — re-opening mic");
+        pttActiveRef.current = true;
+        setPttActive(true);
+      }, 12000);
+    }
+  }, []);
 
   const togglePause = useCallback(() => {
     setIsPaused((p) => {
@@ -1341,7 +1395,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         <p style={{ fontSize: "15px", color: !sessionStarted ? "#1F2937" : "#9CA3AF", fontWeight: 800, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
           {!sessionStarted ? ts.hintStart :
            isPaused ? ts.hintPaused :
+           recording ? ts.hintTapDone :
            status === "speaking" ? ts.hintListening :
+           manualTurn && pttActive ? ts.hintTapToSpeak :
            pttActive ? ts.hintSpeak :
            ts.hintWait}
         </p>
@@ -1375,9 +1431,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                     <div className="mic-ring" style={{ position: "absolute", width: "116px", height: "116px", borderRadius: "50%", background: "#22C55E", opacity: 0.14 }} />
                   </>
                 )}
-                <div style={{
+                <div
+                  onClick={manualTurn ? toggleTalk : undefined}
+                  style={{
+                  cursor: manualTurn && !isPaused ? "pointer" : "default",
                   width: "110px", height: "110px", borderRadius: "50%",
                   background: isPaused ? "#D1D5DB" :
+                               recording ? "#EF4444" :
                                status === "speaking" ? "#6366F1" :
                                pttActive ? "#22C55E" : "#E5E7EB",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -1388,6 +1448,10 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 }}>
                   {isPaused ? (
                     <span style={{ fontSize: "42px" }}>⏸</span>
+                  ) : recording ? (
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+                      <rect x="5" y="5" width="14" height="14" rx="3" fill="white"/>
+                    </svg>
                   ) : status === "speaking" ? (
                     <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
                       <path d="M11 5L6 9H2v6h4l5 4V5z" fill="white"/>
@@ -1407,8 +1471,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 </div>
               </div>
               <p style={{ fontSize: "12px", fontWeight: 800, letterSpacing: "0.05em", margin: 0, textAlign: "center",
-                color: isPaused ? "#9CA3AF" : status === "speaking" ? "#6366F1" : pttActive ? "#22C55E" : "#9CA3AF" }}>
-                {isPaused ? ts.labelPaused : status === "speaking" ? ts.labelTalking : pttActive ? ts.labelYourTurn : ts.labelWaiting}
+                color: isPaused ? "#9CA3AF" : recording ? "#EF4444" : status === "speaking" ? "#6366F1" : pttActive ? "#22C55E" : "#9CA3AF" }}>
+                {isPaused ? ts.labelPaused : recording ? ts.labelTapDone : manualTurn && pttActive ? ts.labelTapToSpeak : status === "speaking" ? ts.labelTalking : pttActive ? ts.labelYourTurn : ts.labelWaiting}
               </p>
             </div>
 
