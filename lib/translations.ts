@@ -223,10 +223,6 @@ interface Translations {
     labelPaused: string;
     labelTalking: string;
     labelYourTurn: string;
-    labelTapToSpeak: string;
-    labelTapDone: string;
-    hintTapToSpeak: string;
-    hintTapDone: string;
     labelWaiting: string;
     resume: string;
     pause: string;
@@ -516,10 +512,6 @@ export const T: Record<Lang, Translations> = {
       labelPaused: "PAUSED",
       labelTalking: "TICHA IS TALKING",
       labelYourTurn: "YOUR TURN — JUST SPEAK!",
-      labelTapToSpeak: "TAP TO SPEAK",
-      labelTapDone: "TAP WHEN DONE",
-      hintTapToSpeak: "🎤 Tap the microphone, then speak",
-      hintTapDone: "🔴 Speaking… tap when you are done",
       labelWaiting: "GETTING READY...",
       resume: "▶ Resume",
       pause: "⏸ Pause",
@@ -821,10 +813,6 @@ export const T: Record<Lang, Translations> = {
       labelPaused: "IMESIMAMISHWA",
       labelTalking: "TICHA ANAZUNGUMZA",
       labelYourTurn: "ZAMU YAKO — ZUNGUMZA TU!",
-      labelTapToSpeak: "GONGA KUZUNGUMZA",
-      labelTapDone: "GONGA UKIMALIZA",
-      hintTapToSpeak: "🎤 Gonga maikrofoni, kisha zungumza",
-      hintTapDone: "🔴 Unazungumza… gonga ukimaliza",
       labelWaiting: "INAJIANDAA...",
       resume: "▶ Endelea",
       pause: "⏸ Simamisha",
