@@ -131,6 +131,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Client-driven turns (default; ?turn=server opts out): server VAD is off; the mic pump below
   // detects speech itself and sends activityStart/activityEnd. Hands-free.
   const manualTurnRef    = useRef(false);
+  // Always-on, numbers only (no audio, no speech text). Sent to PostHog when
+  // the lesson ends so testers never have to copy logs or add URL flags.
+  const diagRef = useRef({
+    latencies: [] as number[], turns: 0, stalls: 0, nearMisses: 0, nearMissesTicha: 0,
+    bargeIns: 0, closes: [] as string[], reconnects: 0, maxFloor: 0, sent: false,
+  });
   const replyWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pttActiveRef     = useRef(false); // ref for use inside audio processor callback
   const videoRef         = useRef<HTMLVideoElement>(null);
@@ -318,6 +324,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     if (turnCompleteAtRef.current !== null) {
       const waited = ((Date.now() - turnCompleteAtRef.current) / 1000).toFixed(1);
       turnCompleteAtRef.current = null;
+      diagRef.current.latencies.push(Number(waited));
       logRef.current?.(`💬 REPLY STARTED after ${waited}s of silence`);
     }
 
@@ -430,10 +437,45 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     }
   }, [isCameraOn, log]);
 
+  const sendDiagnostics = useCallback((reason: string) => {
+    const d = diagRef.current;
+    if (d.sent || !sessionStartTimeRef.current) return;
+    d.sent = true;
+    const l = [...d.latencies].sort((a, b) => a - b);
+    posthog?.capture("session_diagnostics", {
+      reason,
+      game, language,
+      turn_mode: manualTurnRef.current ? "client-vad" : "server-vad",
+      model: liveModelRef.current,
+      duration_seconds: Math.round((Date.now() - sessionStartTimeRef.current) / 1000),
+      child_turns: d.turns,
+      replies: l.length,
+      reply_p50_s: l.length ? l[Math.floor(l.length / 2)] : null,
+      reply_max_s: l.length ? l[l.length - 1] : null,
+      replies_over_5s: l.filter((x) => x > 5).length,
+      stalls_over_10s: d.stalls,
+      near_misses: d.nearMisses,
+      near_misses_while_ticha_talking: d.nearMissesTicha,
+      barge_ins: d.bargeIns,
+      close_codes: d.closes.join(","),
+      reconnects: d.reconnects,
+      max_noise_floor: Number(d.maxFloor.toFixed(4)),
+      user_agent: navigator.userAgent,
+    });
+  }, [posthog, game, language]);
+
+  // Lesson abandoned by closing the tab / backgrounding: still report.
+  useEffect(() => {
+    const onHide = () => sendDiagnostics("pagehide");
+    window.addEventListener("pagehide", onHide);
+    return () => window.removeEventListener("pagehide", onHide);
+  }, [sendDiagnostics]);
+
   const endSession = useCallback(async (manualEnd = false) => {
     // Guard: prevent double-save from simultaneous auto-end and manual End clicks
     if (sessionSavedRef.current) return;
     sessionSavedRef.current = true;
+    sendDiagnostics(manualEnd ? "manual_end" : "completed");
 
     // Stop mic sends FIRST — the AudioWorklet processor runs on a separate thread
     // and fires continuously. If we close the socket before flipping this flag,
@@ -565,7 +607,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     }
   // wordsIntroduced/childXp/childAge/posthog are included so the PostHog
   // events report current values instead of the ones captured at mount.
-  }, [router, childId, game, language, lessonWords, wordsIntroduced, childXp, childAge, posthog]);
+  }, [router, childId, game, language, lessonWords, wordsIntroduced, childXp, childAge, posthog, sendDiagnostics]);
 
   // Keep endSessionRef in sync so callbacks can call it without stale closure
   useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
@@ -578,6 +620,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
     const delay = RECONNECT_DELAYS[attempt];
     reconnectAttemptsRef.current += 1;
+    diagRef.current.reconnects += 1;
     log(`🔄 Reconnecting (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}) in ${delay / 1000}s…`);
 
     setStatus("reconnecting");
@@ -760,6 +803,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           vad.peak = Math.max(vad.peak, rms);
           if (now - vad.peakLogAt >= 4000) {
             if (vad.peak > thresh * 0.6) {
+              diagRef.current.nearMisses += 1;
+              if (tichaTalking) diagRef.current.nearMissesTicha += 1;
               logRef.current?.(`👂 near-miss peak=${vad.peak.toFixed(3)} thresh=${thresh.toFixed(3)} tichaTalking=${tichaTalking}`);
             }
             vad.peak = 0;
@@ -775,11 +820,14 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               playHeadRef.current = ctx?.currentTime ?? 0;
               if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
               setStatus("listening");
+              diagRef.current.bargeIns += 1;
               logRef.current?.("⚡ Barge-in (client VAD) — Ticha cut off");
             }
             sessionRef.current?.sendRealtimeInput({ activityStart: {} });
             vad.speaking = true;
             vad.startedAt = vad.lastLoud = now;
+            diagRef.current.turns += 1;
+            diagRef.current.maxFloor = Math.max(diagRef.current.maxFloor, vad.floor);
             vad.preroll.forEach(sendMic);
             vad.preroll = [];
             logRef.current?.(`🎙️ activityStart rms=${rms.toFixed(3)} thresh=${thresh.toFixed(3)} floor=${vad.floor.toFixed(3)}`);
@@ -791,7 +839,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             sessionRef.current?.sendRealtimeInput({ activityEnd: {} });
             vad.speaking = false;
             vad.loud = 0;
-            turnCompleteAtRef.current = Date.now();
+            const endedAt = Date.now();
+            turnCompleteAtRef.current = endedAt;
+            // No reply audio within 10 s of the child finishing = a stall.
+            setTimeout(() => {
+              if (turnCompleteAtRef.current === endedAt) diagRef.current.stalls += 1;
+            }, 10000);
             logRef.current?.(`🛑 activityEnd after ${((now - vad.startedAt) / 1000).toFixed(1)}s of speech`);
           }
         }
@@ -1022,6 +1075,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             if (!isNormal) {
               console.error("[Ticha] Gemini onclose — unexpected code:", ev?.code, "reason:", ev?.reason);
             }
+            diagRef.current.closes.push(`${ev?.code ?? "none"}`);
             log(`${isNormal ? "✅" : "❌"} Closed: code=${ev?.code} reason="${ev?.reason}"`);
 
             if (
