@@ -730,7 +730,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Gemini with activityStart / activityEnd. No tapping.
       const SILENCE_END_MS = 900;   // quiet this long = child finished
       const MAX_TURN_MS    = 15000; // safety: never hold a turn open forever
-      const vad = { floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[] };
+      const vad = { peak: 0, peakLogAt: 0, floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[] };
       const sendMic = (f: Float32Array) => {
         sessionRef.current?.sendRealtimeInput({ audio: { data: encodePcm16Base64(f), mimeType: "audio/pcm;rate=16000" } });
         micSendCountRef.current += 1;
@@ -749,11 +749,22 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           vad.floor = Math.min(Math.max(vad.floor, 0.003), 0.05);
         }
         // While Ticha speaks, demand much louder input so her own voice leaking
-        // back through the mic cannot open a turn; a real barge-in still can.
-        const thresh = Math.max(0.02, vad.floor * 3) * (tichaTalking ? 2.5 : 1);
+        // back through the mic cannot open a turn (was 2.5x, which swallowed a
+        // real quiet answer given while her buffered audio was still playing); a real barge-in still can.
+        const thresh = Math.max(0.02, vad.floor * 3) * (tichaTalking ? 1.8 : 1);
         const loud = rms > thresh;
 
         if (!vad.speaking) {
+          // Diagnostic: sound that got close to opening a turn but didn't. If a
+          // child says they spoke and nothing fired, this shows why.
+          vad.peak = Math.max(vad.peak, rms);
+          if (now - vad.peakLogAt >= 4000) {
+            if (vad.peak > thresh * 0.6) {
+              logRef.current?.(`👂 near-miss peak=${vad.peak.toFixed(3)} thresh=${thresh.toFixed(3)} tichaTalking=${tichaTalking}`);
+            }
+            vad.peak = 0;
+            vad.peakLogAt = now;
+          }
           vad.preroll.push(f);
           if (vad.preroll.length > 3) vad.preroll.shift();
           vad.loud = loud ? vad.loud + 1 : 0;
