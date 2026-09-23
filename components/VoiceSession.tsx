@@ -215,11 +215,31 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // the thing most likely to have moved underneath it is the model itself.
   // Rolling back a snapshot is the one lever left inside Google.
   const liveModelRef = useRef("gemini-2.5-flash-native-audio-preview-12-2025");
+
+  // VAD profile, switchable with ?vad= so it can be A/B'd on a real device.
+  //
+  // Why this is the next suspect: rolling the model back to 09-2025 did NOT
+  // fix the long silences (45s gap there vs 17s/65s on 12-2025), so the stall
+  // is probably not the model. What both runs share is our own VAD config plus
+  // a mic that streams continuously, room noise included.
+  //
+  // START_SENSITIVITY_HIGH is deliberately eager so quiet children register.
+  // The cost is that ambient noise also registers as speech — and every time it
+  // does, the silence timer that ends the child's turn resets. If the room
+  // never goes quiet for a clean 1000ms, Gemini never closes the turn and never
+  // answers, which is exactly the shape of these gaps: long, variable, and
+  // ending whenever a quiet moment finally arrives.
+  //
+  //   ?vad=low  — require clearer speech to start, and Google's recommended
+  //               silence window (500-800ms) rather than our 1000ms.
+  const vadProfileRef = useRef<"default" | "low">("default");
+
   useEffect(() => {
     try {
-      const m = new URLSearchParams(window.location.search).get("model");
-      if (m === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
-    } catch { /* leave the pinned default */ }
+      const q = new URLSearchParams(window.location.search);
+      if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
+      if (q.get("vad") === "low") vadProfileRef.current = "low";
+    } catch { /* leave the pinned defaults */ }
   }, []);
   useEffect(() => {
     // Sticky per device: ?debug=1 turns it on and remembers, ?debug=0 turns it
@@ -666,7 +686,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
-      setDebugHeader(`🤖 ${liveModelRef.current}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
+      setDebugHeader(`🤖 ${liveModelRef.current}  |  vad=${vadProfileRef.current}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       playCtxRef.current = playCtx;
       playHeadRef.current = 0;
 
@@ -718,7 +738,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           realtimeInputConfig: {
             automaticActivityDetection: {
               disabled: false,
-              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
+              startOfSpeechSensitivity: vadProfileRef.current === "low"
+                ? StartSensitivity.START_SENSITIVITY_LOW
+                : StartSensitivity.START_SENSITIVITY_HIGH,
               // HIGH: cuts through ambient noise common in East African home/classroom
               // environments. LOW required definitively quiet silence, causing children to
               // repeat themselves 2-3 times before Gemini would respond in noisy rooms.
@@ -727,7 +749,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               prefixPaddingMs:          300,
               // 1000 ms: HIGH sensitivity detects silence quickly, so we extend the wait
               // window to give children enough time to pause mid-thought without being cut off.
-              silenceDurationMs:        1000,
+              silenceDurationMs:        vadProfileRef.current === "low" ? 700 : 1000,
             },
           },
         },
