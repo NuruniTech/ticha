@@ -137,10 +137,14 @@ describe("parseAttempt", () => {
   });
 });
 
-import { resolvePhase, BASELINE_ITEMS, MIN_PRACTICE_SESSIONS_FOR_CHECK } from "@/lib/reading/validate";
+import { resolvePhase, countServerSessions, BASELINE_ITEMS, MIN_PRACTICE_SESSIONS_FOR_CHECK, SESSION_GAP_MS } from "@/lib/reading/validate";
 
 describe("resolvePhase (server decides the phase)", () => {
-  const practice = (n: number) => Array.from({ length: n }, (_, i) => ({ session_id: `p${i}`, phase: "practice" }));
+  const T0 = Date.parse("2026-10-01T09:00:00Z");
+  const at = (ms: number) => new Date(T0 + ms).toISOString();
+  // n practice sessions, each one attempt, separated by more than the session gap
+  const practiceSessions = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ phase: "practice", created_at: at(i * (SESSION_GAP_MS + 60_000)) }));
 
   it("always allows practice", () => {
     expect(resolvePhase("practice", [])).toBe("practice");
@@ -148,19 +152,29 @@ describe("resolvePhase (server decides the phase)", () => {
 
   it("allows baseline only before any practice, and only for the first items", () => {
     expect(resolvePhase("baseline", [])).toBe("baseline");
-    expect(resolvePhase("baseline", practice(1))).toBe("practice");
-    const full = Array.from({ length: BASELINE_ITEMS }, () => ({ session_id: "b", phase: "baseline" }));
+    expect(resolvePhase("baseline", practiceSessions(1))).toBe("practice");
+    const full = Array.from({ length: BASELINE_ITEMS }, () => ({ phase: "baseline", created_at: at(0) }));
     expect(resolvePhase("baseline", full)).toBe("practice");
   });
 
-  it("refuses checkpoint and final until enough practice sessions exist", () => {
+  it("refuses checkpoint and final until enough real sessions exist", () => {
     expect(resolvePhase("checkpoint", [])).toBe("practice");
-    expect(resolvePhase("final", practice(MIN_PRACTICE_SESSIONS_FOR_CHECK - 1))).toBe("practice");
-    expect(resolvePhase("checkpoint", practice(MIN_PRACTICE_SESSIONS_FOR_CHECK))).toBe("checkpoint");
+    expect(resolvePhase("final", practiceSessions(MIN_PRACTICE_SESSIONS_FOR_CHECK - 1))).toBe("practice");
+    expect(resolvePhase("checkpoint", practiceSessions(MIN_PRACTICE_SESSIONS_FOR_CHECK))).toBe("checkpoint");
   });
 
-  it("counts distinct sessions, not attempts", () => {
-    const oneSessionManyRows = Array.from({ length: 50 }, () => ({ session_id: "same", phase: "practice" }));
-    expect(resolvePhase("final", oneSessionManyRows)).toBe("practice");
+  it("cannot be unlocked by many attempts in one sitting", () => {
+    const burst = Array.from({ length: 200 }, (_, i) => ({ phase: "practice", created_at: at(i * 1000) }));
+    expect(resolvePhase("final", burst)).toBe("practice");
+  });
+});
+
+describe("countServerSessions", () => {
+  it("counts a new session after a 30 minute gap, from server timestamps", () => {
+    const t = Date.parse("2026-10-01T09:00:00Z");
+    const rows = [0, 60_000, SESSION_GAP_MS + 120_000, SESSION_GAP_MS + 180_000, 3 * SESSION_GAP_MS]
+      .map((ms) => ({ phase: "practice", created_at: new Date(t + ms).toISOString() }));
+    expect(countServerSessions(rows)).toBe(3);
+    expect(countServerSessions([])).toBe(0);
   });
 });

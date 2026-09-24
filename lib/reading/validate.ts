@@ -54,25 +54,37 @@ export function parseAttempt(body: unknown): ParseResult {
 // before/after measurement, so a special phase is granted only when the child's
 // stored history allows it; otherwise the attempt is recorded as practice.
 //
-// (The verdict itself still comes from the app. Checker mode exists to measure
-// how far the automatic verdicts can be trusted.)
+// "Practice sessions" are derived from the SERVER's own timestamps — a new
+// session starts after a 30-minute gap — because the client-supplied session_id
+// can be made up. (Faking sessions this way means really waiting between
+// attempts. The verdict itself still comes from the app; checker mode exists to
+// measure how far the automatic verdicts can be trusted.)
 
 export const BASELINE_ITEMS = 10;
 export const MIN_PRACTICE_SESSIONS_FOR_CHECK = 5;
+export const SESSION_GAP_MS = 30 * 60 * 1000;
 
-export interface HistoryRow { session_id: string; phase: string }
+export interface HistoryRow { phase: string; created_at: string }
+
+export function countServerSessions(rows: HistoryRow[]): number {
+  const times = rows.map((r) => Date.parse(r.created_at)).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
+  if (times.length === 0) return 0;
+  let sessions = 1;
+  for (let i = 1; i < times.length; i++) if (times[i] - times[i - 1] > SESSION_GAP_MS) sessions++;
+  return sessions;
+}
 
 export function resolvePhase(requested: AttemptInput["phase"], history: HistoryRow[]): AttemptInput["phase"] {
   if (requested === "practice") return "practice";
 
-  const practiceSessions = new Set(history.filter((r) => r.phase === "practice").map((r) => r.session_id));
+  const practice = history.filter((r) => r.phase === "practice");
 
   if (requested === "baseline") {
     // Only before any teaching has happened, and only for the first BASELINE_ITEMS items.
     const baselineRows = history.filter((r) => r.phase === "baseline").length;
-    return practiceSessions.size === 0 && baselineRows < BASELINE_ITEMS ? "baseline" : "practice";
+    return practice.length === 0 && baselineRows < BASELINE_ITEMS ? "baseline" : "practice";
   }
 
   // checkpoint / final: only after enough real practice sessions.
-  return practiceSessions.size >= MIN_PRACTICE_SESSIONS_FOR_CHECK ? requested : "practice";
+  return countServerSessions(practice) >= MIN_PRACTICE_SESSIONS_FOR_CHECK ? requested : "practice";
 }

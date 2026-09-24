@@ -48,22 +48,30 @@ export async function POST(request: Request) {
   }
 
   // The client only REQUESTS a phase; the server decides it from stored history
-  // so before/after results cannot be relabelled from the browser.
+  // so before/after results cannot be relabelled from the browser. If the
+  // history cannot be read, fall back to plain practice — never treat "could not
+  // read" as "no history", which would hand out a baseline.
   let phase = a.phase;
   if (phase !== "practice") {
-    const { data: history } = await admin.from("reading_attempts")
-      .select("session_id, phase").eq("child_id", a.childId).limit(5000);
-    phase = resolvePhase(phase, (history ?? []) as HistoryRow[]);
+    const { data: history, error: historyError } = await admin.from("reading_attempts")
+      .select("phase, created_at").eq("child_id", a.childId).limit(5000);
+    phase = historyError ? "practice" : resolvePhase(phase, (history ?? []) as HistoryRow[]);
   }
 
-  const { error } = await admin.from("reading_attempts").insert({
+  const row = {
     child_id:   a.childId,
     session_id: a.sessionId,
     item_id:    a.itemId,
     outcome:    a.outcome,
-    phase,
     latency_ms: a.latencyMs,
-  });
+  };
+  let { error } = await admin.from("reading_attempts").insert({ ...row, phase });
+  // The database allows each item once per child in the baseline (unique index),
+  // which closes the race between two simultaneous baseline requests. A conflict
+  // just means this attempt is ordinary practice.
+  if (error?.code === "23505" && phase === "baseline") {
+    ({ error } = await admin.from("reading_attempts").insert({ ...row, phase: "practice" }));
+  }
   if (error) {
     console.error("reading-attempt insert failed:", error);
     return NextResponse.json({ error: "Save failed" }, { status: 500 });

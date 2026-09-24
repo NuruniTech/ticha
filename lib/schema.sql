@@ -221,6 +221,8 @@ create table if not exists reading_attempts (
 );
 create index if not exists reading_attempts_child_item on reading_attempts (child_id, item_id);
 create index if not exists reading_attempts_child_phase on reading_attempts (child_id, phase, created_at);
+-- Each item can be a child's baseline attempt only once (closes a check-then-insert race).
+create unique index if not exists reading_attempts_one_baseline on reading_attempts (child_id, item_id) where phase = 'baseline';
 alter table reading_attempts enable row level security;
 drop policy if exists "Parents read reading attempts" on reading_attempts;
 create policy "Parents read reading attempts" on reading_attempts
