@@ -67,6 +67,10 @@ export function useReadingLesson(options: Options) {
   const pendingRef = useRef<Pending>(null);
   const audioSincePendingRef = useRef(false);
   const expectingRef = useRef(false);
+  // True once the app's own mic detection has seen the child finish speaking since
+  // the current prompt. A report without it is premature: the model may call the
+  // function straight after asking, before the child has said anything.
+  const spokeSincePromptRef = useRef(false);
   const promptSentAtRef = useRef(0);
   const reportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -159,6 +163,7 @@ export function useReadingLesson(options: Options) {
     if (clipExpected && !clipPlayed) optsRef.current.log(`🔇 no recording for ${item.id} — Ticha says it instead`);
 
     expectingRef.current = true;
+    spokeSincePromptRef.current = false;
     promptSentAtRef.current = Date.now();
     optsRef.current.sendToModel(promptInstruction(step, { isRetry, clipPlayed, clipExpected }));
   }, []);
@@ -196,6 +201,10 @@ export function useReadingLesson(options: Options) {
     const heard = (args as { heard?: unknown } | null)?.heard;
     const st = stateRef.current;
     const step = st && currentStep(st);
+    if (expectingRef.current && !spokeSincePromptRef.current) {
+      optsRef.current.log("⚠️ Report arrived before the child spoke — ignored");
+      return "[APP] The child has not spoken yet. Stay completely silent and wait for them to answer. Do not call report_attempt until they have spoken.";
+    }
     const outcome: AttemptOutcome = step ? judgeHeard(step.itemId, heard) : "unscored";
     // Debug log only (never stored or sent anywhere): shows why an attempt was scored as it was.
     optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" for "${step ? getItem(step.itemId)!.text : "?"}" → ${outcome}`);
@@ -225,6 +234,7 @@ export function useReadingLesson(options: Options) {
   /** The child stopped speaking. If Ticha never reports, count it as unscored. */
   const onChildTurnEnded = useCallback(() => {
     if (!expectingRef.current) return;
+    spokeSincePromptRef.current = true;
     if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
     reportTimerRef.current = setTimeout(() => {
       const text = finishAttempt("unscored");
