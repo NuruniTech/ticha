@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
 import { decideCheck } from "@/lib/reading/checks";
 import { CHECK_FORMS, isKnownItemId } from "@/lib/reading/curriculum";
-import { shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction } from "@/lib/reading/instructions";
+import { shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstruction, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
 import { SESSION_GAP_MS } from "@/lib/reading/validate";
 
 const plan = { review: ["v-a"], teach: ["v-e", "v-i"], mixed: ["v-i", "v-e", "v-a"] };
@@ -369,5 +369,56 @@ describe("age is a starting point, not a ceiling", () => {
   it("then offers syllables to the child who has moved on", () => {
     const track = effectiveTrack(3, masteredVowels(5));
     expect(planLesson(masteredVowels(5), { kinds: trackKinds(track) }).teach[0]).toBe("s-ba");
+  });
+});
+
+describe("pronunciation guidance (Ticha said the vowel e the English way)", () => {
+  const model = { itemId: "v-e", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: false };
+  it("tells her exactly how each vowel sounds in Swahili", () => {
+    expect(Object.keys(VOWEL_SOUND).sort()).toEqual(["a", "e", "i", "o", "u"]);
+    expect(VOWEL_SOUND.e).toMatch(/eh/);
+    expect(VOWEL_SOUND.e).toMatch(/pesa/);
+  });
+  it("forbids the English letter name when modelling a vowel", () => {
+    const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(p).toMatch(/"eh"/);
+    expect(p).toMatch(/NEVER use the English letter name/);
+  });
+  it("also covers the vowel inside syllables and words, and the consonant sounds", () => {
+    const syl = promptInstruction({ ...model, itemId: "s-me" }, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(syl).toMatch(/never the English letter name/);
+    expect(syl).toMatch(/The vowel "e" is "eh"/);
+    const word = promptInstruction({ ...model, itemId: "w-nane" }, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(word).toMatch(/The vowel "e" is "eh"/);
+    expect(word).toMatch(/The vowel "a" is "ah"/);
+  });
+  it("puts the same rules in Ticha's standing prompt", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/NEVER "ee"/);
+    expect(p).toMatch(/Never say English letter names/);
+  });
+});
+
+describe("a less robotic lesson", () => {
+  it("opens with a friendly question and no teaching or reporting", () => {
+    const w = warmupInstruction(() => 0);
+    expect(w).toMatch(/how they are feeling today/);
+    expect(w).toMatch(/Do NOT teach anything yet/);
+    expect(w).toMatch(/Do NOT call report_attempt/);
+  });
+  it("asks different friendly questions", () => {
+    const seen = new Set([0, 0.3, 0.6, 0.9].map((r) => warmupInstruction(() => r)));
+    expect(seen.size).toBeGreaterThan(1);
+  });
+  it("varies its praise", () => {
+    const step = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: false };
+    const seen = new Set(PRAISES.map((_, i) => feedbackInstruction(step, "correct", { action: "next", movedOn: false }, [], () => i / PRAISES.length)));
+    expect(seen.size).toBe(PRAISES.length);
+    expect([...seen][0]).toMatch(/not scripted/);
+  });
+  it("keeps the standing prompt about personality and short turns", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/cheerful, playful, patient friend/);
+    expect(p).toMatch(/Keep every turn short/);
   });
 });

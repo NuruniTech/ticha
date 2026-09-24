@@ -12,7 +12,7 @@ import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind,
 } from "@/lib/reading/conductor";
-import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction } from "@/lib/reading/instructions";
+import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction, warmupInstruction } from "@/lib/reading/instructions";
 
 // Runs one reading lesson. The APP steers (see lib/reading/conductor.ts);
 // Ticha, through Gemini Live, speaks, listens and reports each attempt by
@@ -59,12 +59,13 @@ const NO_AUDIO_FALLBACK_MS = 7_000; // Ticha never spoke the feedback: carry on 
 
 // What we are waiting for Ticha to finish saying before moving on.
 //   afterModel / afterTogether: a guided (unscored) step just spoken -> advance past it.
-type Pending = "greeting" | "startStep" | "afterModel" | "afterTogether" | "end" | null;
+type Pending = "greeting" | "startStep" | "afterModel" | "afterTogether" | "afterWarmup" | "end" | null;
 
 // The native-audio model slows down and stalls as one session ages, so we swap in a
 // fresh session every few prompts, and straight away after any stall or fallback.
 const ROLL_EVERY_SENDS = 3;
 
+const WARMUP_WAIT_MS = 12_000;   // child does not answer the friendly question: carry on
 const TOGETHER_WAIT_MS = 15_000; // child never joins in: move on rather than wait forever
 
 export function useReadingLesson(options: Options) {
@@ -84,6 +85,8 @@ export function useReadingLesson(options: Options) {
   const spokeSincePromptRef = useRef(false);
   const sendsSinceRollRef = useRef(0);
   const needsRollRef = useRef(false);
+  const warmedUpRef = useRef(false);   // the friendly chat happens once per lesson (not again after a reconnect)
+  const warmupRef = useRef(false);     // currently waiting for the child to answer the friendly question
   const togetherRef = useRef(false); // waiting for the child to say it WITH Ticha (unscored)
   const togetherTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const promptSentAtRef = useRef(0);
@@ -163,10 +166,25 @@ export function useReadingLesson(options: Options) {
 
   // Move on after Ticha has finished speaking. A guided step is advanced past first.
   // Between steps is the safe moment to swap in a fresh Gemini session.
+  const startWarmup = () => {
+    warmedUpRef.current = true;
+    send(warmupInstruction());
+    warmupRef.current = true;
+    if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
+    togetherTimerRef.current = setTimeout(() => {
+      if (!warmupRef.current) return;
+      warmupRef.current = false;
+      optsRef.current.log("⚠️ Child did not answer the friendly question — starting the lesson");
+      proceed("afterWarmup");
+    }, WARMUP_WAIT_MS);
+  };
+
   const proceed = (p: Exclude<Pending, "end" | null>) => {
     if ((p === "afterModel" || p === "afterTogether") && stateRef.current) {
       stateRef.current = advanceGuided(stateRef.current);
     }
+    // After the greeting comes a short friendly chat, before any learning.
+    if (p === "greeting" && !warmedUpRef.current) { startWarmup(); return; }
     void (async () => {
       if (optsRef.current.roll && (needsRollRef.current || sendsSinceRollRef.current >= ROLL_EVERY_SENDS)) {
         const ok = await optsRef.current.roll();
@@ -302,6 +320,14 @@ export function useReadingLesson(options: Options) {
 
   /** The child stopped speaking. If Ticha never reports, count it as unscored. */
   const onChildTurnEnded = useCallback(() => {
+    // Friendly chat: the child has answered. Let Ticha react, then start the lesson.
+    if (warmupRef.current) {
+      warmupRef.current = false;
+      if (togetherTimerRef.current) { clearTimeout(togetherTimerRef.current); togetherTimerRef.current = null; }
+      pendingRef.current = "afterWarmup";
+      armFallback();
+      return;
+    }
     // "We do": the child has joined in. Let Ticha's brief praise finish, then go on.
     if (togetherRef.current) {
       togetherRef.current = false;
