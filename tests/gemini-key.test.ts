@@ -52,18 +52,23 @@ vi.mock("next/headers", () => ({
 }));
 
 // Never hit the real Gemini API from a test.
+const sdkCreate = vi.fn();
 vi.mock("@google/genai", () => ({
   GoogleGenAI: class {
-    authTokens = { create: async () => ({ name: "auth_tokens/fake-token" }) };
+    authTokens = { create: (...a: unknown[]) => sdkCreate(...a) };
   },
 }));
 
 const { GET } = await import("@/app/api/gemini-key/route");
+const { resetTokenTransportForTests } = await import("@/lib/geminiToken");
 
 // REST is tried first (see lib/geminiToken.ts); never hit the real API from a test.
 const fetchMock = vi.fn();
 
 beforeEach(() => {
+  resetTokenTransportForTests();
+  sdkCreate.mockReset();
+  sdkCreate.mockResolvedValue({ name: "auth_tokens/fake-token" });
   fetchMock.mockReset();
   fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ name: "auth_tokens/rest-token" }) });
   vi.stubGlobal("fetch", fetchMock);
@@ -128,33 +133,36 @@ describe("missing GEMINI_API_KEY", () => {
 
 
 describe("token minting", () => {
-  it("sends the key as a ?key= query parameter, never a header (AQ. keys need this)", async () => {
-    process.env.GEMINI_API_KEY = "AQ.test-key";
-    const res = await GET();
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ token: "auth_tokens/rest-token" });
-
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toContain("/v1alpha/auth_tokens?key=AQ.test-key");
-    expect(JSON.stringify(init.headers ?? {})).not.toContain("AQ.test-key");
-  });
-
-  it("falls back to the SDK when the REST call fails", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 400, json: async () => ({}) });
+  it("uses the SDK (key in a header) first and never touches the URL path", async () => {
     const res = await GET();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ token: "auth_tokens/fake-token" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("falls back to ?key= when the SDK rejects the key, then remembers", async () => {
+    sdkCreate.mockRejectedValue(new Error("401 ACCESS_TOKEN_TYPE_UNSUPPORTED"));
+    process.env.GEMINI_API_KEY = "AQ.test-key";
+
+    const first = await GET();
+    expect(first.status).toBe(200);
+    expect(await first.json()).toEqual({ token: "auth_tokens/rest-token" });
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/v1alpha/auth_tokens?key=AQ.test-key");
+
+    sdkCreate.mockClear();
+    expect((await GET()).status).toBe(200);
+    expect(sdkCreate).not.toHaveBeenCalled(); // straight to REST now: no wasted call
   });
 
   it("returns a bare 503 and never logs the key when both paths fail", async () => {
     process.env.GEMINI_API_KEY = "AQ.secret-key-value";
-    fetchMock.mockRejectedValue(new Error("network down"));
-    vi.doMock("@google/genai", () => ({ GoogleGenAI: class { authTokens = { create: async () => { throw new Error("sdk down"); } }; } }));
-    vi.resetModules();
-    const { GET: freshGET } = await import("@/app/api/gemini-key/route");
-    const res = await freshGET();
+    sdkCreate.mockRejectedValue(new Error("boom for AQ.secret-key-value"));
+    fetchMock.mockRejectedValue(new Error("fetch failed for https://x/?key=AQ.secret-key-value"));
+
+    const res = await GET();
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: "Service unavailable" });
+
     const logged = JSON.stringify((console.error as unknown as { mock: { calls: unknown[] } }).mock.calls);
     expect(logged).not.toContain("secret-key-value");
   });

@@ -112,7 +112,7 @@ export async function GET() {
     });
     return NextResponse.json({ token });
   } catch (err) {
-    console.error("Ephemeral token creation failed:", err instanceof Error ? err.message : "unknown");
+    console.error("Ephemeral token creation failed:", err instanceof Error ? err.message : "unknown"); // already scrubbed by mintEphemeralToken
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 }
