@@ -356,7 +356,24 @@ export function useReadingLesson(options: Options) {
     if (step && !isCheckStep(step)) void optsRef.current.playClip(getItem(step.itemId)!.audio);
   }, []);
 
+  /** A fresh Gemini session has been swapped in after a drop: restart the current step from the top. */
+  const resume = useCallback(() => {
+    clearTimers();
+    pendingRef.current = null;
+    expectingRef.current = false;
+    togetherRef.current = false;
+    warmupRef.current = false;
+    const st = stateRef.current;
+    if (!st || st.done) return;
+    stateRef.current = { ...st, tries: 0, unscored: 0 };
+    sendsSinceRollRef.current = 0;
+    needsRollRef.current = false;
+    optsRef.current.log("▶️ Resuming the lesson on the fresh session");
+    void startStep();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const summary = useCallback(() => ({ ...summaryRef.current }), []);
 
-  return { card, prepare, giveConsent, begin, handleToolCall, onModelAudio, onTurnComplete, onChildTurnEnded, replay, summary };
+  return { card, prepare, giveConsent, begin, handleToolCall, onModelAudio, onTurnComplete, onChildTurnEnded, replay, resume, summary };
 }

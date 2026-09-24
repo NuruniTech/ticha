@@ -153,6 +153,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // it in. Audio, screen and lesson position are untouched.
   const liveRollRef      = useRef<(() => Promise<boolean>) | null>(null);
   const liveRetireRef    = useRef<() => void>(() => {});
+  const hotRecoverTimesRef = useRef<number[]>([]); // recent fast recoveries, to stop a loop
   // Always-on, numbers only (no audio, no speech text). Sent to PostHog when
   // the lesson ends so testers never have to copy logs or add URL flags.
   const diagRef = useRef({
@@ -1246,6 +1247,23 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             }
             diagRef.current.closes.push(`${ev?.code ?? "none"}`);
             log(`${isNormal ? "✅" : "❌"} Closed: code=${ev?.code} reason="${ev?.reason}"`);
+
+            // Reading lesson: Google dropped the session (1011). The app holds the lesson
+            // state, so swap in a fresh session and resume the step — under a second,
+            // no screen reset — instead of tearing everything down. If it keeps
+            // happening (3 times in a minute) fall through to the normal reconnect.
+            if (!isNormal && isReading && liveRollRef.current && sessionStartTimeRef.current > 0 && !sessionSavedRef.current) {
+              const now = Date.now();
+              hotRecoverTimesRef.current = [...hotRecoverTimesRef.current.filter((t) => now - t < 60_000), now];
+              if (hotRecoverTimesRef.current.length <= 3) {
+                log("🔄 Session dropped — swapping in a fresh one and resuming the step");
+                void liveRollRef.current().then((ok) => {
+                  if (ok) readingApiRef.current?.resume();
+                  else reconnectSessionRef.current?.();
+                });
+                return;
+              }
+            }
 
             if (
               !isNormal &&
