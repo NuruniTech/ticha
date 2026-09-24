@@ -130,3 +130,18 @@ describe("instructions", () => {
     expect(feedbackInstruction(teach, "correct", { action: "end", movedOn: false })).toMatch(/tutaonana/);
   });
 });
+
+import { getReadingSystemPrompt } from "@/lib/reading/prompt";
+
+describe("reading system prompt", () => {
+  const p = getReadingSystemPrompt("Amani");
+  it("names the child and keeps Ticha to Swahili with the app in charge", () => {
+    expect(p).toMatch(/Amani/);
+    expect(p).toMatch(/ONLY Swahili/);
+    expect(p).toMatch(/report_attempt/);
+    expect(p).toMatch(/never choose, skip, or change/);
+  });
+  it("stays short (the vocabulary prompt is ~20k tokens)", () => {
+    expect(p.length).toBeLessThan(3000);
+  });
+});

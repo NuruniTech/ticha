@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleGenAI, Modality, StartSensitivity, EndSensitivity, type LiveServerMessage } from "@google/genai";
+import { GoogleGenAI, Modality, Type, StartSensitivity, EndSensitivity, type LiveServerMessage } from "@google/genai";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
@@ -10,6 +10,9 @@ import TichaAvatar from "./TichaAvatar";
 import FluentEmoji from "./FluentEmoji";
 import LottieEmoji from "./LottieEmoji";
 import { getSystemPrompt, getWordBatch, getLessonLevel } from "@/lib/lessonPrompt";
+import { getReadingSystemPrompt } from "@/lib/reading/prompt";
+import { useReadingLesson } from "@/hooks/useReadingLesson";
+import ReadingCard from "./ReadingCard";
 import { getAnimatedUrl, getFluentUrl } from "@/lib/fluentEmoji";
 import { usePostHog } from "posthog-js/react";
 import Image from "next/image";
@@ -117,7 +120,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const revealClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Words fixed for this session
-  const lessonWords = useMemo(() => getWordBatch(game, childXp, childAge), [game, childXp, childAge]);
+  // Reading mode (game=reading): the app steers a Swahili early-reading lesson and
+  // Ticha reports each attempt via a function call. Every branch below is gated on
+  // this flag, so the vocabulary tutor is unchanged.
+  const isReading = game === "reading";
+  const lessonWords = useMemo(() => (isReading ? [] : getWordBatch(game, childXp, childAge)), [isReading, game, childXp, childAge]);
+  const [showConsent, setShowConsent] = useState(false);
 
   const sessionRef       = useRef<LiveSession>(null);
   // Two AudioContexts — mic at 16 kHz (Gemini input requirement),
@@ -131,6 +139,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Client-driven turns (default; ?turn=server opts out): server VAD is off; the mic pump below
   // detects speech itself and sends activityStart/activityEnd. Hands-free.
   const manualTurnRef    = useRef(false);
+  const readingApiRef    = useRef<ReturnType<typeof useReadingLesson> | null>(null);
   // Always-on, numbers only (no audio, no speech text). Sent to PostHog when
   // the lesson ends so testers never have to copy logs or add URL flags.
   const diagRef = useRef({
@@ -365,6 +374,50 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     setTimeout(() => setStarsFlash(false), 900);
   }, []);
 
+  // ── Reading mode: play a recorded sound through the SAME playback timeline as
+  // Ticha's voice, so it lands in order with her speech. Returns false when the
+  // recording is missing/undecodable (the lesson then has Ticha say it herself).
+  const recordingCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
+  const playRecording = useCallback(async (url: string): Promise<boolean> => {
+    const ctx = playCtxRef.current;
+    if (!ctx || isPausedRef.current) return false;
+    try {
+      let buf = recordingCacheRef.current.get(url);
+      if (!buf) {
+        const res = await fetch(url);
+        if (!res.ok) return false;
+        buf = await ctx.decodeAudioData(await res.arrayBuffer());
+        recordingCacheRef.current.set(url, buf);
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(analyserRef.current ?? ctx.destination);
+      const startAt = Math.max(ctx.currentTime + 0.01, playHeadRef.current);
+      src.start(startAt);
+      playHeadRef.current = startAt + buf.duration;
+      scheduledNodesRef.current.push(src);
+      src.addEventListener("ended", () => {
+        scheduledNodesRef.current = scheduledNodesRef.current.filter((n) => n !== src);
+      });
+      setStatus("speaking");
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const reading = useReadingLesson({
+    childId,
+    childName,
+    sendToModel: (text) => {
+      sessionRef.current?.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true });
+    },
+    playClip: playRecording,
+    onCorrect: () => awardStars(10),
+    log,
+  });
+  useEffect(() => { readingApiRef.current = reading; });
+
   // Track exactly WHICH lesson words Ticha has introduced (by index).
   // Normalise apostrophes so ng'ombe (curly) matches ng'ombe (straight) in the transcript.
   // Defined before endSession, which depends on wordsIntroduced for analytics.
@@ -485,8 +538,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       reconnects: d.reconnects,
       max_noise_floor: Number(d.maxFloor.toFixed(4)),
       user_agent: navigator.userAgent,
+      ...(isReading ? { reading_summary: readingApiRef.current?.summary() } : {}),
     });
-  }, [posthog, game, language]);
+  }, [posthog, game, language, isReading]);
 
   // Lesson abandoned by closing the tab / backgrounding: still report.
   useEffect(() => {
@@ -620,6 +674,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setTimeout(() => {
         setShowCelebration(false);
         setStars(0);
+        if (isReading) { router.push(childId ? `/child/${childId}` : "/dashboard"); return; }
         if (childId) {
           const wordsParam = lessonWords.map(w => w.sw).join(",");
           const ageParam   = childAge ? `&age=${childAge}` : "";
@@ -631,7 +686,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     }
   // wordsIntroduced/childXp/childAge/posthog are included so the PostHog
   // events report current values instead of the ones captured at mount.
-  }, [router, childId, game, language, lessonWords, wordsIntroduced, childXp, childAge, posthog, sendDiagnostics]);
+  }, [router, childId, game, language, isReading, lessonWords, wordsIntroduced, childXp, childAge, posthog, sendDiagnostics]);
 
   // Keep endSessionRef in sync so callbacks can call it without stale closure
   useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
@@ -716,6 +771,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setDebugLog([]);
       try { localStorage.removeItem("ticha_last_log"); } catch { /* ignore */ }
       log("Starting session...");
+
+      if (isReading) {
+        const prep = await readingApiRef.current!.prepare();
+        if ("needsConsent" in prep) { setStatus("idle"); setShowConsent(true); return; }
+        if ("error" in prep) throw new Error(prep.error);
+      }
 
       // Fast-fail if the device has no network at all — saves a confusing timeout.
       if (!navigator.onLine) {
@@ -865,6 +926,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           if (now - vad.lastLoud >= SILENCE_END_MS || now - vad.startedAt >= MAX_TURN_MS) {
             sendFrameRef.current?.(); // what the child is showing at the end of their turn
             sessionRef.current?.sendRealtimeInput({ activityEnd: {} });
+            readingApiRef.current?.onChildTurnEnded();
             vad.speaking = false;
             vad.loud = 0;
             const endedAt = Date.now();
@@ -879,7 +941,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               diagRef.current.stalls += 1;
               diagRef.current.stallInfo.push(turnInfo);
               logRef.current?.(`⚠️ No reply 10s after activityEnd (${turnInfo}) — nudging Ticha`);
-              if (vad.speaking || !sessionRef.current || isPausedRef.current) return;
+              if (isReading || vad.speaking || !sessionRef.current || isPausedRef.current) return; // reading has its own no-report handling
               diagRef.current.nudges += 1;
               turnCompleteAtRef.current = Date.now();
               sessionRef.current.sendClientContent({
@@ -919,14 +981,30 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: {
-            parts: [{ text: getSystemPrompt(childName, language, game, lessonWords, childAge, childXp, settings.slowSpeech, prevSessions, isReconnectRef.current) }],
+            parts: [{ text: isReading
+              ? getReadingSystemPrompt(childName)
+              : getSystemPrompt(childName, language, game, lessonWords, childAge, childXp, settings.slowSpeech, prevSessions, isReconnectRef.current) }],
           },
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: settings.voice } },
           },
           thinkingConfig: { thinkingBudget: 0 },
           outputAudioTranscription: {},
-          inputAudioTranscription: {},
+          // Reading mode stores only verdicts: no transcription of the child's speech.
+          ...(isReading ? {} : { inputAudioTranscription: {} }),
+          ...(isReading ? {
+            tools: [{
+              functionDeclarations: [{
+                name: "report_attempt",
+                description: "Report whether the child's attempt at the item on screen was correct. Call exactly once per attempt, before speaking.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: { result: { type: Type.STRING, enum: ["correct", "incorrect", "unclear"], description: "correct, incorrect, or unclear" } },
+                  required: ["result"],
+                },
+              }],
+            }],
+          } : {}),
           realtimeInputConfig: {
             automaticActivityDetection: manualTurnRef.current ? { disabled: true } : {
               disabled: false,
@@ -1008,6 +1086,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           },
 
           onmessage: (msg: LiveServerMessage) => {
+            // ── Reading mode: Ticha reports an attempt via function call ──
+            if (isReading && msg.toolCall?.functionCalls?.length) {
+              const responses = msg.toolCall.functionCalls.map((fc) => ({
+                id: fc.id,
+                name: fc.name,
+                response: { output: fc.name === "report_attempt" ? readingApiRef.current?.handleToolCall(fc.args) ?? "" : "Unknown function." },
+              }));
+              sessionRef.current?.sendToolResponse({ functionResponses: responses });
+            }
+
             // ── Barge-in: Gemini detected the child speaking during Ticha's turn ──
             // Cancel all queued audio nodes instantly so playback stops mid-sentence,
             // then reset the play head so the next Ticha response starts cleanly.
@@ -1024,6 +1112,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             const parts = msg.serverContent?.modelTurn?.parts ?? [];
             for (const part of parts) {
               if (part.inlineData?.data) {
+                if (isReading) readingApiRef.current?.onModelAudio();
                 scheduleAudioChunk(decodePcm16(part.inlineData.data));
               }
             }
@@ -1043,7 +1132,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 return [...prev, { role: "ticha", text: tichaText }];
               });
 
-              if (PRAISE_WORDS.some((w) => tichaText.toLowerCase().includes(w))) awardStars(10);
+              if (!isReading && PRAISE_WORDS.some((w) => tichaText.toLowerCase().includes(w))) awardStars(10);
 
               // Auto-completion: detect the lesson goodbye.
               // We do NOT start the end timer here — the text arrives before all audio
@@ -1065,6 +1154,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               // A turnComplete arriving seconds before the audio actually runs
               // out is the signature of the known server-side truncation bug.
               turnCompleteAtRef.current = Date.now();
+              if (isReading) readingApiRef.current?.onTurnComplete();
               log(`⏹ turnComplete — waiting for next reply…`);
               turnCompleteRef.current = true;
               // If the lesson goodbye was already detected, start the drain timer NOW —
@@ -1080,7 +1170,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
             // ── Child transcript ──
             const childText = msg.serverContent?.inputTranscription?.text;
-            if (childText?.trim() && childText.trim().length >= 2) {
+            if (!isReading && childText?.trim() && childText.trim().length >= 2) {
               // If the child speaks while the auto-end timer is running (e.g. they said
               // "wait!" or asked a question right after Ticha's goodbye), cancel the
               // timer and let Ticha respond — never close over the child's voice.
@@ -1155,6 +1245,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         ? `Habari Ticha! Mimi ni ${childName} na niko tayari kujifunza!`
         : `Hello Ticha! I am ${childName} and I am ready to learn!`;
       setTimeout(() => {
+        if (isReading) { readingApiRef.current?.begin(); return; }
         sessionRef.current?.sendClientContent({
           turns: [{ role: "user", parts: [{ text: triggerText }] }],
           turnComplete: true,
@@ -1167,7 +1258,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setStatus("error");
       setSessionStarted(false);
     }
-  }, [childName, language, game, scheduleAudioChunk, awardStars, log, settings.voice, settings.slowSpeech, childAge, childXp]);
+  }, [childName, language, game, isReading, scheduleAudioChunk, awardStars, log, settings.voice, settings.slowSpeech, childAge, childXp]);
 
   // Keep startSessionRef in sync so reconnectSession can call it via ref
   useEffect(() => { startSessionRef.current = startSession; }, [startSession]);
@@ -1410,7 +1501,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>👋🏾 {childName}</span>
           </div>
 
-          {sessionStarted && (
+          {sessionStarted && !isReading && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                 {lessonWords.map((lw, i) => {
@@ -1531,6 +1622,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
       {/* ── White Bottom Panel ── */}
       <div style={{ background: "white", flex: 1, borderRadius: "28px 28px 0 0", marginTop: "-24px", display: "flex", flexDirection: "column", alignItems: "center", padding: "22px 20px 40px", zIndex: 5, position: "relative" }}>
+
+        {/* Reading card */}
+        {isReading && sessionStarted && reading.card && (
+          <ReadingCard card={reading.card} onReplay={reading.replay} />
+        )}
 
         {/* Hint */}
         <p style={{ fontSize: "15px", color: !sessionStarted ? "#1F2937" : "#9CA3AF", fontWeight: 800, textAlign: "center", marginBottom: "16px", letterSpacing: "0.02em" }}>
@@ -1677,6 +1773,39 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "24px" }}>
             {language === "sw" ? "Mchezo wa maneno unaanza..." : "Word quiz coming up..."}
           </p>
+        </div>
+      )}
+
+      {showConsent && (
+        <div role="dialog" aria-modal="true" style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "white", borderRadius: 24, padding: 24, maxWidth: 380, fontFamily: "'Nunito', sans-serif" }}>
+            <h2 style={{ fontFamily: "'Baloo 2', cursive", fontSize: 20, margin: "0 0 10px", color: "#1E3A5F" }}>
+              {language === "sw" ? "Hifadhi maendeleo ya kusoma?" : "Save reading progress?"}
+            </h2>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: "#374151", margin: "0 0 18px" }}>
+              {language === "sw"
+                ? "Mzazi: Ticha atahifadhi tu kama kila herufi, silabi na neno lilisomwa vizuri au la. Hatuhifadhi rekodi za sauti wala maneno anayosema mtoto. Hii husaidia kuonyesha maendeleo ya mtoto na kuboresha Ticha."
+                : "Parent: Ticha will save only whether each letter, syllable and word was read right or wrong. We never save recordings or what your child says. This shows your child's progress and helps improve Ticha."}
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={async () => {
+                  const ok = await readingApiRef.current?.giveConsent();
+                  if (ok) { setShowConsent(false); startSessionRef.current?.(); }
+                  else setErrorMsg(language === "sw" ? "Imeshindwa kuhifadhi ruhusa. Jaribu tena." : "Could not save your permission. Please try again.");
+                }}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 14, border: "none", background: "#22C55E", color: "white", fontWeight: 800, fontSize: 15, cursor: "pointer" }}
+              >
+                {language === "sw" ? "Ruhusu" : "Allow"}
+              </button>
+              <button
+                onClick={() => setShowConsent(false)}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 14, border: "2px solid #E5E7EB", background: "white", color: "#6B7280", fontWeight: 800, fontSize: 15, cursor: "pointer" }}
+              >
+                {language === "sw" ? "Sio sasa" : "Not now"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

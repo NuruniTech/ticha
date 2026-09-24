@@ -61,6 +61,9 @@ export default function ChildPage() {
   const [child,         setChild]         = useState<Child | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [game,          setGame]          = useState("numbers");
+  // Swahili reading is still in testing: hidden unless ?reading=1 has been opened
+  // on this device (remembered), so field testers of the vocabulary tutor never see it.
+  const [showReading,   setShowReading]   = useState(false);
   const [completedGames, setCompletedGames] = useState<Set<string>>(new Set());
   const [view,          setView]          = useState<View>("dashboard");
   const [lockedTapped,  setLockedTapped]  = useState<string | null>(null);
@@ -167,6 +170,17 @@ export default function ChildPage() {
   // localStorage, so it can't run during render without breaking hydration).
   // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { loadData(); checkQuizCooldown(); }, [loadData]);
+
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get("reading");
+      if (q === "0") localStorage.removeItem("ticha_reading");
+      else if (q === "1") localStorage.setItem("ticha_reading", "1");
+      setShowReading(localStorage.getItem("ticha_reading") === "1");
+    } catch {
+      setShowReading(new URLSearchParams(window.location.search).get("reading") === "1");
+    }
+  }, []);
 
   async function startSession() {
     if (!child || isStarting || !gameUnlocked(game, completedGames)) return;
@@ -461,6 +475,21 @@ export default function ChildPage() {
                 </div>
               );
             })}
+
+            {showReading && child && (
+              <button
+                onClick={() => {
+                  const p = new URLSearchParams({
+                    name: child.name, lang: "sw", game: "reading", childId: child.id,
+                    ...(child.age ? { age: String(child.age) } : {}),
+                  });
+                  router.push(`/session?${p.toString()}`);
+                }}
+                style={{ width: "100%", padding: "14px", marginBottom: "12px", background: "#4B8BF5", border: "none", borderRadius: "16px", color: "white", fontSize: "17px", fontWeight: 800, fontFamily: "'Baloo 2', cursive", cursor: "pointer", boxShadow: "0 5px 0 #2F6FD8" }}
+              >
+                📖 {lang === "sw" ? "Jifunze kusoma Kiswahili (jaribio)" : "Learn to read Swahili (beta)"}
+              </button>
+            )}
 
             <button
               onClick={startSession}
