@@ -195,3 +195,40 @@ $$;
 -- the service role — a browser-side client must never be able to call it.
 revoke all on function public.check_rate_limit(text, int, int) from public, anon, authenticated;
 grant execute on function public.check_rate_limit(text, int, int) to service_role;
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- Swahili early reading  (added September 2026)
+--
+-- Every scored reading attempt, written ONLY by the server (service role) so
+-- results cannot be forged from the browser. Item mastery is derived from this
+-- table (see lib/reading/mastery.ts); the older `progress` table is not used.
+-- `phase` separates practice from the before/after checks; `human_correct` is
+-- filled in by "checker mode" so automatic scoring can be compared to a person.
+-- No audio and no speech text is stored — only the verdict.
+-- ═════════════════════════════════════════════════════════════════════════════
+alter table children add column if not exists reading_consent_at timestamptz;
+
+create table if not exists reading_attempts (
+  id uuid default gen_random_uuid() primary key,
+  child_id uuid references children(id) on delete cascade not null,
+  session_id text not null,
+  item_id text not null,
+  outcome text not null check (outcome in ('correct','incorrect','unscored')),
+  phase text not null default 'practice' check (phase in ('practice','baseline','checkpoint','final')),
+  latency_ms int,
+  human_correct boolean,
+  created_at timestamptz default now()
+);
+create index if not exists reading_attempts_child_item on reading_attempts (child_id, item_id);
+create index if not exists reading_attempts_child_phase on reading_attempts (child_id, phase, created_at);
+alter table reading_attempts enable row level security;
+drop policy if exists "Parents read reading attempts" on reading_attempts;
+create policy "Parents read reading attempts" on reading_attempts
+  for select using (
+    exists (
+      select 1 from children
+      where children.id = reading_attempts.child_id
+      and children.parent_id = auth.uid()
+    )
+  );
+revoke insert, update, delete on table reading_attempts from authenticated;

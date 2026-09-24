@@ -102,3 +102,37 @@ describe("planLesson", () => {
     [...plan.review, ...plan.teach, ...plan.mixed].forEach((id) => expect(isKnownItemId(id)).toBe(true));
   });
 });
+
+import { parseAttempt } from "@/lib/reading/validate";
+
+describe("parseAttempt", () => {
+  const good = { childId: "c1", sessionId: "s1", itemId: "s-ba", outcome: "correct" };
+
+  it("accepts a valid attempt and defaults the phase to practice", () => {
+    const r = parseAttempt(good);
+    expect(r.ok && r.value.phase).toBe("practice");
+  });
+
+  it("rejects items that are not in the curriculum", () => {
+    expect(parseAttempt({ ...good, itemId: "s-zz" }).ok).toBe(false);
+  });
+
+  it("rejects bad outcomes, phases and non-objects", () => {
+    expect(parseAttempt({ ...good, outcome: "great" }).ok).toBe(false);
+    expect(parseAttempt({ ...good, phase: "exam" }).ok).toBe(false);
+    expect(parseAttempt(null).ok).toBe(false);
+    expect(parseAttempt("x").ok).toBe(false);
+  });
+
+  it("rejects missing or oversized ids", () => {
+    expect(parseAttempt({ ...good, childId: "" }).ok).toBe(false);
+    expect(parseAttempt({ ...good, sessionId: "x".repeat(65) }).ok).toBe(false);
+  });
+
+  it("drops absurd latencies instead of storing them", () => {
+    const r = parseAttempt({ ...good, latencyMs: 9_999_999 });
+    expect(r.ok && r.value.latencyMs).toBeNull();
+    const ok = parseAttempt({ ...good, latencyMs: 1234.6 });
+    expect(ok.ok && ok.value.latencyMs).toBe(1235);
+  });
+});

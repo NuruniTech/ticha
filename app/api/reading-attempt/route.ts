@@ -1,0 +1,63 @@
+import { NextResponse } from "next/server";
+import { getAuthedUser, getOwnedChild, serviceClient } from "@/lib/apiAuth";
+import { parseAttempt } from "@/lib/reading/validate";
+
+// Saves one scored reading attempt. Only the verdict is stored — never audio
+// and never what the child said. The parent is identified from their session,
+// the child's ownership is checked through RLS, and the insert uses the
+// service role, so scores cannot be forged from the browser.
+//
+// Attempts are refused until the parent has given consent (see
+// /api/reading-consent): this data feeds learning-outcome measurement.
+
+// A lesson is roughly one attempt every few seconds; this is a loose ceiling
+// against runaway loops, not a pacing rule.
+const RATE_LIMIT_PER_MIN = 120;
+
+export async function POST(request: Request) {
+  const { user, supabase: userClient } = await getAuthedUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: unknown;
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
+
+  const parsed = parseAttempt(body);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const a = parsed.value;
+
+  const child = await getOwnedChild(userClient, a.childId);
+  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const { data: consent } = await userClient
+    .from("children").select("reading_consent_at").eq("id", a.childId).single();
+  if (!consent?.reading_consent_at) {
+    return NextResponse.json({ error: "Consent required" }, { status: 403 });
+  }
+
+  const admin = serviceClient();
+  try {
+    const { data: limited, error } = await admin.rpc("check_rate_limit", {
+      p_id: `reading:${a.childId}`, p_limit: RATE_LIMIT_PER_MIN, p_window_seconds: 60,
+    });
+    if (error) throw error;
+    if (limited === true) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  } catch (e) {
+    // Known parent, already ownership-checked: fail open rather than lose a lesson.
+    console.error("reading-attempt rate limit check failed:", e);
+  }
+
+  const { error } = await admin.from("reading_attempts").insert({
+    child_id:   a.childId,
+    session_id: a.sessionId,
+    item_id:    a.itemId,
+    outcome:    a.outcome,
+    phase:      a.phase,
+    latency_ms: a.latencyMs,
+  });
+  if (error) {
+    console.error("reading-attempt insert failed:", error);
+    return NextResponse.json({ error: "Save failed" }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
+}
