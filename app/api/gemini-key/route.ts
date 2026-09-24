@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
-import { GoogleGenAI } from "@google/genai";
+import { mintEphemeralToken } from "@/lib/geminiToken";
 import { serviceClient } from "@/lib/apiAuth";
 
 // Mints a short-lived, single-use ephemeral Gemini token for one Live session.
@@ -105,21 +105,14 @@ export async function GET() {
   }
 
   try {
-    // Ephemeral tokens are only available on the v1alpha API surface
-    const client = new GoogleGenAI({ apiKey: key, httpOptions: { apiVersion: "v1alpha" } });
     const now = Date.now();
-    const token = await client.authTokens.create({
-      config: {
-        uses: 1,
-        expireTime:           new Date(now + TOKEN_LIFETIME_MS).toISOString(),
-        newSessionExpireTime: new Date(now + NEW_SESSION_WINDOW_MS).toISOString(),
-        httpOptions: { apiVersion: "v1alpha" },
-      },
+    const token = await mintEphemeralToken(key, {
+      expireTime:           new Date(now + TOKEN_LIFETIME_MS).toISOString(),
+      newSessionExpireTime: new Date(now + NEW_SESSION_WINDOW_MS).toISOString(),
     });
-    if (!token.name) throw new Error("Empty token");
-    return NextResponse.json({ token: token.name });
+    return NextResponse.json({ token });
   } catch (err) {
-    console.error("Ephemeral token creation failed:", err);
+    console.error("Ephemeral token creation failed:", err instanceof Error ? err.message : "unknown");
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 }

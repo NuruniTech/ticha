@@ -60,7 +60,13 @@ vi.mock("@google/genai", () => ({
 
 const { GET } = await import("@/app/api/gemini-key/route");
 
+// REST is tried first (see lib/geminiToken.ts); never hit the real API from a test.
+const fetchMock = vi.fn();
+
 beforeEach(() => {
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ name: "auth_tokens/rest-token" }) });
+  vi.stubGlobal("fetch", fetchMock);
   rows.clear();
   rpcFails = false;
   now = 1_700_000_000_000;
@@ -117,5 +123,39 @@ describe("missing GEMINI_API_KEY", () => {
     expect(body).toEqual({ error: "Service unavailable" });
     // No token, no key, no upstream error detail.
     expect(Object.keys(body)).toEqual(["error"]);
+  });
+});
+
+
+describe("token minting", () => {
+  it("sends the key as a ?key= query parameter, never a header (AQ. keys need this)", async () => {
+    process.env.GEMINI_API_KEY = "AQ.test-key";
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ token: "auth_tokens/rest-token" });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain("/v1alpha/auth_tokens?key=AQ.test-key");
+    expect(JSON.stringify(init.headers ?? {})).not.toContain("AQ.test-key");
+  });
+
+  it("falls back to the SDK when the REST call fails", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 400, json: async () => ({}) });
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ token: "auth_tokens/fake-token" });
+  });
+
+  it("returns a bare 503 and never logs the key when both paths fail", async () => {
+    process.env.GEMINI_API_KEY = "AQ.secret-key-value";
+    fetchMock.mockRejectedValue(new Error("network down"));
+    vi.doMock("@google/genai", () => ({ GoogleGenAI: class { authTokens = { create: async () => { throw new Error("sdk down"); } }; } }));
+    vi.resetModules();
+    const { GET: freshGET } = await import("@/app/api/gemini-key/route");
+    const res = await freshGET();
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: "Service unavailable" });
+    const logged = JSON.stringify((console.error as unknown as { mock: { calls: unknown[] } }).mock.calls);
+    expect(logged).not.toContain("secret-key-value");
   });
 });
