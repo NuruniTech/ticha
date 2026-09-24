@@ -134,7 +134,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Always-on, numbers only (no audio, no speech text). Sent to PostHog when
   // the lesson ends so testers never have to copy logs or add URL flags.
   const diagRef = useRef({
-    latencies: [] as number[], turns: 0, stalls: 0, nearMisses: 0, nearMissesTicha: 0,
+    latencies: [] as number[], turns: 0, stalls: 0, nudges: 0, stallInfo: [] as string[], nearMisses: 0, nearMissesTicha: 0,
     bargeIns: 0, closes: [] as string[], reconnects: 0, maxFloor: 0, sent: false,
   });
   const sendFrameRef     = useRef<(() => void) | null>(null); // set while the camera is on
@@ -463,6 +463,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       reply_max_s: l.length ? l[l.length - 1] : null,
       replies_over_5s: l.filter((x) => x > 5).length,
       stalls_over_10s: d.stalls,
+      stall_turns: d.stallInfo.join(" "),
+      nudges_sent: d.nudges,
       near_misses: d.nearMisses,
       near_misses_while_ticha_talking: d.nearMissesTicha,
       barge_ins: d.bargeIns,
@@ -782,7 +784,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Gemini with activityStart / activityEnd. No tapping.
       const SILENCE_END_MS = 900;   // quiet this long = child finished
       const MAX_TURN_MS    = 15000; // safety: never hold a turn open forever
-      const vad = { peak: 0, peakLogAt: 0, floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[] };
+      const vad = { turnPeak: 0, peak: 0, peakLogAt: 0, floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[] };
       const sendMic = (f: Float32Array) => {
         sessionRef.current?.sendRealtimeInput({ audio: { data: encodePcm16Base64(f), mimeType: "audio/pcm;rate=16000" } });
         micSendCountRef.current += 1;
@@ -835,6 +837,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             sessionRef.current?.sendRealtimeInput({ activityStart: {} });
             vad.speaking = true;
             vad.startedAt = vad.lastLoud = now;
+            vad.turnPeak = rms;
             diagRef.current.turns += 1;
             diagRef.current.maxFloor = Math.max(diagRef.current.maxFloor, vad.floor);
             vad.preroll.forEach(sendMic);
@@ -844,6 +847,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           }
         } else {
           sendMic(f);
+          vad.turnPeak = Math.max(vad.turnPeak, rms);
           if (loud) vad.lastLoud = now;
           if (now - vad.lastLoud >= SILENCE_END_MS || now - vad.startedAt >= MAX_TURN_MS) {
             sendFrameRef.current?.(); // what the child is showing at the end of their turn
@@ -852,9 +856,23 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             vad.loud = 0;
             const endedAt = Date.now();
             turnCompleteAtRef.current = endedAt;
-            // No reply audio within 10 s of the child finishing = a stall.
+            const turnInfo = `${((now - vad.startedAt) / 1000).toFixed(1)}s@${vad.turnPeak.toFixed(3)}`;
+            // No reply audio within 10 s of the child finishing = a stall (about
+            // 1 turn in 8 in the first field test). Record what the turn looked
+            // like, then recover: have Ticha ask the child to repeat instead of
+            // leaving them in silence.
             setTimeout(() => {
-              if (turnCompleteAtRef.current === endedAt) diagRef.current.stalls += 1;
+              if (turnCompleteAtRef.current !== endedAt) return;
+              diagRef.current.stalls += 1;
+              diagRef.current.stallInfo.push(turnInfo);
+              logRef.current?.(`⚠️ No reply 10s after activityEnd (${turnInfo}) — nudging Ticha`);
+              if (vad.speaking || !sessionRef.current || isPausedRef.current) return;
+              diagRef.current.nudges += 1;
+              turnCompleteAtRef.current = Date.now();
+              sessionRef.current.sendClientContent({
+                turns: [{ role: "user", parts: [{ text: "(The child just spoke but you could not make out what they said. In one short, warm sentence, say you did not catch that and ask them to say it again.)" }] }],
+                turnComplete: true,
+              });
             }, 10000);
             logRef.current?.(`🛑 activityEnd after ${((now - vad.startedAt) / 1000).toFixed(1)}s of speech`);
           }
