@@ -38,6 +38,7 @@ interface Options {
   childAge?: number;
   sendToModel: (text: string) => void;
   playClip: (url: string) => Promise<boolean>; // false when the recording is unavailable
+  roll?: () => Promise<boolean>;                // swap in a fresh Gemini session; false if it failed
   onCorrect: () => void;
   log: (msg: string) => void;
 }
@@ -60,6 +61,10 @@ const NO_AUDIO_FALLBACK_MS = 7_000; // Ticha never spoke the feedback: carry on 
 //   afterModel / afterTogether: a guided (unscored) step just spoken -> advance past it.
 type Pending = "greeting" | "startStep" | "afterModel" | "afterTogether" | "end" | null;
 
+// The native-audio model slows down and stalls as one session ages, so we swap in a
+// fresh session every few prompts, and straight away after any stall or fallback.
+const ROLL_EVERY_SENDS = 3;
+
 const TOGETHER_WAIT_MS = 15_000; // child never joins in: move on rather than wait forever
 
 export function useReadingLesson(options: Options) {
@@ -77,12 +82,20 @@ export function useReadingLesson(options: Options) {
   // the current prompt. A report without it is premature: the model may call the
   // function straight after asking, before the child has said anything.
   const spokeSincePromptRef = useRef(false);
+  const sendsSinceRollRef = useRef(0);
+  const needsRollRef = useRef(false);
   const togetherRef = useRef(false); // waiting for the child to say it WITH Ticha (unscored)
   const togetherTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const promptSentAtRef = useRef(0);
   const reportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const summaryRef = useRef({ attempts: 0, correct: 0, incorrect: 0, unscored: 0, check_attempts: 0, movedOn: 0, autoUnscored: 0 });
+
+  // Every message we send to Ticha starts a new model turn, so count them.
+  const send = (text: string) => {
+    sendsSinceRollRef.current += 1;
+    optsRef.current.sendToModel(text);
+  };
 
   const clearTimers = () => {
     if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
@@ -149,11 +162,18 @@ export function useReadingLesson(options: Options) {
   }, []);
 
   // Move on after Ticha has finished speaking. A guided step is advanced past first.
+  // Between steps is the safe moment to swap in a fresh Gemini session.
   const proceed = (p: Exclude<Pending, "end" | null>) => {
     if ((p === "afterModel" || p === "afterTogether") && stateRef.current) {
       stateRef.current = advanceGuided(stateRef.current);
     }
-    void startStep();
+    void (async () => {
+      if (optsRef.current.roll && (needsRollRef.current || sendsSinceRollRef.current >= ROLL_EVERY_SENDS)) {
+        const ok = await optsRef.current.roll();
+        if (ok) { needsRollRef.current = false; sendsSinceRollRef.current = 0; }
+      }
+      await startStep();
+    })();
   };
 
   const armFallback = () => {
@@ -163,6 +183,7 @@ export function useReadingLesson(options: Options) {
       const p = pendingRef.current;
       if (p && p !== "end") {
         optsRef.current.log("⚠️ No feedback audio — starting the next step anyway");
+        needsRollRef.current = true;
         pendingRef.current = null;
         proceed(p);
       }
@@ -174,7 +195,7 @@ export function useReadingLesson(options: Options) {
     const step = st && currentStep(st);
     if (!st || !step) {
       // Nothing (left) to practise: say goodbye so the lesson ends instead of hanging.
-      if (st?.done) { pendingRef.current = "end"; optsRef.current.sendToModel(nothingLeftInstruction); }
+      if (st?.done) { pendingRef.current = "end"; send(nothingLeftInstruction); }
       return;
     }
     const item = getItem(step.itemId)!;
@@ -190,7 +211,7 @@ export function useReadingLesson(options: Options) {
     // Guided steps ("I do" / "we do") are not scored: nothing is reported.
     if (isGuided(step)) {
       expectingRef.current = false;
-      optsRef.current.sendToModel(instruction);
+      send(instruction);
       if (step.stage === "model") {
         pendingRef.current = "afterModel";
         armFallback();
@@ -210,7 +231,7 @@ export function useReadingLesson(options: Options) {
     expectingRef.current = true;
     spokeSincePromptRef.current = false;
     promptSentAtRef.current = Date.now();
-    optsRef.current.sendToModel(instruction);
+    send(instruction);
   // proceed/armFallback are stable, refs-only helpers
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -261,7 +282,7 @@ export function useReadingLesson(options: Options) {
   const begin = useCallback(() => {
     pendingRef.current = "greeting";
     armFallback();
-    optsRef.current.sendToModel(greetingInstruction(optsRef.current.childName));
+    send(greetingInstruction(optsRef.current.childName));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -297,7 +318,8 @@ export function useReadingLesson(options: Options) {
       if (text) {
         summaryRef.current.autoUnscored += 1;
         optsRef.current.log("⚠️ Ticha did not report — counted as unscored");
-        optsRef.current.sendToModel(text);
+        needsRollRef.current = true;
+        send(text);
       }
     }, NO_REPORT_MS);
   }, [finishAttempt]);

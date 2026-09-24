@@ -140,6 +140,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // detects speech itself and sends activityStart/activityEnd. Hands-free.
   const manualTurnRef    = useRef(false);
   const readingApiRef    = useRef<ReturnType<typeof useReadingLesson> | null>(null);
+  // "Rolling" to a fresh Gemini session: the native-audio model gets slower and
+  // stalls the longer one session runs (measured: replies 1.3s -> 6.8s -> 8.5s, then
+  // a 45s silence), so between lesson steps we quietly open a new session and swap
+  // it in. Audio, screen and lesson position are untouched.
+  const liveRollRef      = useRef<(() => Promise<boolean>) | null>(null);
+  const liveRetireRef    = useRef<() => void>(() => {});
   // Always-on, numbers only (no audio, no speech text). Sent to PostHog when
   // the lesson ends so testers never have to copy logs or add URL flags.
   const diagRef = useRef({
@@ -414,6 +420,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       sessionRef.current?.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true });
     },
     playClip: playRecording,
+    roll: () => liveRollRef.current?.() ?? Promise.resolve(false),
     onCorrect: () => awardStars(10),
     log,
   });
@@ -967,7 +974,10 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Fetch a short-lived, single-use ephemeral token from the server.
       // The real Gemini API key never reaches the browser — this token only
       // works for one Live session and expires on its own.
-      const keyRes = await keyResPromise;
+      // Opens one Live session: at start, and again whenever we roll to a fresh one.
+      const openLive = async (isRoll: boolean): Promise<{ session: LiveSession; retire: () => void }> => {
+      let retired = false; // set once this session has been swapped out: its late events are ignored
+      const keyRes = isRoll ? await fetch("/api/gemini-key") : await keyResPromise;
       if (!keyRes.ok) throw new Error("Could not initialise session. Please try again.");
       const { token: geminiToken } = await keyRes.json();
 
@@ -1026,6 +1036,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         },
         callbacks: {
           onopen: () => {
+            if (isRoll) { log("🔄 Fresh Gemini session ready"); return; }
             log("✅ Session opened");
             setStatus("listening");
             setSessionStarted(true);
@@ -1087,6 +1098,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           },
 
           onmessage: (msg: LiveServerMessage) => {
+            if (retired) return;
             // ── Reading mode: Ticha reports an attempt via function call ──
             if (isReading && msg.toolCall?.functionCalls?.length) {
               const responses = msg.toolCall.functionCalls.map((fc) => ({
@@ -1195,6 +1207,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           },
 
           onerror: (e: unknown) => {
+            if (retired) return;
             const msg = e instanceof Error ? e.message : JSON.stringify(e);
             console.error("[Ticha] Gemini onerror:", msg);
             log(`⚠️ Error: ${msg}`);
@@ -1203,6 +1216,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           },
 
           onclose: (e?: unknown) => {
+            if (retired) return; // the session we deliberately swapped out closing
             const ev = e as CloseEvent;
             const isNormal = ev?.code === 1000 || ev?.code === undefined;
             if (!isNormal) {
@@ -1231,6 +1245,28 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           },
         },
       });
+      return { session, retire: () => { retired = true; } };
+      };
+
+      const opened = await openLive(false);
+      const session = opened.session;
+      liveRetireRef.current = opened.retire;
+      liveRollRef.current = async () => {
+        const startedAt = Date.now();
+        try {
+          const next = await openLive(true);
+          const old = sessionRef.current;
+          liveRetireRef.current();          // ignore anything the old session still says
+          liveRetireRef.current = next.retire;
+          sessionRef.current = next.session;
+          try { old?.close(); } catch { /* already closed */ }
+          log(`🔄 Rolled to a fresh session in ${Date.now() - startedAt} ms`);
+          return true;
+        } catch (e) {
+          log(`⚠️ Roll failed, keeping the current session: ${e instanceof Error ? e.message : String(e)}`);
+          return false;
+        }
+      };
       sessionRef.current = session;
 
       // Send opening trigger now — sessionRef.current is guaranteed to be set.
