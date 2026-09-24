@@ -996,11 +996,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             tools: [{
               functionDeclarations: [{
                 name: "report_attempt",
-                description: "Report whether the child's attempt at the item on screen was correct. Call exactly once per attempt, before speaking.",
+                description: "Report exactly what you heard the child say for the item on screen. Do not judge correctness. Call exactly once per attempt, before speaking.",
                 parameters: {
                   type: Type.OBJECT,
-                  properties: { result: { type: Type.STRING, enum: ["correct", "incorrect", "unclear"], description: "correct, incorrect, or unclear" } },
-                  required: ["result"],
+                  properties: { heard: { type: Type.STRING, description: "The sounds or word you actually heard, in simple Swahili spelling. Empty string if you heard nothing or are unsure." } },
+                  required: ["heard"],
                 },
               }],
             }],

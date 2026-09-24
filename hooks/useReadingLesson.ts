@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getItem, type ReadingItem } from "@/lib/reading/curriculum";
 import { planLesson } from "@/lib/reading/lesson";
+import { judgeHeard } from "@/lib/reading/judge";
 import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
 import { decideCheck, type StoredRow } from "@/lib/reading/checks";
 import {
@@ -184,15 +185,20 @@ export function useReadingLesson(options: Options) {
     pendingRef.current = advance.action === "end" ? "end" : "startStep";
     if (advance.action !== "end") armFallback();
     optsRef.current.log(`📖 ${step.itemId} → ${outcome} (${advance.action})`);
-    return feedbackInstruction(step, outcome, advance);
+    const learned = [...new Set(state.steps.filter((x) => x.kind === "teach").map((x) => getItem(x.itemId)!.text))];
+    return feedbackInstruction(step, outcome, advance, learned);
   // armFallback/startStep are stable refs-only helpers
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveAttempt]);
 
-  /** Ticha called report_attempt. Returns the text to hand back as the tool result. */
+  /** Ticha called report_attempt with what she heard. The APP judges it. Returns the tool result text. */
   const handleToolCall = useCallback((args: unknown): string => {
-    const r = (args as { result?: unknown } | null)?.result;
-    const outcome: AttemptOutcome = r === "correct" ? "correct" : r === "incorrect" ? "incorrect" : "unscored";
+    const heard = (args as { heard?: unknown } | null)?.heard;
+    const st = stateRef.current;
+    const step = st && currentStep(st);
+    const outcome: AttemptOutcome = step ? judgeHeard(step.itemId, heard) : "unscored";
+    // Debug log only (never stored or sent anywhere): shows why an attempt was scored as it was.
+    optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" for "${step ? getItem(step.itemId)!.text : "?"}" → ${outcome}`);
     return finishAttempt(outcome) ?? "[APP] Ignored. Wait quietly for the next [APP] message.";
   }, [finishAttempt]);
 

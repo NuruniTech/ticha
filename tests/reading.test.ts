@@ -61,10 +61,16 @@ describe("mastery", () => {
 describe("planLesson", () => {
   const master = (id: string): Attempt[] => [a("s1", "correct", 1), a("s1", "correct", 2), a("s2", "correct", 3)];
 
-  it("starts a brand-new child on the first three items, in order", () => {
+  it("starts a brand-new child on the five vowels together, in order", () => {
     const plan = planLesson({});
     expect(plan.review).toEqual([]);
-    expect(plan.teach).toEqual(READING_ITEMS.slice(0, 3).map((i) => i.id));
+    expect(plan.teach).toEqual(["v-a", "v-e", "v-i", "v-o", "v-u"]);
+  });
+
+  it("teaches at most 3 new items once past the vowels", () => {
+    const vowels: Record<string, Attempt[]> = {};
+    for (const v of ["v-a", "v-e", "v-i", "v-o", "v-u"]) vowels[v] = master(v);
+    expect(planLesson(vowels).teach).toEqual(["s-ba", "s-be", "s-bi"]);
   });
 
   it("reviews at most two mastered items, least recently seen first", () => {

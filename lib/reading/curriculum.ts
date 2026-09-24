@@ -101,12 +101,13 @@ export const getItem = (id: string): ReadingItem | undefined => BY_ID.get(id);
 export const isKnownItemId = (id: string): boolean => BY_ID.has(id);
 
 // ── Before/after check forms ─────────────────────────────────────────────────
-// Two matched sets of 10 (5 syllables + 5 words) so a later check measures
-// reading, not memory of the baseline items. Form A = baseline, form B =
-// checkpoints. ⚠ PROPOSAL: a Swahili teacher should confirm the two forms are
-// of equal difficulty (they were picked to spread across consonants and to use
-// words of similar length).
+// Two matched sets of 10 so a later check measures reading, not memory of the
+// baseline items. Form A = baseline, form B = checkpoints. Each is ordered
+// EASIEST FIRST (vowels, then syllables, then words) because a check stops after
+// a run of misses (see DISCONTINUE_AFTER in conductor.ts), so a child who cannot
+// read yet is not made to attempt hard items. ⚠ PROPOSAL: a Swahili teacher
+// should confirm the two forms are of equal difficulty.
 export const CHECK_FORMS = {
-  A: ["s-ba", "s-mo", "s-ti", "s-ke", "s-su", "w-mama", "w-kuku", "w-soma", "w-sita", "w-nane"],
-  B: ["s-bi", "s-mu", "s-te", "s-ko", "s-si", "w-baba", "w-kula", "w-mimi", "w-tano", "w-lala"],
+  A: ["v-a", "v-o", "s-ba", "s-mo", "s-ti", "s-ke", "w-mama", "w-kuku", "w-soma", "w-sita"],
+  B: ["v-e", "v-u", "s-bi", "s-mu", "s-te", "s-ko", "w-baba", "w-kula", "w-mimi", "w-tano"],
 } as const;
