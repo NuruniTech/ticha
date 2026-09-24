@@ -11,7 +11,8 @@ export type StepKind = "baseline" | "checkpoint" | "review" | "teach" | "mixed";
 //   model    - Ticha shows the item and blends its sounds (not scored)
 //   together - child and Ticha say it together (not scored)
 //   alone    - the child says it alone (the only scored, retried step)
-export type Stage = "model" | "together" | "alone";
+//   play     - a short playful game with the sound (mouse voice, lion voice, clap...); not scored
+export type Stage = "model" | "together" | "alone" | "play";
 
 export interface Step {
   itemId: string;
@@ -30,6 +31,7 @@ export interface ConductorState {
   done: boolean;
 }
 
+const PLAY_EVERY = 2; // a playful game after every 2nd new item
 export const MAX_TRIES = 3;          // one try plus up to two more after a miss
 export const MAX_UNSCORED_TRIES = 2; // if we cannot tell twice, move on
 
@@ -44,7 +46,7 @@ export type Advance =
   | { action: "end"; movedOn: boolean; discontinued?: boolean };
 
 export const isCheckStep = (s: Step) => s.kind === "baseline" || s.kind === "checkpoint";
-export const isGuided = (s: Step) => s.stage === "model" || s.stage === "together";
+export const isGuided = (s: Step) => s.stage === "model" || s.stage === "together" || s.stage === "play";
 
 export function buildSteps(opts: { check?: { phase: "baseline" | "checkpoint"; items: string[] }; plan: LessonPlan }): Step[] {
   const steps: Step[] = [];
@@ -56,10 +58,13 @@ export function buildSteps(opts: { check?: { phase: "baseline" | "checkpoint"; i
   };
   if (opts.check) opts.check.items.forEach((id) => add(id, opts.check!.phase));
   opts.plan.review.forEach((id) => add(id, "review"));
-  opts.plan.teach.forEach((id) => {
+  opts.plan.teach.forEach((id, i) => {
     add(id, "teach", "model");
     add(id, "teach", "together");
     add(id, "teach", "alone");
+    // After every second new item, a little game with the sound: lessons that are all
+    // drill feel like a classroom, and playing with a sound is also practice.
+    if ((i + 1) % PLAY_EVERY === 0) add(id, "teach", "play");
   });
   opts.plan.mixed.forEach((id) => add(id, "mixed"));
   return steps;

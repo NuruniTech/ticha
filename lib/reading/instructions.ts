@@ -19,27 +19,23 @@ export const nothingLeftInstruction =
   "[APP] There is nothing more to practise today. In TWO short Swahili sentences, praise the child for their work and say goodbye, including the word \"tutaonana\".";
 
 export const greetingInstruction = (childName: string) =>
-  `[APP] Greet ${childName} warmly in ONE short Swahili sentence and say you will learn to read together today. Nothing else. Then stay silent until the next [APP] message.`;
+  `[APP] Greet ${childName} warmly by name in ONE short, happy Swahili sentence and say you are Ticha and you are so glad to see them. Do NOT mention lessons or reading yet: you are just meeting a friend. Nothing else. Then stay silent until the next [APP] message.`;
 
 // One spoken sentence that introduces each new part of the lesson.
 const PHASE_INTRO: Record<StepKind, string> = {
   baseline:   "tell the child you will first play a little game to see what they already know, and that it is fine not to know some",
   checkpoint: "tell the child you will first play a little game to see how much they have learned, and that it is fine not to know some",
   review:     "tell the child you will now remember things they learned before",
-  teach:      "tell the child you will now learn something new together",
+  teach:      "react with excitement to whatever the child just said, then tell them you will now meet a new magic sound together",
   mixed:      "tell the child you will now practise everything together",
 };
 
-// Should the recorded sound play before this attempt?
-export function shouldPlayClip(step: Step, isRetry: boolean): boolean {
-  if (isCheckStep(step)) return false;   // a check must not give the answer away
-  if (isGuided(step)) return true;       // modelling and saying together: always play it
-  return isRetry;                        // alone / review / mixed: only as help after a miss
-}
-
-// Swahili sounds, spelled out for the model. Without this Ticha sometimes read the
-// vowel "e" the English way ("ee"); in Swahili it is "eh". Letters are SOUNDS here,
-// never English letter names ("bee", "ay", "see").
+// Swahili sounds, spelled out for the model.
+//
+// Handing the model a bare letter ("e") makes it read the ENGLISH letter name — which
+// is "ee", the sound of Swahili "i". So instead of letters we give it RESPELLINGS it
+// reads correctly: "meh", "bah", "soh-mah". Vowels: a "ah", e "eh", i "ee", o "oh", u "oo".
+export const VOWEL_RESPELL: Record<string, string> = { a: "ah", e: "eh", i: "ee", o: "oh", u: "oo" };
 export const VOWEL_SOUND: Record<string, string> = {
   a: '"ah", as in Swahili "baba"',
   e: '"eh", as in Swahili "pesa" (short, like the "e" in English "bed")',
@@ -47,41 +43,71 @@ export const VOWEL_SOUND: Record<string, string> = {
   o: '"oh", as in Swahili "moja" (short and round)',
   u: '"oo", as in Swahili "kuku"',
 };
-export const SOUNDS_NOT_NAMES = "Use the Swahili SOUND of each letter, never the English letter name (not \"bee\", \"ay\", \"see\", \"ee\").";
+export const SOUNDS_NOT_NAMES = "Use the Swahili SOUND of each letter, never the English letter name (not \"bee\", \"ay\", \"see\", \"ee\" for e).";
+
+/** "ba" -> "bah", "me" -> "meh", "a" -> "ah" */
+export function respellUnit(unit: string): string {
+  const vowel = unit.slice(-1);
+  return `${unit.slice(0, -1)}${VOWEL_RESPELL[vowel] ?? vowel}`;
+}
+/** "soma" -> "soh-mah" */
+export const respellItem = (itemId: string): string => getItem(itemId)!.syllables.map(respellUnit).join("-");
 
 function pronunciationNote(itemId: string): string {
   const item = getItem(itemId)!;
-  if (item.kind === "vowel") return `Pronounce it ${VOWEL_SOUND[item.text]}. NEVER use the English letter name. `;
   const vowels = [...new Set(item.text.split("").filter((c) => VOWEL_SOUND[c]))];
-  return `${SOUNDS_NOT_NAMES} ${vowels.map((v) => `The vowel "${v}" is ${VOWEL_SOUND[v]}.`).join(" ")} `;
+  return `${SOUNDS_NOT_NAMES} Say it exactly as respelled here: "${respellItem(itemId)}". ${vowels.map((v) => `The vowel "${v}" is ${VOWEL_SOUND[v]}.`).join(" ")} `;
 }
 
 // Variety, so praise sounds like a person and not a script.
 export const PRAISES = ["Vizuri sana!", "Hongera!", "Safi kabisa!", "Umefanya vizuri!", "Ndiyo, ni sahihi!", "Vizuri kabisa, mwerevu wangu!"];
 const pick = <T,>(list: readonly T[], rng: () => number = Math.random) => list[Math.floor(rng() * list.length)];
 
-// A friendly chat before any learning, so the lesson does not open like a test.
-const WARMUP_QUESTIONS = [
-  "how they are feeling today",
-  "what their favourite animal is",
-  "whether they have eaten something yummy today",
-  "what colour they like best",
-];
-export const warmupInstruction = (rng: () => number = Math.random) =>
-  `[APP] Do these in order: 1) In ONE short, friendly Swahili sentence ask the child ${pick(WARMUP_QUESTIONS, rng)}. 2) Then stay silent and listen. 3) After the child answers, reply with ONE short, warm sentence that shows you are really interested in what they said (you may laugh a little). Do NOT teach anything yet. Do NOT call report_attempt.`;
-
-// The separate sounds of an item, for blending ("b" + "a" -> "ba"; "ma" + "ma" -> "mama").
-function blendingLine(itemId: string): string {
-  const item = getItem(itemId)!;
-  if (item.kind === "vowel") return `Say the sound "${item.text}" once, slowly. ${pronunciationNote(itemId)}`;
-  if (item.kind === "syllable") {
-    const [consonant, ...rest] = item.text.split("");
-    return `Say its sounds slowly, one at a time ("${consonant}", "${rest.join("")}"), and then the whole syllable "${item.text}". ${pronunciationNote(itemId)}`;
-  }
-  return `Say each syllable slowly, one at a time (${item.syllables.map((s) => `"${s}"`).join(", ")}), and then the whole word "${item.text}". ${pronunciationNote(itemId)}`;
+// A real back-and-forth before any learning, so the lesson does not open like a test.
+// Each message is sent after the child has answered the one before; Ticha reacts to
+// what they actually said.
+const FUN_QUESTIONS = ["what their favourite animal is", "what yummy thing they ate today", "what colour they like best"];
+export const WARMUP_TURNS = 3;
+export function warmupInstructions(rng: () => number = Math.random): string[] {
+  const q = pick(FUN_QUESTIONS, rng);
+  const tail = "Then stay silent and listen. Do NOT teach anything. Do NOT call report_attempt.";
+  return [
+    `[APP] In ONE short, friendly Swahili sentence ask the child how they are feeling today. ${tail}`,
+    `[APP] React to what the child just said in ONE warm sentence, so they know you really heard them (you may laugh a little). Then ask ONE simple, fun question: ${q}. ${tail}`,
+    `[APP] React to their answer with real delight (for example make the animal's sound, or say something playful about it). Then say in ONE or TWO short sentences that today the two of you will play with magic sounds, and ask if they are ready. ${tail}`,
+  ];
 }
 
-export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean }): string {
+// Ideas for the little games, so each one is different.
+const PLAY_IDEAS = [
+  "say the sound in a tiny mouse voice, then in a big lion voice, and ask the child to copy you each time",
+  "say the sound very slowly like a snail, then very fast like a rabbit, and ask the child to copy you",
+  "whisper the sound like a secret, then say it out loud, and ask the child to copy you",
+  "clap once as you say the sound, and ask the child to clap and say it with you",
+];
+
+// Should the recorded sound play before this attempt?
+export function shouldPlayClip(step: Step, isRetry: boolean): boolean {
+  if (isCheckStep(step)) return false;   // a check must not give the answer away
+  if (isGuided(step)) return true;       // modelling, saying together, playing: always play it
+  return isRetry;                        // alone / review / mixed: only as help after a miss
+}
+
+// The separate sounds of an item, for blending ("m" + "meh" -> "meh").
+function blendingLine(itemId: string): string {
+  const item = getItem(itemId)!;
+  if (item.kind === "vowel") {
+    return `Say the sound "${respellUnit(item.text)}" once, slowly, exactly as respelled here (it is the Swahili vowel "${item.text}"). ${pronunciationNote(itemId)}`;
+  }
+  if (item.kind === "syllable") {
+    const consonant = item.text.slice(0, -1);
+    const vowel = item.text.slice(-1);
+    return `Say its sounds slowly, one at a time ("${consonant}", then "${VOWEL_RESPELL[vowel]}"), and then the whole syllable, respelled here as "${respellItem(itemId)}". ${pronunciationNote(itemId)}`;
+  }
+  return `Say each syllable slowly, one at a time (${item.syllables.map((s) => `"${respellUnit(s)}"`).join(", ")}), and then the whole word, respelled here as "${respellItem(itemId)}". ${pronunciationNote(itemId)}`;
+}
+
+export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean }, rng: () => number = Math.random): string {
   const item = getItem(step.itemId)!;
   const what = `${kindLabel(item.kind)} "${item.text}"`;
   const head = `[APP] The child now sees the ${what} on the screen. Do these in order:`;
@@ -90,7 +116,7 @@ export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlay
   const todo: string[] = [];
   if (step.phaseStart && !opts.isRetry) todo.push(`In ONE short Swahili sentence, ${PHASE_INTRO[step.kind]}.`);
   if (!isCheckStep(step) && opts.clipExpected && !opts.clipPlayed) {
-    todo.push(`Say the sound "${spoken(step.itemId)}" clearly yourself, once.`);
+    todo.push(`Say the sound "${respellItem(step.itemId)}" clearly yourself, once. ${pronunciationNote(step.itemId)}`);
   }
 
   // "I do": Ticha models the item. Not scored, and the child is not asked to answer yet.
@@ -105,6 +131,13 @@ export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlay
     todo.push("The correct sound has just been played again. In ONE short Swahili sentence invite the child to say it together with you.");
     todo.push(`Say it yourself once, slowly, then stay silent while the child says it. ${pronunciationNote(step.itemId)}`);
     return `${head} ${todo.map((t, i) => `${i + 1}) ${t}`).join(" ")} After the child speaks, reply with ONE short, warm word of praise (for example: Vizuri!). Do NOT call report_attempt for this step.`;
+  }
+
+  // A little game with the sound. Not scored: playing with it is also practice.
+  if (step.stage === "play") {
+    todo.push(`Start a tiny playful game with the sound "${respellItem(step.itemId)}" (in ONE or TWO short, excited Swahili sentences): ${pick(PLAY_IDEAS, rng)}. ${pronunciationNote(step.itemId)}`);
+    todo.push("Then stay silent and let the child join in.");
+    return `${head} ${todo.map((t, i) => `${i + 1}) ${t}`).join(" ")} After they join in, react with delight in ONE short sentence. Do NOT call report_attempt.`;
   }
 
   if (isCheckStep(step)) {

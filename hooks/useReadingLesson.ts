@@ -12,7 +12,7 @@ import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind,
 } from "@/lib/reading/conductor";
-import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction, warmupInstruction } from "@/lib/reading/instructions";
+import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS } from "@/lib/reading/instructions";
 
 // Runs one reading lesson. The APP steers (see lib/reading/conductor.ts);
 // Ticha, through Gemini Live, speaks, listens and reports each attempt by
@@ -69,8 +69,13 @@ type Pending = "greeting" | "startStep" | "afterModel" | "afterTogether" | "afte
 // fresh session every few prompts, and straight away after any stall or fallback.
 const ROLL_EVERY_SENDS = 3;
 
-const WARMUP_WAIT_MS = 12_000;   // child does not answer the friendly question: carry on
-const TOGETHER_WAIT_MS = 15_000; // child never joins in: move on rather than wait forever
+// A breath between steps: without it the lesson moves at machine speed, and a small
+// child has no time to enjoy the praise, hear the next thing coming, or answer.
+const STEP_GAP_MS = 1_500;
+const PLAY_WAIT_MS = 20_000;     // a game with the sound: give the child longer to join in
+const WARMUP_WAIT_MS = 15_000;   // child does not answer the friendly question: carry on
+const TOGETHER_WAIT_MS = 15_000;
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)); // child never joins in: move on rather than wait forever
 
 export function useReadingLesson(options: Options) {
   const optsRef = useRef(options);
@@ -89,6 +94,8 @@ export function useReadingLesson(options: Options) {
   const spokeSincePromptRef = useRef(false);
   const sendsSinceRollRef = useRef(0);
   const needsRollRef = useRef(false);
+  const warmupIndexRef = useRef(0);    // which friendly question we are on
+  const warmupPlanRef = useRef<string[]>([]);
   const warmedUpRef = useRef(false);   // the friendly chat happens once per lesson (not again after a reconnect)
   const warmupRef = useRef(false);     // currently waiting for the child to answer the friendly question
   const togetherRef = useRef(false); // waiting for the child to say it WITH Ticha (unscored)
@@ -171,14 +178,20 @@ export function useReadingLesson(options: Options) {
   // Move on after Ticha has finished speaking. A guided step is advanced past first.
   // Between steps is the safe moment to swap in a fresh Gemini session.
   const startWarmup = () => {
-    warmedUpRef.current = true;
-    send(warmupInstruction());
+    if (!warmedUpRef.current) {
+      warmedUpRef.current = true;
+      warmupIndexRef.current = 0;
+      warmupPlanRef.current = warmupInstructions();
+    }
+    send(warmupPlanRef.current[warmupIndexRef.current]);
     warmupRef.current = true;
     if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
     togetherTimerRef.current = setTimeout(() => {
       if (!warmupRef.current) return;
       warmupRef.current = false;
+      // The child is not answering: stop chatting and start the lesson.
       optsRef.current.log("⚠️ Child did not answer the friendly question — starting the lesson");
+      warmupIndexRef.current = WARMUP_TURNS;
       proceed("afterWarmup");
     }, WARMUP_WAIT_MS);
   };
@@ -187,9 +200,20 @@ export function useReadingLesson(options: Options) {
     if ((p === "afterModel" || p === "afterTogether") && stateRef.current) {
       stateRef.current = advanceGuided(stateRef.current);
     }
-    // After the greeting comes a short friendly chat, before any learning.
-    if (p === "greeting" && !warmedUpRef.current) { startWarmup(); return; }
+    // After the greeting comes a real back-and-forth chat, before any learning.
+    if (p === "greeting" && !warmedUpRef.current) {
+      void (async () => { await sleep(STEP_GAP_MS); startWarmup(); })();
+      return;
+    }
+    if (p === "afterWarmup") {
+      warmupIndexRef.current += 1;
+      if (warmupIndexRef.current < WARMUP_TURNS) {
+        void (async () => { await sleep(STEP_GAP_MS); startWarmup(); })();
+        return;
+      }
+    }
     void (async () => {
+      await sleep(STEP_GAP_MS); // a breath before every step
       if (optsRef.current.roll && (needsRollRef.current || sendsSinceRollRef.current >= ROLL_EVERY_SENDS)) {
         const ok = await optsRef.current.roll();
         if (ok) { needsRollRef.current = false; sendsSinceRollRef.current = 0; }
@@ -245,7 +269,7 @@ export function useReadingLesson(options: Options) {
           togetherRef.current = false;
           optsRef.current.log("⚠️ Child did not join in — moving on");
           proceed("afterTogether");
-        }, TOGETHER_WAIT_MS);
+        }, step.stage === "play" ? PLAY_WAIT_MS : TOGETHER_WAIT_MS);
       }
       return;
     }

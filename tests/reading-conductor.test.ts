@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
 import { decideCheck } from "@/lib/reading/checks";
 import { CHECK_FORMS, isKnownItemId } from "@/lib/reading/curriculum";
-import { shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstruction, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
+import { greetingInstruction, shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS, respellUnit, respellItem, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
 import { SESSION_GAP_MS } from "@/lib/reading/validate";
 
 const plan = { review: ["v-a"], teach: ["v-e", "v-i"], mixed: ["v-i", "v-e", "v-a"] };
@@ -30,9 +30,10 @@ describe("buildSteps", () => {
   it("orders check, review, teach, mixed and marks first appearances", () => {
     const steps = buildSteps({ plan, check: { phase: "baseline", items: ["s-ba"] } });
     // each new item is taught in three stages: model, together, alone
-    expect(steps.map((s) => s.kind)).toEqual(["baseline", "review", "teach", "teach", "teach", "teach", "teach", "teach", "mixed", "mixed", "mixed"]);
+    // ...and a little game follows every second new item
+    expect(steps.map((s) => s.kind)).toEqual(["baseline", "review", "teach", "teach", "teach", "teach", "teach", "teach", "teach", "mixed", "mixed", "mixed"]);
     expect(steps.filter((s) => s.kind === "teach").map((s) => `${s.itemId}:${s.stage}`)).toEqual([
-      "v-e:model", "v-e:together", "v-e:alone", "v-i:model", "v-i:together", "v-i:alone",
+      "v-e:model", "v-e:together", "v-e:alone", "v-i:model", "v-i:together", "v-i:alone", "v-i:play",
     ]);
     expect(steps.find((s) => s.itemId === "v-e" && s.stage === "model")!.first).toBe(true);
     expect(steps.find((s) => s.itemId === "v-e" && s.stage === "alone")!.first).toBe(false);
@@ -216,15 +217,15 @@ describe("instructions", () => {
 
   it("modelling blends the sounds and does not ask the child to answer or report", () => {
     const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(p).toMatch(/one at a time \("b", "a"\)/);
-    expect(p).toMatch(/whole syllable "ba"/);
+    expect(p).toMatch(/one at a time \("b", then "ah"\)/);
+    expect(p).toMatch(/respelled here as "bah"/);
     expect(p).toMatch(/Do NOT ask the child to say it yet/);
     expect(p).toMatch(/Do NOT call report_attempt/);
     const word = promptInstruction({ ...model, itemId: "w-mama" }, { isRetry: false, clipPlayed: true, clipExpected: true });
     expect(word).toMatch(/each syllable slowly/);
-    expect(word).toMatch(/whole word "mama"/);
+    expect(word).toMatch(/respelled here as "mah-mah"/);
     const vowel = promptInstruction({ ...model, itemId: "v-a" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(vowel).toMatch(/sound "a" once, slowly/);
+    expect(vowel).toMatch(/sound "ah" once, slowly/);
   });
 
   it("saying together invites the child to join and is not scored", () => {
@@ -248,8 +249,8 @@ describe("instructions", () => {
 
   it("welcomes each new part of the lesson aloud, but not on a retry", () => {
     const start = { ...model, phaseStart: true };
-    expect(promptInstruction(start, { isRetry: false, clipPlayed: true, clipExpected: true })).toMatch(/learn something new/);
-    expect(promptInstruction({ ...alone, phaseStart: true }, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/learn something new/);
+    expect(promptInstruction(start, { isRetry: false, clipPlayed: true, clipExpected: true })).toMatch(/new magic sound together/);
+    expect(promptInstruction({ ...alone, phaseStart: true }, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/new magic sound together/);
     expect(promptInstruction({ ...check, phaseStart: true }, { isRetry: false, clipPlayed: false, clipExpected: false })).toMatch(/fine not to know some/);
   });
 
@@ -266,8 +267,8 @@ describe("instructions", () => {
   });
 
   it("makes Ticha say the sound herself only when a recording was expected but missing", () => {
-    expect(promptInstruction(model, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say the sound "ba" clearly yourself/);
-    expect(promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true })).not.toMatch(/Say the sound "ba" clearly yourself/);
+    expect(promptInstruction(model, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say the sound "bah" clearly yourself/);
+    expect(promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true })).not.toMatch(/clearly yourself/);
   });
 
   it("asks for the goodbye word at the end so the app can close the lesson", () => {
@@ -288,7 +289,7 @@ describe("reading system prompt", () => {
     expect(p).toMatch(/empty string/);
   });
   it("stays short (the vocabulary prompt is ~20k tokens)", () => {
-    expect(p.length).toBeLessThan(3000);
+    expect(p.length).toBeLessThan(4500);
   });
 });
 
@@ -372,54 +373,101 @@ describe("age is a starting point, not a ceiling", () => {
   });
 });
 
-describe("pronunciation guidance (Ticha said the vowel e the English way)", () => {
+describe("pronunciation (Ticha read the vowel e as the English letter name, which sounds like Swahili i)", () => {
   const model = { itemId: "v-e", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: false };
-  it("tells her exactly how each vowel sounds in Swahili", () => {
+
+  it("respells Swahili units so the model cannot read them as English letter names", () => {
+    expect(respellUnit("e")).toBe("eh");
+    expect(respellUnit("i")).toBe("ee");
+    expect(respellUnit("ba")).toBe("bah");
+    expect(respellUnit("me")).toBe("meh");
+    expect(respellUnit("so")).toBe("soh");
+    expect(respellUnit("ku")).toBe("koo");
+    expect(respellItem("w-soma")).toBe("soh-mah");
+    expect(respellItem("w-nane")).toBe("nah-neh");
+  });
+
+  it("gives every vowel an unambiguous sound", () => {
     expect(Object.keys(VOWEL_SOUND).sort()).toEqual(["a", "e", "i", "o", "u"]);
     expect(VOWEL_SOUND.e).toMatch(/eh/);
     expect(VOWEL_SOUND.e).toMatch(/pesa/);
   });
-  it("forbids the English letter name when modelling a vowel", () => {
+
+  it("asks for the respelling, not the letter, when modelling the vowel e", () => {
     const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(p).toMatch(/"eh"/);
-    expect(p).toMatch(/NEVER use the English letter name/);
+    expect(p).toMatch(/Say the sound "eh" once, slowly/);
+    expect(p).toMatch(/exactly as respelled here: "eh"/);
+    expect(p).toMatch(/never the English letter name/);
   });
-  it("also covers the vowel inside syllables and words, and the consonant sounds", () => {
+
+  it("covers the vowels inside syllables and words too", () => {
     const syl = promptInstruction({ ...model, itemId: "s-me" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(syl).toMatch(/never the English letter name/);
+    expect(syl).toMatch(/respelled here as "meh"/);
     expect(syl).toMatch(/The vowel "e" is "eh"/);
     const word = promptInstruction({ ...model, itemId: "w-nane" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(word).toMatch(/The vowel "e" is "eh"/);
+    expect(word).toMatch(/"nah-neh"/);
     expect(word).toMatch(/The vowel "a" is "ah"/);
   });
+
   it("puts the same rules in Ticha's standing prompt", () => {
     const p = getReadingSystemPrompt("Amani");
-    expect(p).toMatch(/NEVER "ee"/);
+    expect(p).toMatch(/NEVER said "ee"/);
+    expect(p).toMatch(/say EXACTLY that/);
     expect(p).toMatch(/Never say English letter names/);
   });
 });
 
 describe("a less robotic lesson", () => {
-  it("opens with a friendly question and no teaching or reporting", () => {
-    const w = warmupInstruction(() => 0);
-    expect(w).toMatch(/how they are feeling today/);
-    expect(w).toMatch(/Do NOT teach anything yet/);
-    expect(w).toMatch(/Do NOT call report_attempt/);
+  it("opens with a real three-exchange chat before any teaching", () => {
+    const w = warmupInstructions(() => 0);
+    expect(w).toHaveLength(WARMUP_TURNS);
+    expect(w[0]).toMatch(/how they are feeling today/);
+    expect(w[1]).toMatch(/React to what the child just said/);
+    expect(w[1]).toMatch(/favourite animal/);
+    expect(w[2]).toMatch(/magic sounds/);
+    expect(w[2]).toMatch(/ask if they are ready/);
+    w.forEach((line) => {
+      expect(line).toMatch(/Do NOT teach anything/);
+      expect(line).toMatch(/Do NOT call report_attempt/);
+      expect(line).toMatch(/stay silent and listen/);
+    });
   });
-  it("asks different friendly questions", () => {
-    const seen = new Set([0, 0.3, 0.6, 0.9].map((r) => warmupInstruction(() => r)));
+
+  it("asks a different fun question each time", () => {
+    const seen = new Set([0, 0.4, 0.8].map((r) => warmupInstructions(() => r)[1]));
     expect(seen.size).toBeGreaterThan(1);
   });
+
   it("varies its praise", () => {
     const step = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: false };
     const seen = new Set(PRAISES.map((_, i) => feedbackInstruction(step, "correct", { action: "next", movedOn: false }, [], () => i / PRAISES.length)));
     expect(seen.size).toBe(PRAISES.length);
     expect([...seen][0]).toMatch(/not scripted/);
   });
-  it("keeps the standing prompt about personality and short turns", () => {
+
+  it("keeps the standing prompt about a playful friend, slow pace and short turns", () => {
     const p = getReadingSystemPrompt("Amani");
     expect(p).toMatch(/cheerful, playful, patient friend/);
+    expect(p).toMatch(/NOT a classroom teacher/);
+    expect(p).toMatch(/Speak SLOWLY/);
     expect(p).toMatch(/Keep every turn short/);
+  });
+
+  it("plays a little game with the sound, unscored, and lets the child join in", () => {
+    const play = { itemId: "v-a", kind: "teach" as const, stage: "play" as const, first: false, phaseStart: false };
+    expect(isGuided(play)).toBe(true);
+    expect(shouldPlayClip(play, false)).toBe(true);
+    const p = promptInstruction(play, { isRetry: false, clipPlayed: true, clipExpected: true }, () => 0);
+    expect(p).toMatch(/tiny playful game with the sound "ah"/);
+    expect(p).toMatch(/mouse voice/);
+    expect(p).toMatch(/let the child join in/);
+    expect(p).toMatch(/Do NOT call report_attempt/);
+    expect(promptInstruction(play, { isRetry: false, clipPlayed: true, clipExpected: true }, () => 0.99)).toMatch(/clap/);
+  });
+
+  it("adds a game after every second new item, and only then", () => {
+    const steps = buildSteps({ plan: { review: [], teach: ["v-a", "v-e", "v-i", "v-o"], mixed: [] } });
+    expect(steps.filter((s) => s.stage === "play").map((s) => s.itemId)).toEqual(["v-e", "v-o"]);
   });
 });
 
@@ -428,5 +476,13 @@ describe("prompt: only report after the child has spoken", () => {
     const p = getReadingSystemPrompt("Amani");
     expect(p).toMatch(/ONLY AFTER you have actually heard the child speak/);
     expect(p).toMatch(/wait silently/);
+  });
+});
+
+describe("greeting", () => {
+  it("meets a friend first: no mention of lessons yet", () => {
+    const g = greetingInstruction("Amani");
+    expect(g).toMatch(/Amani/);
+    expect(g).toMatch(/Do NOT mention lessons or reading yet/);
   });
 });
