@@ -990,7 +990,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               if (turnCompleteAtRef.current !== endedAt) return;
               diagRef.current.stalls += 1;
               diagRef.current.stallInfo.push(turnInfo);
-              logRef.current?.(`⚠️ No reply 10s after activityEnd (${turnInfo}) — nudging Ticha`);
+              logRef.current?.(`⚠️ No reply 10s after activityEnd (${turnInfo})${isReading ? "" : " — nudging Ticha"}`);
               if (isReading || vad.speaking || !sessionRef.current || isPausedRef.current) return; // reading has its own no-report handling
               diagRef.current.nudges += 1;
               turnCompleteAtRef.current = Date.now();
@@ -1049,7 +1049,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             tools: [{
               functionDeclarations: [{
                 name: "report_attempt",
-                description: "Report exactly what you heard the child say for the item on screen. Do not judge correctness. Call exactly once per attempt, before speaking.",
+                description: "Report exactly what you heard the child say for the item on screen. Only call this AFTER the child has spoken; never call it while waiting for them. Do not judge correctness. Call once per attempt, before speaking.",
                 parameters: {
                   type: Type.OBJECT,
                   properties: { heard: { type: Type.STRING, description: "The sounds or word you actually heard, in simple Swahili spelling. Empty string if you heard nothing or are unsure." } },

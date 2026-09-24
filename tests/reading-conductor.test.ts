@@ -422,3 +422,11 @@ describe("a less robotic lesson", () => {
     expect(p).toMatch(/Keep every turn short/);
   });
 });
+
+describe("prompt: only report after the child has spoken", () => {
+  it("tells the model not to call the function while waiting", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/ONLY AFTER you have actually heard the child speak/);
+    expect(p).toMatch(/wait silently/);
+  });
+});

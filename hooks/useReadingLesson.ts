@@ -55,7 +55,11 @@ function newSessionId(): string {
 export type PrepareResult = { ok: true } | { needsConsent: true } | { error: string };
 
 const NO_REPORT_MS = 9_000;    // child finished speaking but Ticha never reported
-const NO_AUDIO_FALLBACK_MS = 7_000; // Ticha never spoke the feedback: carry on anyway
+const NO_AUDIO_FALLBACK_MS = 8_000; // Ticha never started speaking: carry on anyway
+// Once she IS speaking, only step in if the audio goes quiet AND her turn never ends.
+// (A single timer from the moment of sending fired mid-sentence and started the next
+// step over her voice.)
+const SPEAKING_IDLE_MS = 15_000;
 
 // What we are waiting for Ticha to finish saying before moving on.
 //   afterModel / afterTogether: a guided (unscored) step just spoken -> advance past it.
@@ -194,9 +198,9 @@ export function useReadingLesson(options: Options) {
     })();
   };
 
-  const armFallback = () => {
+  const armFallback = (ms: number = NO_AUDIO_FALLBACK_MS, resetAudioFlag = true) => {
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-    audioSincePendingRef.current = false;
+    if (resetAudioFlag) audioSincePendingRef.current = false;
     fallbackTimerRef.current = setTimeout(() => {
       const p = pendingRef.current;
       if (p && p !== "end") {
@@ -205,7 +209,7 @@ export function useReadingLesson(options: Options) {
         pendingRef.current = null;
         proceed(p);
       }
-    }, NO_AUDIO_FALLBACK_MS);
+    }, ms);
   };
 
   const startStep = useCallback(async () => {
@@ -304,7 +308,18 @@ export function useReadingLesson(options: Options) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onModelAudio = useCallback(() => { audioSincePendingRef.current = true; }, []);
+  const lastRearmRef = useRef(0);
+  const onModelAudio = useCallback(() => {
+    audioSincePendingRef.current = true;
+    // She is speaking: swap the short "never started" timer for a long "gone quiet" one,
+    // pushed back as audio keeps arriving (throttled: chunks come every few ms).
+    const now = Date.now();
+    if (pendingRef.current && pendingRef.current !== "end" && fallbackTimerRef.current && now - lastRearmRef.current > 400) {
+      lastRearmRef.current = now;
+      armFallback(SPEAKING_IDLE_MS, false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Ticha finished a spoken turn. If we were waiting for her feedback, move on. */
   const onTurnComplete = useCallback(() => {
@@ -320,6 +335,14 @@ export function useReadingLesson(options: Options) {
 
   /** The child stopped speaking. If Ticha never reports, count it as unscored. */
   const onChildTurnEnded = useCallback(() => {
+    // The child joined in while Ticha was still modelling the item: count that as
+    // "we do" (they are saying it with her), so go straight on once she has replied.
+    if (pendingRef.current === "afterModel" && stateRef.current) {
+      stateRef.current = advanceGuided(stateRef.current); // model -> together
+      pendingRef.current = "afterTogether";               // ... and proceed() moves on past together
+      armFallback();
+      return;
+    }
     // Friendly chat: the child has answered. Let Ticha react, then start the lesson.
     if (warmupRef.current) {
       warmupRef.current = false;
