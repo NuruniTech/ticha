@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
 import { decideCheck } from "@/lib/reading/checks";
 import { CHECK_FORMS, isKnownItemId } from "@/lib/reading/curriculum";
-import { shouldPlayClip, promptInstruction, feedbackInstruction } from "@/lib/reading/instructions";
+import { shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction } from "@/lib/reading/instructions";
 import { SESSION_GAP_MS } from "@/lib/reading/validate";
 
 const plan = { review: ["v-a"], teach: ["v-e", "v-i"], mixed: ["v-i", "v-e", "v-a"] };
@@ -289,5 +289,56 @@ describe("reading system prompt", () => {
   });
   it("stays short (the vocabulary prompt is ~20k tokens)", () => {
     expect(p.length).toBeLessThan(3000);
+  });
+});
+
+import { readingTrack, trackKinds, EARLY_TRACK_MAX_AGE } from "@/lib/reading/track";
+import { planLesson } from "@/lib/reading/lesson";
+import { decideCheckForTrack } from "@/lib/reading/checks";
+import { READING_ITEMS, getItem } from "@/lib/reading/curriculum";
+
+describe("reading tracks by age", () => {
+  const mastered = (n = 0) => [
+    { sessionId: "s1", outcome: "correct" as const, at: n + 1 },
+    { sessionId: "s1", outcome: "correct" as const, at: n + 2 },
+    { sessionId: "s2", outcome: "correct" as const, at: n + 3 },
+  ];
+
+  it("gives ages 4 and under the early track, 5+ or unknown the full track", () => {
+    expect(readingTrack(3)).toBe("early");
+    expect(readingTrack(EARLY_TRACK_MAX_AGE)).toBe("early");
+    expect(readingTrack(5)).toBe("full");
+    expect(readingTrack(7)).toBe("full");
+    expect(readingTrack(undefined)).toBe("full");
+    expect(readingTrack(null)).toBe("full");
+    expect(readingTrack(NaN)).toBe("full");
+  });
+
+  it("limits the early track to the five vowels", () => {
+    expect(trackKinds("early")).toEqual(["vowel"]);
+    const plan = planLesson({}, { kinds: trackKinds("early") });
+    expect(plan.teach).toEqual(["v-a", "v-e", "v-i", "v-o", "v-u"]);
+  });
+
+  it("never offers syllables or words to the early track, even when every vowel is mastered", () => {
+    const all: Record<string, ReturnType<typeof mastered>> = {};
+    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i, idx) => { all[i.id] = mastered(idx * 10); });
+    const plan = planLesson(all, { kinds: trackKinds("early") });
+    expect(plan.teach).toEqual([]);
+    [...plan.review, ...plan.teach, ...plan.mixed].forEach((id) => expect(getItem(id)!.kind).toBe("vowel"));
+  });
+
+  it("keeps syllables in the full track and gives the early track no check", () => {
+    const vowels: Record<string, ReturnType<typeof mastered>> = {};
+    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i, idx) => { vowels[i.id] = mastered(idx * 10); });
+    expect(planLesson(vowels, { kinds: trackKinds("full") }).teach[0]).toBe("s-ba");
+    expect(decideCheckForTrack("early", [])).toBeNull();
+    expect(decideCheckForTrack("full", [])!.phase).toBe("baseline");
+  });
+});
+
+describe("empty lesson", () => {
+  it("says goodbye with the closing word so the app can end the session", () => {
+    expect(nothingLeftInstruction).toMatch(/tutaonana/);
   });
 });

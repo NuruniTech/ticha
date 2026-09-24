@@ -2,7 +2,7 @@
 // same plan out — which keeps it testable and keeps the app, not the AI, in
 // charge of progression.
 
-import { READING_ITEMS, getItem, isKnownItemId } from "./curriculum";
+import { READING_ITEMS, getItem, isKnownItemId, type ReadingItemKind } from "./curriculum";
 import { correctCount, itemState, lastAttemptAt, type Attempt } from "./mastery";
 
 export interface LessonPlan {
@@ -17,9 +17,10 @@ const MAX_TEACH_VOWELS = 5; // the five vowels are taught together, as one small
 const MAX_LEARNING_AT_ONCE = 6; // do not pile on new items while many are shaky
 const WORD_PREREQ_CORRECT = 2;  // a word opens when each of its syllables has this many correct
 
-export function planLesson(attemptsByItem: Record<string, Attempt[]>): LessonPlan {
+export function planLesson(attemptsByItem: Record<string, Attempt[]>, opts: { kinds?: ReadingItemKind[] } = {}): LessonPlan {
   const attempts = (id: string) => attemptsByItem[id] ?? [];
-  const known = READING_ITEMS.filter((i) => isKnownItemId(i.id));
+  // `kinds` limits the pool by age track (see track.ts); by default everything is available.
+  const known = READING_ITEMS.filter((i) => isKnownItemId(i.id) && (!opts.kinds || opts.kinds.includes(i.kind)));
 
   const mastered = known.filter((i) => itemState(attempts(i.id)) === "mastered");
   const learning = known.filter((i) => itemState(attempts(i.id)) === "learning");

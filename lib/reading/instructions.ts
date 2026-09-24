@@ -14,6 +14,10 @@ import type { AttemptOutcome } from "./mastery";
 const kindLabel = (kind: string) => (kind === "vowel" ? "letter" : kind);
 const spoken = (itemId: string) => getItem(itemId)!.syllables.join("-");
 
+// Used if a lesson somehow has nothing left to practise, so it ends kindly instead of hanging.
+export const nothingLeftInstruction =
+  "[APP] There is nothing more to practise today. In TWO short Swahili sentences, praise the child for their work and say goodbye, including the word \"tutaonana\".";
+
 export const greetingInstruction = (childName: string) =>
   `[APP] Greet ${childName} warmly in ONE short Swahili sentence and say you will learn to read together today. Nothing else. Then stay silent until the next [APP] message.`;
 

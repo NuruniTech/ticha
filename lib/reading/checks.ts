@@ -3,6 +3,7 @@
 
 import { CHECK_FORMS } from "./curriculum";
 import { countServerSessions } from "./validate";
+import type { ReadingTrack } from "./track";
 
 export interface StoredRow { item_id: string; outcome: string; phase: string; created_at: string }
 
@@ -35,4 +36,9 @@ export function decideCheck(rows: StoredRow[]): CheckDue | null {
   return sessions >= CHECK_EVERY_N_SESSIONS * (completedRounds + 1)
     ? { phase: "checkpoint", items: [...CHECK_FORMS.B] }
     : null;
+}
+
+/** The check for a child on this track. The early track has no formal check. */
+export function decideCheckForTrack(track: ReadingTrack, rows: StoredRow[]): CheckDue | null {
+  return track === "early" ? null : decideCheck(rows);
 }

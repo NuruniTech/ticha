@@ -409,6 +409,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const reading = useReadingLesson({
     childId,
     childName,
+    childAge,
     sendToModel: (text) => {
       sessionRef.current?.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true });
     },

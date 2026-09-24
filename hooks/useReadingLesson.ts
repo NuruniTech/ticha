@@ -6,12 +6,13 @@ import { getItem, type ReadingItem } from "@/lib/reading/curriculum";
 import { planLesson } from "@/lib/reading/lesson";
 import { judgeHeard } from "@/lib/reading/judge";
 import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
-import { decideCheck, type StoredRow } from "@/lib/reading/checks";
+import { decideCheckForTrack, type StoredRow } from "@/lib/reading/checks";
+import { readingTrack, trackKinds } from "@/lib/reading/track";
 import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind,
 } from "@/lib/reading/conductor";
-import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip } from "@/lib/reading/instructions";
+import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction } from "@/lib/reading/instructions";
 
 // Runs one reading lesson. The APP steers (see lib/reading/conductor.ts);
 // Ticha, through Gemini Live, speaks, listens and reports each attempt by
@@ -34,6 +35,7 @@ export interface ReadingCard {
 interface Options {
   childId: string | null;
   childName: string;
+  childAge?: number;
   sendToModel: (text: string) => void;
   playClip: (url: string) => Promise<boolean>; // false when the recording is unavailable
   onCorrect: () => void;
@@ -112,13 +114,14 @@ export function useReadingLesson(options: Options) {
       (byItem[r.item_id] ??= []).push({ sessionId: r.session_id, outcome: r.outcome as AttemptOutcome, at: Date.parse(r.created_at) });
     }
 
-    const check = decideCheck(stored);
-    const steps = buildSteps({ plan: planLesson(byItem), check: check ?? undefined });
+    const track = readingTrack(optsRef.current.childAge);
+    const check = decideCheckForTrack(track, stored);
+    const steps = buildSteps({ plan: planLesson(byItem, { kinds: trackKinds(track) }), check: check ?? undefined });
     stateRef.current = startConductor(steps);
     sessionIdRef.current = newSessionId();
     pendingRef.current = null;
     expectingRef.current = false;
-    log(`📖 Reading lesson ready: ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
+    log(`📖 Reading lesson ready (${track} track): ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
     return { ok: true };
   }, []);
 
@@ -169,7 +172,11 @@ export function useReadingLesson(options: Options) {
   const startStep = useCallback(async () => {
     const st = stateRef.current;
     const step = st && currentStep(st);
-    if (!st || !step) return;
+    if (!st || !step) {
+      // Nothing (left) to practise: say goodbye so the lesson ends instead of hanging.
+      if (st?.done) { pendingRef.current = "end"; optsRef.current.sendToModel(nothingLeftInstruction); }
+      return;
+    }
     const item = getItem(step.itemId)!;
     const isRetry = st.tries > 0;
     setCard({ item, index: st.index, total: st.steps.length, kind: step.kind, canReplay: !isCheckStep(step) });
