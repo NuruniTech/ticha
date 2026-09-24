@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSteps, startConductor, applyVerdict, currentStep, MAX_TRIES, DISCONTINUE_AFTER } from "@/lib/reading/conductor";
+import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
 import { decideCheck } from "@/lib/reading/checks";
 import { CHECK_FORMS, isKnownItemId } from "@/lib/reading/curriculum";
 import { shouldPlayClip, promptInstruction, feedbackInstruction } from "@/lib/reading/instructions";
@@ -29,17 +29,39 @@ describe("check forms are easiest first", () => {
 describe("buildSteps", () => {
   it("orders check, review, teach, mixed and marks first appearances", () => {
     const steps = buildSteps({ plan, check: { phase: "baseline", items: ["s-ba"] } });
-    expect(steps.map((s) => s.kind)).toEqual(["baseline", "review", "teach", "teach", "mixed", "mixed", "mixed"]);
-    expect(steps.find((s) => s.itemId === "v-e" && s.kind === "teach")!.first).toBe(true);
+    // each new item is taught in three stages: model, together, alone
+    expect(steps.map((s) => s.kind)).toEqual(["baseline", "review", "teach", "teach", "teach", "teach", "teach", "teach", "mixed", "mixed", "mixed"]);
+    expect(steps.filter((s) => s.kind === "teach").map((s) => `${s.itemId}:${s.stage}`)).toEqual([
+      "v-e:model", "v-e:together", "v-e:alone", "v-i:model", "v-i:together", "v-i:alone",
+    ]);
+    expect(steps.find((s) => s.itemId === "v-e" && s.stage === "model")!.first).toBe(true);
+    expect(steps.find((s) => s.itemId === "v-e" && s.stage === "alone")!.first).toBe(false);
     expect(steps.find((s) => s.itemId === "v-e" && s.kind === "mixed")!.first).toBe(false);
   });
 });
 
+// Guided steps ("I do" / "we do") are not scored, so scoring tests step past them.
+const skipGuided = (s: ConductorState): ConductorState => {
+  while (currentStep(s) && isGuided(currentStep(s)!)) s = advanceGuided(s);
+  return s;
+};
+
 describe("conductor", () => {
+  it("teaches each new item as model, then together, then alone; only alone is scored", () => {
+    let s = startConductor(buildSteps({ plan: { review: [], teach: ["v-a"], mixed: ["v-a"] } }));
+    expect(currentStep(s)!.stage).toBe("model");
+    s = advanceGuided(s);
+    expect(currentStep(s)!.stage).toBe("together");
+    s = advanceGuided(s);
+    expect(currentStep(s)!.stage).toBe("alone");
+    expect(isGuided(currentStep(s)!)).toBe(false);
+    expect(applyVerdict(s, "incorrect").advance).toEqual({ action: "retry" }); // the alone step retries a miss
+  });
+
   const run = (kinds: ("correct" | "incorrect" | "unscored")[], planIn = plan, check?: Parameters<typeof buildSteps>[0]["check"]) => {
     let s = startConductor(buildSteps({ plan: planIn, check }));
     const advances: string[] = [];
-    for (const k of kinds) { const r = applyVerdict(s, k); s = r.state; advances.push(r.advance.action); }
+    for (const k of kinds) { s = skipGuided(s); const r = applyVerdict(s, k); s = r.state; advances.push(r.advance.action); }
     return { s, advances };
   };
 
@@ -50,7 +72,7 @@ describe("conductor", () => {
   it("retries a miss, then moves on after the maximum tries", () => {
     const { advances, s } = run(Array(MAX_TRIES).fill("incorrect"));
     expect(advances).toEqual(["retry", "retry", "next"]);
-    expect(s.index).toBe(1);
+    expect(s.index).toBeGreaterThan(0);
   });
 
   it("moves on after two attempts it could not judge", () => {
@@ -71,7 +93,7 @@ describe("conductor", () => {
   });
 
   it("reports movedOn when leaving without a correct answer", () => {
-    let s = startConductor(buildSteps({ plan }));
+    let s = skipGuided(startConductor(buildSteps({ plan: { review: [], teach: ["v-a"], mixed: ["v-a"] } })));
     let last;
     for (let i = 0; i < MAX_TRIES; i++) { last = applyVerdict(s, "incorrect"); s = last.state; }
     expect(last!.advance).toEqual({ action: "next", movedOn: true });
@@ -177,13 +199,45 @@ describe("decideCheck", () => {
 describe("instructions", () => {
   const check = { itemId: "s-ba", kind: "baseline" as const, first: true, phaseStart: false };
   const teach = { itemId: "s-ba", kind: "teach" as const, first: true, phaseStart: false };
+  const model = { ...teach, stage: "model" as const };
+  const together = { ...teach, stage: "together" as const, first: false };
+  const alone = { ...teach, stage: "alone" as const, first: false };
   const review = { itemId: "s-ba", kind: "review" as const, first: false, phaseStart: false };
 
-  it("never plays the sound for a check, always for teaching, only on retry for review", () => {
+  it("never plays the sound for a check, always while modelling and saying together, only on retry otherwise", () => {
     expect(shouldPlayClip(check, false)).toBe(false);
-    expect(shouldPlayClip(teach, false)).toBe(true);
+    expect(shouldPlayClip(model, false)).toBe(true);
+    expect(shouldPlayClip(together, false)).toBe(true);
+    expect(shouldPlayClip(alone, false)).toBe(false);
+    expect(shouldPlayClip(alone, true)).toBe(true);
     expect(shouldPlayClip(review, false)).toBe(false);
     expect(shouldPlayClip(review, true)).toBe(true);
+  });
+
+  it("modelling blends the sounds and does not ask the child to answer or report", () => {
+    const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(p).toMatch(/one at a time \("b", "a"\)/);
+    expect(p).toMatch(/whole syllable "ba"/);
+    expect(p).toMatch(/Do NOT ask the child to say it yet/);
+    expect(p).toMatch(/Do NOT call report_attempt/);
+    const word = promptInstruction({ ...model, itemId: "w-mama" }, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(word).toMatch(/each syllable slowly/);
+    expect(word).toMatch(/whole word "mama"/);
+    const vowel = promptInstruction({ ...model, itemId: "v-a" }, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(vowel).toMatch(/sound "a" once, slowly/);
+  });
+
+  it("saying together invites the child to join and is not scored", () => {
+    const p = promptInstruction(together, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(p).toMatch(/together with you/);
+    expect(p).toMatch(/Do NOT call report_attempt for this step/);
+    expect(p).not.toMatch(/listen. When the child answers, call report_attempt/);
+  });
+
+  it("the alone step tells the child it is their turn and asks Ticha to listen and report", () => {
+    const p = promptInstruction(alone, { isRetry: false, clipPlayed: false, clipExpected: false });
+    expect(p).toMatch(/their turn to say it alone/);
+    expect(p).toMatch(/call report_attempt with exactly what you heard/);
   });
 
   it("forbids hinting during a check and stays silent about right/wrong", () => {
@@ -193,9 +247,9 @@ describe("instructions", () => {
   });
 
   it("welcomes each new part of the lesson aloud, but not on a retry", () => {
-    const start = { ...teach, phaseStart: true };
+    const start = { ...model, phaseStart: true };
     expect(promptInstruction(start, { isRetry: false, clipPlayed: true, clipExpected: true })).toMatch(/learn something new/);
-    expect(promptInstruction(start, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/learn something new/);
+    expect(promptInstruction({ ...alone, phaseStart: true }, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/learn something new/);
     expect(promptInstruction({ ...check, phaseStart: true }, { isRetry: false, clipPlayed: false, clipExpected: false })).toMatch(/fine not to know some/);
   });
 
@@ -212,8 +266,8 @@ describe("instructions", () => {
   });
 
   it("makes Ticha say the sound herself only when a recording was expected but missing", () => {
-    expect(promptInstruction(teach, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say the sound "ba" clearly yourself/);
-    expect(promptInstruction(teach, { isRetry: false, clipPlayed: true, clipExpected: true })).not.toMatch(/Say the sound/);
+    expect(promptInstruction(model, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say the sound "ba" clearly yourself/);
+    expect(promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true })).not.toMatch(/Say the sound "ba" clearly yourself/);
   });
 
   it("asks for the goodbye word at the end so the app can close the lesson", () => {

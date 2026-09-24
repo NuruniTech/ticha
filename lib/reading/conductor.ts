@@ -7,9 +7,16 @@ import type { AttemptOutcome } from "./mastery";
 
 export type StepKind = "baseline" | "checkpoint" | "review" | "teach" | "mixed";
 
+// How a NEW item is taught, following the teacher-guide routine "I do, we do, you do":
+//   model    - Ticha shows the item and blends its sounds (not scored)
+//   together - child and Ticha say it together (not scored)
+//   alone    - the child says it alone (the only scored, retried step)
+export type Stage = "model" | "together" | "alone";
+
 export interface Step {
   itemId: string;
   kind: StepKind;
+  stage?: Stage;
   first: boolean;      // first appearance of this item in the lesson
   phaseStart: boolean; // first step of a new part of the lesson (welcome the new part aloud)
 }
@@ -37,18 +44,23 @@ export type Advance =
   | { action: "end"; movedOn: boolean; discontinued?: boolean };
 
 export const isCheckStep = (s: Step) => s.kind === "baseline" || s.kind === "checkpoint";
+export const isGuided = (s: Step) => s.stage === "model" || s.stage === "together";
 
 export function buildSteps(opts: { check?: { phase: "baseline" | "checkpoint"; items: string[] }; plan: LessonPlan }): Step[] {
   const steps: Step[] = [];
   const seen = new Set<string>();
-  const add = (itemId: string, kind: StepKind) => {
+  const add = (itemId: string, kind: StepKind, stage?: Stage) => {
     const phaseStart = steps.length === 0 || steps[steps.length - 1].kind !== kind;
-    steps.push({ itemId, kind, first: !seen.has(itemId), phaseStart });
+    steps.push({ itemId, kind, ...(stage ? { stage } : {}), first: !seen.has(itemId), phaseStart });
     seen.add(itemId);
   };
   if (opts.check) opts.check.items.forEach((id) => add(id, opts.check!.phase));
   opts.plan.review.forEach((id) => add(id, "review"));
-  opts.plan.teach.forEach((id) => add(id, "teach"));
+  opts.plan.teach.forEach((id) => {
+    add(id, "teach", "model");
+    add(id, "teach", "together");
+    add(id, "teach", "alone");
+  });
   opts.plan.mixed.forEach((id) => add(id, "mixed"));
   return steps;
 }
@@ -59,9 +71,19 @@ export function startConductor(steps: Step[]): ConductorState {
 
 export const currentStep = (s: ConductorState): Step | null => (s.done ? null : s.steps[s.index] ?? null);
 
+/** Moves past a guided (unscored) step. */
+export function advanceGuided(state: ConductorState): ConductorState {
+  const nextIndex = state.index + 1;
+  return { ...state, index: nextIndex, tries: 0, unscored: 0, done: nextIndex >= state.steps.length };
+}
+
 export function applyVerdict(state: ConductorState, outcome: AttemptOutcome): { state: ConductorState; advance: Advance } {
   const step = currentStep(state);
   if (!step) return { state, advance: { action: "end", movedOn: false } };
+  if (isGuided(step)) {
+    const next = advanceGuided(state);
+    return { state: next, advance: next.done ? { action: "end", movedOn: false } : { action: "next", movedOn: false } };
+  }
 
   const tries = state.tries + 1;
   const unscored = state.unscored + (outcome === "unscored" ? 1 : 0);

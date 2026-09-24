@@ -8,7 +8,7 @@ import { judgeHeard } from "@/lib/reading/judge";
 import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
 import { decideCheck, type StoredRow } from "@/lib/reading/checks";
 import {
-  buildSteps, startConductor, applyVerdict, currentStep, isCheckStep,
+  buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind,
 } from "@/lib/reading/conductor";
 import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip } from "@/lib/reading/instructions";
@@ -54,7 +54,11 @@ export type PrepareResult = { ok: true } | { needsConsent: true } | { error: str
 const NO_REPORT_MS = 9_000;    // child finished speaking but Ticha never reported
 const NO_AUDIO_FALLBACK_MS = 7_000; // Ticha never spoke the feedback: carry on anyway
 
-type Pending = "greeting" | "startStep" | "end" | null;
+// What we are waiting for Ticha to finish saying before moving on.
+//   afterModel / afterTogether: a guided (unscored) step just spoken -> advance past it.
+type Pending = "greeting" | "startStep" | "afterModel" | "afterTogether" | "end" | null;
+
+const TOGETHER_WAIT_MS = 15_000; // child never joins in: move on rather than wait forever
 
 export function useReadingLesson(options: Options) {
   const optsRef = useRef(options);
@@ -71,6 +75,8 @@ export function useReadingLesson(options: Options) {
   // the current prompt. A report without it is premature: the model may call the
   // function straight after asking, before the child has said anything.
   const spokeSincePromptRef = useRef(false);
+  const togetherRef = useRef(false); // waiting for the child to say it WITH Ticha (unscored)
+  const togetherTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const promptSentAtRef = useRef(0);
   const reportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,7 +85,8 @@ export function useReadingLesson(options: Options) {
   const clearTimers = () => {
     if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-    reportTimerRef.current = fallbackTimerRef.current = null;
+    if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
+    reportTimerRef.current = fallbackTimerRef.current = togetherTimerRef.current = null;
   };
   useEffect(() => clearTimers, []);
 
@@ -138,14 +145,23 @@ export function useReadingLesson(options: Options) {
       .catch(() => { setTimeout(() => { send().catch(() => log("⚠️ attempt not saved (network)")); }, 2000); });
   }, []);
 
+  // Move on after Ticha has finished speaking. A guided step is advanced past first.
+  const proceed = (p: Exclude<Pending, "end" | null>) => {
+    if ((p === "afterModel" || p === "afterTogether") && stateRef.current) {
+      stateRef.current = advanceGuided(stateRef.current);
+    }
+    void startStep();
+  };
+
   const armFallback = () => {
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
     audioSincePendingRef.current = false;
     fallbackTimerRef.current = setTimeout(() => {
-      if (pendingRef.current === "greeting" || pendingRef.current === "startStep") {
+      const p = pendingRef.current;
+      if (p && p !== "end") {
         optsRef.current.log("⚠️ No feedback audio — starting the next step anyway");
         pendingRef.current = null;
-        void startStep();
+        proceed(p);
       }
     }, NO_AUDIO_FALLBACK_MS);
   };
@@ -162,10 +178,34 @@ export function useReadingLesson(options: Options) {
     const clipPlayed = clipExpected ? await optsRef.current.playClip(item.audio) : false;
     if (clipExpected && !clipPlayed) optsRef.current.log(`🔇 no recording for ${item.id} — Ticha says it instead`);
 
+    const instruction = promptInstruction(step, { isRetry, clipPlayed, clipExpected });
+
+    // Guided steps ("I do" / "we do") are not scored: nothing is reported.
+    if (isGuided(step)) {
+      expectingRef.current = false;
+      optsRef.current.sendToModel(instruction);
+      if (step.stage === "model") {
+        pendingRef.current = "afterModel";
+        armFallback();
+      } else {
+        togetherRef.current = true;
+        if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
+        togetherTimerRef.current = setTimeout(() => {
+          if (!togetherRef.current) return;
+          togetherRef.current = false;
+          optsRef.current.log("⚠️ Child did not join in — moving on");
+          proceed("afterTogether");
+        }, TOGETHER_WAIT_MS);
+      }
+      return;
+    }
+
     expectingRef.current = true;
     spokeSincePromptRef.current = false;
     promptSentAtRef.current = Date.now();
-    optsRef.current.sendToModel(promptInstruction(step, { isRetry, clipPlayed, clipExpected }));
+    optsRef.current.sendToModel(instruction);
+  // proceed/armFallback are stable, refs-only helpers
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Records the verdict and returns the instruction Ticha should follow next,
@@ -224,15 +264,24 @@ export function useReadingLesson(options: Options) {
   const onTurnComplete = useCallback(() => {
     const p = pendingRef.current;
     if (p === "end") { pendingRef.current = null; return; }
-    if ((p === "greeting" || p === "startStep") && audioSincePendingRef.current) {
+    if (p && audioSincePendingRef.current) {
       pendingRef.current = null;
       if (fallbackTimerRef.current) { clearTimeout(fallbackTimerRef.current); fallbackTimerRef.current = null; }
-      void startStep();
+      proceed(p);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startStep]);
 
   /** The child stopped speaking. If Ticha never reports, count it as unscored. */
   const onChildTurnEnded = useCallback(() => {
+    // "We do": the child has joined in. Let Ticha's brief praise finish, then go on.
+    if (togetherRef.current) {
+      togetherRef.current = false;
+      if (togetherTimerRef.current) { clearTimeout(togetherTimerRef.current); togetherTimerRef.current = null; }
+      pendingRef.current = "afterTogether";
+      armFallback();
+      return;
+    }
     if (!expectingRef.current) return;
     spokeSincePromptRef.current = true;
     if (reportTimerRef.current) clearTimeout(reportTimerRef.current);

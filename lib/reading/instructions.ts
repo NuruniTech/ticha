@@ -7,7 +7,7 @@
 // together, and a goodbye that names what was learned.
 
 import { getItem } from "./curriculum";
-import { isCheckStep, type Step, type StepKind } from "./conductor";
+import { isCheckStep, isGuided, type Step, type StepKind } from "./conductor";
 import type { Advance } from "./conductor";
 import type { AttemptOutcome } from "./mastery";
 
@@ -28,14 +28,26 @@ const PHASE_INTRO: Record<StepKind, string> = {
 
 // Should the recorded sound play before this attempt?
 export function shouldPlayClip(step: Step, isRetry: boolean): boolean {
-  if (isCheckStep(step)) return false;           // a check must not give the answer away
-  if (step.kind === "teach") return true;        // introduce and re-play
-  return isRetry;                                // review/mixed: only as help after a miss
+  if (isCheckStep(step)) return false;   // a check must not give the answer away
+  if (isGuided(step)) return true;       // modelling and saying together: always play it
+  return isRetry;                        // alone / review / mixed: only as help after a miss
+}
+
+// The separate sounds of an item, for blending ("b" + "a" -> "ba"; "ma" + "ma" -> "mama").
+function blendingLine(itemId: string): string {
+  const item = getItem(itemId)!;
+  if (item.kind === "vowel") return `Say the sound "${item.text}" once, slowly.`;
+  if (item.kind === "syllable") {
+    const [consonant, ...rest] = item.text.split("");
+    return `Say its sounds slowly, one at a time ("${consonant}", "${rest.join("")}"), and then the whole syllable "${item.text}".`;
+  }
+  return `Say each syllable slowly, one at a time (${item.syllables.map((s) => `"${s}"`).join(", ")}), and then the whole word "${item.text}".`;
 }
 
 export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean }): string {
   const item = getItem(step.itemId)!;
-  const head = `[APP] The child now sees the ${kindLabel(item.kind)} "${item.text}" on the screen. Do these in order:`;
+  const what = `${kindLabel(item.kind)} "${item.text}"`;
+  const head = `[APP] The child now sees the ${what} on the screen. Do these in order:`;
   const listen = "Then stay completely silent and listen. When the child answers, call report_attempt with exactly what you heard.";
 
   const todo: string[] = [];
@@ -44,16 +56,30 @@ export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlay
     todo.push(`Say the sound "${spoken(step.itemId)}" clearly yourself, once.`);
   }
 
+  // "I do": Ticha models the item. Not scored, and the child is not asked to answer yet.
+  if (step.stage === "model") {
+    todo.push(`The correct sound has just been played. In ONE short Swahili sentence say this is the ${kindLabel(item.kind)} "${item.text}".`);
+    todo.push(blendingLine(step.itemId));
+    return `${head} ${todo.map((t, i) => `${i + 1}) ${t}`).join(" ")} Then stop and stay silent. Do NOT ask the child to say it yet. Do NOT call report_attempt.`;
+  }
+
+  // "We do": child and Ticha say it together. Not scored.
+  if (step.stage === "together") {
+    todo.push("The correct sound has just been played again. In ONE short Swahili sentence invite the child to say it together with you.");
+    todo.push("Say it yourself once, slowly, then stay silent while the child says it.");
+    return `${head} ${todo.map((t, i) => `${i + 1}) ${t}`).join(" ")} After the child speaks, reply with ONE short, warm word of praise (for example: Vizuri!). Do NOT call report_attempt for this step.`;
+  }
+
   if (isCheckStep(step)) {
     todo.push("In ONE short Swahili sentence ask them to read it out loud. Do NOT say it or hint at it.");
   } else if (opts.isRetry) {
     todo.push("In ONE short Swahili sentence ask them to try once more (the correct sound has just been played again).");
-  } else if (step.kind === "teach" && step.first) {
-    todo.push(`In ONE short Swahili sentence tell them this is "${item.text}" (the correct sound has just been played) and ask them to say it now.`);
+  } else if (step.kind === "teach") {
+    // "You do": the child alone.
+    todo.push("In ONE short Swahili sentence tell them it is now their turn to say it alone.");
   } else {
     todo.push("In ONE short Swahili sentence ask them to read it out loud.");
   }
-
   return `${head} ${todo.map((t, i) => `${i + 1}) ${t}`).join(" ")} ${listen}`;
 }
 
