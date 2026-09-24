@@ -11,6 +11,7 @@ import FluentEmoji from "./FluentEmoji";
 import LottieEmoji from "./LottieEmoji";
 import { getSystemPrompt, getWordBatch, getLessonLevel } from "@/lib/lessonPrompt";
 import { getReadingSystemPrompt } from "@/lib/reading/prompt";
+import { StreamResampler } from "@/lib/audio/resample";
 import { useReadingLesson } from "@/hooks/useReadingLesson";
 import ReadingCard from "./ReadingCard";
 import { getAnimatedUrl, getFluentUrl } from "@/lib/fluentEmoji";
@@ -140,6 +141,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // detects speech itself and sends activityStart/activityEnd. Hands-free.
   const manualTurnRef    = useRef(false);
   const readingApiRef    = useRef<ReturnType<typeof useReadingLesson> | null>(null);
+  // Resamples Ticha's 24 kHz voice to the device rate as ONE continuous stream (see lib/audio/resample.ts).
+  const resamplerRef       = useRef<StreamResampler | null>(null);
+  // The continuous resampler is unverified by ear on real devices, so it is on for
+  // the reading lesson only; add &resample=1 to try it in the vocabulary tutor.
+  // (Per the handover: never ship an unverified audio change to everyone.)
+  const resampleFlagRef    = useRef(false);
   // "Rolling" to a fresh Gemini session: the native-audio model gets slower and
   // stalls the longer one session runs (measured: replies 1.3s -> 6.8s -> 8.5s, then
   // a 45s silence), so between lesson steps we quietly open a new session and swap
@@ -266,6 +273,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       const q = new URLSearchParams(window.location.search);
       if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
       if (q.get("vad") === "low") vadProfileRef.current = "low";
+      if (q.get("resample") === "1") resampleFlagRef.current = true;
       // Client-driven turns are the default (server VAD stalled ~20 s per reply).
       // &turn=server restores Google's automatic detection for comparison.
       manualTurnRef.current = q.get("turn") !== "server";
@@ -315,8 +323,19 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     const ctx = playCtxRef.current;
     if (!ctx || isPausedRef.current) return;
 
-    const buf = ctx.createBuffer(1, chunk.length, 24000);
-    buf.copyToChannel(chunk, 0);
+    // Resample ourselves, continuously across chunks. Handing each small 24 kHz chunk
+    // to the browser as its own buffer made it resample every chunk in isolation,
+    // which left a click at every join (the "scratching" in Ticha's voice).
+    let samples: Float32Array<ArrayBuffer> = chunk;
+    let rate = 24000;
+    if (ctx.sampleRate !== 24000 && (isReading || resampleFlagRef.current)) {
+      resamplerRef.current ??= new StreamResampler(24000, ctx.sampleRate);
+      samples = resamplerRef.current.process(chunk);
+      rate = ctx.sampleRate;
+    }
+    if (samples.length === 0) return;
+    const buf = ctx.createBuffer(1, samples.length, rate);
+    buf.copyToChannel(samples, 0);
     const src = ctx.createBufferSource();
     src.buffer = buf;
     // Route through analyser so TichaAvatar can read frequency data for lip sync.
@@ -372,7 +391,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         setPttActive(true);
       }
     }, msUntilEnd);
-  }, []);
+  }, [isReading]);
 
   const awardStars = useCallback((amount = 10) => {
     setStars((p) => p + amount);
@@ -843,6 +862,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       log(`CONFIG ${liveModelRef.current} | ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}`);
       playCtxRef.current = playCtx;
+      resamplerRef.current = null; // new context, new rate: start a fresh stream
       playHeadRef.current = 0;
 
       // AnalyserNode passive tap — sits between audio source nodes and destination.
@@ -911,6 +931,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               scheduledNodesRef.current.forEach((n) => { try { n.stop(); } catch { /* already ended */ } });
               scheduledNodesRef.current = [];
               playHeadRef.current = ctx?.currentTime ?? 0;
+              resamplerRef.current = null;
               if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
               setStatus("listening");
               diagRef.current.bargeIns += 1;
@@ -1116,6 +1137,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               scheduledNodesRef.current.forEach((n) => { try { n.stop(); } catch { /* already ended */ } });
               scheduledNodesRef.current = [];
               playHeadRef.current = playCtxRef.current?.currentTime ?? 0;
+              resamplerRef.current = null; // the cut-off stream ends here; the next reply starts clean
               if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
               setStatus("listening");
               log("⚡ Barge-in — audio cancelled, mic open");
