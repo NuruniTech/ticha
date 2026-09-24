@@ -399,6 +399,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     return () => clearTimeout(t);
   }, [introducedWordIndices]);
 
+  // Attach the camera stream once the preview <video> has mounted.
+  useEffect(() => {
+    const v = videoRef.current;
+    const stream = cameraStreamRef.current;
+    if (isCameraOn && v && stream) {
+      v.srcObject = stream;
+      v.play().catch(() => { /* autoplay blocked — muted playsInline normally allows it */ });
+    }
+  }, [isCameraOn]);
+
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
       frameIntervalRef.current && clearInterval(frameIntervalRef.current);
@@ -421,16 +431,19 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           });
         }
         cameraStreamRef.current = stream;
-        if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+        // The <video> is only mounted once isCameraOn is true, so it does not
+        // exist yet here; the effect below attaches the stream after it mounts.
         setIsCameraOn(true);
         log("📷 Camera on — sending frames");
         const sendFrame = () => {
-          if (!videoRef.current || !sessionRef.current) return;
+          const v = videoRef.current;
+          // Never send a blank frame: wait until the video actually has picture data.
+          if (!v || !sessionRef.current || v.readyState < 2 || v.videoWidth === 0) return;
           const canvas = document.createElement("canvas");
           canvas.width = 240; canvas.height = 180;
           const ctx2d = canvas.getContext("2d");
           if (!ctx2d) return;
-          ctx2d.drawImage(videoRef.current, 0, 0, 240, 180);
+          ctx2d.drawImage(v, 0, 0, 240, 180);
           const base64 = canvas.toDataURL("image/jpeg", 0.55).split(",")[1];
           sessionRef.current.sendRealtimeInput({ video: { data: base64, mimeType: "image/jpeg" } });
         };
