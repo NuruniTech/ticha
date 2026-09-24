@@ -39,6 +39,15 @@ interface Options {
   log: (msg: string) => void;
 }
 
+// crypto.randomUUID() only exists in secure contexts (https / localhost) and newer
+// browsers. This id just groups one sitting's attempts, so a fallback is fine.
+function newSessionId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  } catch { /* fall through */ }
+  return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export type PrepareResult = { ok: true } | { needsConsent: true } | { error: string };
 
 const NO_REPORT_MS = 9_000;    // child finished speaking but Ticha never reported
@@ -94,7 +103,7 @@ export function useReadingLesson(options: Options) {
     const check = decideCheck(stored);
     const steps = buildSteps({ plan: planLesson(byItem), check: check ?? undefined });
     stateRef.current = startConductor(steps);
-    sessionIdRef.current = crypto.randomUUID();
+    sessionIdRef.current = newSessionId();
     pendingRef.current = null;
     expectingRef.current = false;
     log(`📖 Reading lesson ready: ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
