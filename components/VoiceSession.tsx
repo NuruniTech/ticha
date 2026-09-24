@@ -299,9 +299,28 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     setDebugOn(on);
   }, []);
 
+  // Development only: stream the log to .debug/session.log via /api/dev-log so it
+  // can be read from disk without copying anything out of the browser.
+  const devLogBufferRef = useRef<string[]>([]);
+  const devLogTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const devLog = useCallback((line?: string, reset = false) => {
+    if (process.env.NODE_ENV !== "development") return;
+    if (line) devLogBufferRef.current.push(line);
+    const flush = () => {
+      devLogTimerRef.current = null;
+      const lines = devLogBufferRef.current.splice(0);
+      fetch("/api/dev-log", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lines, reset }), keepalive: true }).catch(() => {});
+    };
+    if (reset) { if (devLogTimerRef.current) clearTimeout(devLogTimerRef.current); flush(); return; }
+    if (!devLogTimerRef.current) devLogTimerRef.current = setTimeout(flush, 800);
+  }, []);
+  const devLogRef = useRef(devLog);
+  useEffect(() => { devLogRef.current = devLog; }, [devLog]);
+
   const log = useCallback((msg: string) => {
     if (!debugRef.current) return;
     console.log("[Ticha]", msg);
+    devLogRef.current(`${new Date().toISOString().slice(11, 23)} ${msg}`);
     setDebugLog((p) => [...p.slice(-149), `${new Date().toLocaleTimeString()} ${msg}`]);
     // Survives the redirect to the quiz, which wipes the on-screen panel.
     // Read it afterwards at /debug-log.
@@ -798,6 +817,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       setErrorMsg("");
       setDebugLog([]);
       try { localStorage.removeItem("ticha_last_log"); } catch { /* ignore */ }
+      devLogRef.current(undefined, true); // fresh file for this session (dev only)
       log("Starting session...");
 
       if (isReading) {

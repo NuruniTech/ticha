@@ -45,3 +45,6 @@ next-env.d.ts
 
 # claude code local files
 .claude/
+
+# dev-only session log written by /api/dev-log
+.debug/
