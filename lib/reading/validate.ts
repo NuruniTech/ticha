@@ -47,3 +47,32 @@ export function parseAttempt(body: unknown): ParseResult {
     },
   };
 }
+
+// ── Server-side phase resolution ─────────────────────────────────────────────
+// The client may ASK for a phase, but the server decides. A parent must not be
+// able to relabel practice attempts as "baseline" or "final" and skew the
+// before/after measurement, so a special phase is granted only when the child's
+// stored history allows it; otherwise the attempt is recorded as practice.
+//
+// (The verdict itself still comes from the app. Checker mode exists to measure
+// how far the automatic verdicts can be trusted.)
+
+export const BASELINE_ITEMS = 10;
+export const MIN_PRACTICE_SESSIONS_FOR_CHECK = 5;
+
+export interface HistoryRow { session_id: string; phase: string }
+
+export function resolvePhase(requested: AttemptInput["phase"], history: HistoryRow[]): AttemptInput["phase"] {
+  if (requested === "practice") return "practice";
+
+  const practiceSessions = new Set(history.filter((r) => r.phase === "practice").map((r) => r.session_id));
+
+  if (requested === "baseline") {
+    // Only before any teaching has happened, and only for the first BASELINE_ITEMS items.
+    const baselineRows = history.filter((r) => r.phase === "baseline").length;
+    return practiceSessions.size === 0 && baselineRows < BASELINE_ITEMS ? "baseline" : "practice";
+  }
+
+  // checkpoint / final: only after enough real practice sessions.
+  return practiceSessions.size >= MIN_PRACTICE_SESSIONS_FOR_CHECK ? requested : "practice";
+}

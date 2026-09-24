@@ -136,3 +136,31 @@ describe("parseAttempt", () => {
     expect(ok.ok && ok.value.latencyMs).toBe(1235);
   });
 });
+
+import { resolvePhase, BASELINE_ITEMS, MIN_PRACTICE_SESSIONS_FOR_CHECK } from "@/lib/reading/validate";
+
+describe("resolvePhase (server decides the phase)", () => {
+  const practice = (n: number) => Array.from({ length: n }, (_, i) => ({ session_id: `p${i}`, phase: "practice" }));
+
+  it("always allows practice", () => {
+    expect(resolvePhase("practice", [])).toBe("practice");
+  });
+
+  it("allows baseline only before any practice, and only for the first items", () => {
+    expect(resolvePhase("baseline", [])).toBe("baseline");
+    expect(resolvePhase("baseline", practice(1))).toBe("practice");
+    const full = Array.from({ length: BASELINE_ITEMS }, () => ({ session_id: "b", phase: "baseline" }));
+    expect(resolvePhase("baseline", full)).toBe("practice");
+  });
+
+  it("refuses checkpoint and final until enough practice sessions exist", () => {
+    expect(resolvePhase("checkpoint", [])).toBe("practice");
+    expect(resolvePhase("final", practice(MIN_PRACTICE_SESSIONS_FOR_CHECK - 1))).toBe("practice");
+    expect(resolvePhase("checkpoint", practice(MIN_PRACTICE_SESSIONS_FOR_CHECK))).toBe("checkpoint");
+  });
+
+  it("counts distinct sessions, not attempts", () => {
+    const oneSessionManyRows = Array.from({ length: 50 }, () => ({ session_id: "same", phase: "practice" }));
+    expect(resolvePhase("final", oneSessionManyRows)).toBe("practice");
+  });
+});

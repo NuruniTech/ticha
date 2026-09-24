@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthedUser, getOwnedChild, serviceClient } from "@/lib/apiAuth";
-import { parseAttempt } from "@/lib/reading/validate";
+import { parseAttempt, resolvePhase, type HistoryRow } from "@/lib/reading/validate";
 
 // Saves one scored reading attempt. Only the verdict is stored — never audio
 // and never what the child said. The parent is identified from their session,
@@ -47,12 +47,21 @@ export async function POST(request: Request) {
     console.error("reading-attempt rate limit check failed:", e);
   }
 
+  // The client only REQUESTS a phase; the server decides it from stored history
+  // so before/after results cannot be relabelled from the browser.
+  let phase = a.phase;
+  if (phase !== "practice") {
+    const { data: history } = await admin.from("reading_attempts")
+      .select("session_id, phase").eq("child_id", a.childId).limit(5000);
+    phase = resolvePhase(phase, (history ?? []) as HistoryRow[]);
+  }
+
   const { error } = await admin.from("reading_attempts").insert({
     child_id:   a.childId,
     session_id: a.sessionId,
     item_id:    a.itemId,
     outcome:    a.outcome,
-    phase:      a.phase,
+    phase,
     latency_ms: a.latencyMs,
   });
   if (error) {
