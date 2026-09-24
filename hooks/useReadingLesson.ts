@@ -7,7 +7,7 @@ import { planLesson } from "@/lib/reading/lesson";
 import { judgeHeard } from "@/lib/reading/judge";
 import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
 import { decideCheckForTrack, type StoredRow } from "@/lib/reading/checks";
-import { readingTrack, trackKinds } from "@/lib/reading/track";
+import { effectiveTrack, trackKinds } from "@/lib/reading/track";
 import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind,
@@ -114,7 +114,7 @@ export function useReadingLesson(options: Options) {
       (byItem[r.item_id] ??= []).push({ sessionId: r.session_id, outcome: r.outcome as AttemptOutcome, at: Date.parse(r.created_at) });
     }
 
-    const track = readingTrack(optsRef.current.childAge);
+    const track = effectiveTrack(optsRef.current.childAge, byItem);
     const check = decideCheckForTrack(track, stored);
     const steps = buildSteps({ plan: planLesson(byItem, { kinds: trackKinds(track) }), check: check ?? undefined });
     stateRef.current = startConductor(steps);

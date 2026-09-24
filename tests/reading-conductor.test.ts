@@ -292,7 +292,7 @@ describe("reading system prompt", () => {
   });
 });
 
-import { readingTrack, trackKinds, EARLY_TRACK_MAX_AGE } from "@/lib/reading/track";
+import { readingTrack, trackKinds, effectiveTrack, EARLY_TRACK_MAX_AGE } from "@/lib/reading/track";
 import { planLesson } from "@/lib/reading/lesson";
 import { decideCheckForTrack } from "@/lib/reading/checks";
 import { READING_ITEMS, getItem } from "@/lib/reading/curriculum";
@@ -340,5 +340,34 @@ describe("reading tracks by age", () => {
 describe("empty lesson", () => {
   it("says goodbye with the closing word so the app can end the session", () => {
     expect(nothingLeftInstruction).toMatch(/tutaonana/);
+  });
+});
+
+describe("age is a starting point, not a ceiling", () => {
+  const m = (base: number) => [
+    { sessionId: "s1", outcome: "correct" as const, at: base + 1 },
+    { sessionId: "s1", outcome: "correct" as const, at: base + 2 },
+    { sessionId: "s2", outcome: "correct" as const, at: base + 3 },
+  ];
+  const vowelIds = ["v-a", "v-e", "v-i", "v-o", "v-u"];
+  const masteredVowels = (n: number) => Object.fromEntries(vowelIds.slice(0, n).map((id, i) => [id, m(i * 10)]));
+
+  it("starts a young child on the early track", () => {
+    expect(effectiveTrack(3, {})).toBe("early");
+    expect(effectiveTrack(4, masteredVowels(4))).toBe("early"); // one vowel still to master
+  });
+
+  it("moves a young child to the full track once all five vowels are mastered", () => {
+    expect(effectiveTrack(3, masteredVowels(5))).toBe("full");
+  });
+
+  it("never holds back an older child or one with no age", () => {
+    expect(effectiveTrack(6, {})).toBe("full");
+    expect(effectiveTrack(undefined, {})).toBe("full");
+  });
+
+  it("then offers syllables to the child who has moved on", () => {
+    const track = effectiveTrack(3, masteredVowels(5));
+    expect(planLesson(masteredVowels(5), { kinds: trackKinds(track) }).teach[0]).toBe("s-ba");
   });
 });
