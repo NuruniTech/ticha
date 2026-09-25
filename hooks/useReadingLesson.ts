@@ -92,6 +92,9 @@ export function useReadingLesson(options: Options) {
   // the current prompt. A report without it is premature: the model may call the
   // function straight after asking, before the child has said anything.
   const spokeSincePromptRef = useRef(false);
+  // The child spoke over Ticha. The server then sends a "turn complete" for the
+  // CUT-OFF reply, which must not be mistaken for her finishing what she meant to say.
+  const interruptedRef = useRef(false);
   const sendsSinceRollRef = useRef(0);
   const needsRollRef = useRef(false);
   const warmupIndexRef = useRef(0);    // which friendly question we are on
@@ -183,6 +186,7 @@ export function useReadingLesson(options: Options) {
       warmupIndexRef.current = 0;
       warmupPlanRef.current = warmupInstructions();
     }
+    optsRef.current.log(`💬 Friendly chat ${warmupIndexRef.current + 1}/${WARMUP_TURNS}`);
     send(warmupPlanRef.current[warmupIndexRef.current]);
     warmupRef.current = true;
     if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
@@ -248,6 +252,7 @@ export function useReadingLesson(options: Options) {
     const isRetry = st.tries > 0;
     setCard({ item, index: st.index, total: st.steps.length, kind: step.kind, canReplay: !isCheckStep(step) });
 
+    optsRef.current.log(`▶️ Step ${st.index + 1}/${st.steps.length}: ${step.kind}${step.stage ? "/" + step.stage : ""} ${item.id}${isRetry ? " (retry)" : ""}`);
     const clipExpected = shouldPlayClip(step, isRetry);
     const clipPlayed = clipExpected ? await optsRef.current.playClip(item.audio) : false;
     if (clipExpected && !clipPlayed) optsRef.current.log(`🔇 no recording for ${item.id} — Ticha says it instead`);
@@ -334,6 +339,7 @@ export function useReadingLesson(options: Options) {
 
   const lastRearmRef = useRef(0);
   const onModelAudio = useCallback(() => {
+    interruptedRef.current = false; // a new reply has started: the cut-off one is over
     audioSincePendingRef.current = true;
     // She is speaking: swap the short "never started" timer for a long "gone quiet" one,
     // pushed back as audio keeps arriving (throttled: chunks come every few ms).
@@ -346,7 +352,10 @@ export function useReadingLesson(options: Options) {
   }, []);
 
   /** Ticha finished a spoken turn. If we were waiting for her feedback, move on. */
+  const onInterrupted = useCallback(() => { interruptedRef.current = true; }, []);
+
   const onTurnComplete = useCallback(() => {
+    if (interruptedRef.current) { interruptedRef.current = false; return; } // the cut-off turn ending
     const p = pendingRef.current;
     if (p === "end") { pendingRef.current = null; return; }
     if (p && audioSincePendingRef.current) {
@@ -422,5 +431,5 @@ export function useReadingLesson(options: Options) {
 
   const summary = useCallback(() => ({ ...summaryRef.current }), []);
 
-  return { card, prepare, giveConsent, begin, handleToolCall, onModelAudio, onTurnComplete, onChildTurnEnded, replay, resume, summary };
+  return { card, prepare, giveConsent, begin, handleToolCall, onModelAudio, onInterrupted, onTurnComplete, onChildTurnEnded, replay, resume, summary };
 }

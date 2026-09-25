@@ -1155,6 +1155,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             // Cancel all queued audio nodes instantly so playback stops mid-sentence,
             // then reset the play head so the next Ticha response starts cleanly.
             if (msg.serverContent?.interrupted) {
+              if (isReading) readingApiRef.current?.onInterrupted();
               scheduledNodesRef.current.forEach((n) => { try { n.stop(); } catch { /* already ended */ } });
               scheduledNodesRef.current = [];
               playHeadRef.current = playCtxRef.current?.currentTime ?? 0;
