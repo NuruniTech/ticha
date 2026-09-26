@@ -176,6 +176,8 @@ export default function ChildPage() {
       const q = new URLSearchParams(window.location.search).get("reading");
       if (q === "0") localStorage.removeItem("ticha_reading");
       else if (q === "1") localStorage.setItem("ticha_reading", "1");
+      // localStorage only exists in the browser, so this is read after mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowReading(localStorage.getItem("ticha_reading") === "1");
     } catch {
       setShowReading(new URLSearchParams(window.location.search).get("reading") === "1");

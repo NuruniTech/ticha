@@ -9,6 +9,8 @@ export default function DebugLogPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // Reads localStorage, which only exists in the browser, so it has to happen after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     try { setLines(JSON.parse(localStorage.getItem("ticha_last_log") ?? "[]")); } catch { /* empty */ }
   }, []);
 
