@@ -10,7 +10,7 @@ import { decideCheckForTrack, type StoredRow } from "@/lib/reading/checks";
 import { effectiveTrack, trackKinds } from "@/lib/reading/track";
 import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
-  type ConductorState, type StepKind,
+  type ConductorState, type StepKind, type Stage,
 } from "@/lib/reading/conductor";
 import { greetingInstruction, promptInstruction, feedbackInstruction, shouldPlayClip, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS } from "@/lib/reading/instructions";
 
@@ -29,6 +29,7 @@ export interface ReadingCard {
   index: number;
   total: number;
   kind: StepKind;
+  stage?: Stage;
   canReplay: boolean; // never during a check: replaying would give the answer away
 }
 
@@ -82,6 +83,10 @@ export function useReadingLesson(options: Options) {
   useEffect(() => { optsRef.current = options; });
 
   const [card, setCard] = useState<ReadingCard | null>(null);
+  // Sounds the child has got right in this lesson (each earns a "sound friend" sticker),
+  // and a counter that ticks on every correct answer so the screen can celebrate it.
+  const [collected, setCollected] = useState<string[]>([]);
+  const [celebrateKey, setCelebrateKey] = useState(0);
 
   const stateRef = useRef<ConductorState | null>(null);
   const sessionIdRef = useRef("");
@@ -149,6 +154,8 @@ export function useReadingLesson(options: Options) {
     const steps = buildSteps({ plan: planLesson(byItem, { kinds: trackKinds(track) }), check: check ?? undefined });
     stateRef.current = startConductor(steps);
     sessionIdRef.current = newSessionId();
+    setCollected([]);
+    setCelebrateKey(0);
     pendingRef.current = null;
     expectingRef.current = false;
     log(`📖 Reading lesson ready (${track} track): ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
@@ -250,7 +257,7 @@ export function useReadingLesson(options: Options) {
     }
     const item = getItem(step.itemId)!;
     const isRetry = st.tries > 0;
-    setCard({ item, index: st.index, total: st.steps.length, kind: step.kind, canReplay: !isCheckStep(step) });
+    setCard({ item, index: st.index, total: st.steps.length, kind: step.kind, stage: step.stage, canReplay: !isCheckStep(step) });
 
     optsRef.current.log(`▶️ Step ${st.index + 1}/${st.steps.length}: ${step.kind}${step.stage ? "/" + step.stage : ""} ${item.id}${isRetry ? " (retry)" : ""}`);
     const clipExpected = shouldPlayClip(step, isRetry);
@@ -304,7 +311,11 @@ export function useReadingLesson(options: Options) {
     sm.attempts += 1; sm[outcome] += 1;
     if (isCheckStep(step)) sm.check_attempts += 1;
     if ((advance.action === "next" || advance.action === "end") && advance.movedOn) sm.movedOn += 1;
-    if (outcome === "correct" && !isCheckStep(step)) optsRef.current.onCorrect();
+    if (outcome === "correct" && !isCheckStep(step)) {
+      optsRef.current.onCorrect();
+      setCollected((prev) => (prev.includes(step.itemId) ? prev : [...prev, step.itemId]));
+      setCelebrateKey((k) => k + 1);
+    }
 
     pendingRef.current = advance.action === "end" ? "end" : "startStep";
     if (advance.action !== "end") armFallback();
@@ -431,5 +442,5 @@ export function useReadingLesson(options: Options) {
 
   const summary = useCallback(() => ({ ...summaryRef.current }), []);
 
-  return { card, prepare, giveConsent, begin, handleToolCall, onModelAudio, onInterrupted, onTurnComplete, onChildTurnEnded, replay, resume, summary };
+  return { card, collected, celebrateKey, prepare, giveConsent, begin, handleToolCall, onModelAudio, onInterrupted, onTurnComplete, onChildTurnEnded, replay, resume, summary };
 }

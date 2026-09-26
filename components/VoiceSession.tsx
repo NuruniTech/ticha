@@ -14,6 +14,7 @@ import { getReadingSystemPrompt } from "@/lib/reading/prompt";
 import { StreamResampler } from "@/lib/audio/resample";
 import { useReadingLesson } from "@/hooks/useReadingLesson";
 import ReadingCard from "./ReadingCard";
+import ReadingScreen from "./ReadingScreen";
 import { getAnimatedUrl, getFluentUrl } from "@/lib/fluentEmoji";
 import { usePostHog } from "posthog-js/react";
 import Image from "next/image";
@@ -127,6 +128,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const isReading = game === "reading";
   const lessonWords = useMemo(() => (isReading ? [] : getWordBatch(game, childXp, childAge)), [isReading, game, childXp, childAge]);
   const [showConsent, setShowConsent] = useState(false);
+  const [readingSide, setReadingSide] = useState<"left" | "right">("left"); // which side Ticha is on (&side=right)
 
   const sessionRef       = useRef<LiveSession>(null);
   // Two AudioContexts — mic at 16 kHz (Gemini input requirement),
@@ -275,6 +277,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
       if (q.get("vad") === "low") vadProfileRef.current = "low";
       if (q.get("resample") === "1") resampleFlagRef.current = true;
+      if (q.get("side") === "right") setReadingSide("right");
       // Client-driven turns are the default (server VAD stalled ~20 s per reply).
       // &turn=server restores Google's automatic detection for comparison.
       manualTurnRef.current = q.get("turn") !== "server";
@@ -1555,6 +1558,37 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   return (
     <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Nunito', sans-serif", overflowX: "hidden" }}>
 
+      {/* Reading lesson: Ticha on one side, the lesson on the other */}
+      {isReading && sessionStarted ? (
+        <ReadingScreen
+          language={language}
+          side={readingSide}
+          card={reading.card}
+          collected={reading.collected}
+          celebrateKey={reading.celebrateKey}
+          onReplay={reading.replay}
+          avatarState={avatarState}
+          analyser={analyserNode}
+          ringColor={ringColor}
+          statusText={
+            status === "reconnecting" ? ts.reconnecting :
+            isPaused ? ts.sessionPaused :
+            status === "speaking" ? ts.tichaIsTalking :
+            pttActive ? ts.yourTurnToSpeak : ts.gettingReady
+          }
+          labelText={isPaused ? ts.labelPaused : status === "speaking" ? ts.labelTalking : pttActive ? ts.labelYourTurn : ts.labelWaiting}
+          hintText={isPaused ? ts.hintPaused : status === "speaking" ? ts.hintListening : pttActive ? ts.hintSpeak : ts.hintWait}
+          listening={pttActive}
+          isPaused={isPaused}
+          isCameraOn={isCameraOn}
+          videoRef={videoRef}
+          labels={{ pause: ts.pause, resume: ts.resume, end: ts.end }}
+          onPause={togglePause}
+          onCamera={toggleCamera}
+          onEnd={() => endSession(true)}
+        />
+      ) : (<>
+
       {/* ── Header ── */}
       <header style={{ background: "white", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 0 rgba(0,0,0,0.06)", flexShrink: 0, zIndex: 10 }}>
         <button
@@ -1849,6 +1883,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       </div>
 
       {/* ── Session end celebration overlay ── */}
+      </>)}
+
       {showCelebration && celebrationData && (
         <div style={{ position: "fixed", inset: 0, background: "linear-gradient(160deg, #1E3A8A 0%, #0D1F5C 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 300, padding: "32px" }}>
           <TichaAvatar state="celebrating" size={200} />

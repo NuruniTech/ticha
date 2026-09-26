@@ -486,3 +486,31 @@ describe("greeting", () => {
     expect(g).toMatch(/Do NOT mention lessons or reading yet/);
   });
 });
+
+import { stageCaption } from "@/lib/reading/captions";
+import { friendFor, SOUND_FRIENDS } from "@/lib/reading/friends";
+
+describe("learning-side captions", () => {
+  it("tells the child what to do at each stage, in Swahili and English", () => {
+    expect(stageCaption({ kind: "teach", stage: "model" }, "sw")).toBe("Sikiliza");
+    expect(stageCaption({ kind: "teach", stage: "model" }, "en")).toBe("Listen");
+    expect(stageCaption({ kind: "teach", stage: "together" }, "sw")).toBe("Semeni pamoja!");
+    expect(stageCaption({ kind: "teach", stage: "play" }, "en")).toBe("Let's play!");
+    expect(stageCaption({ kind: "teach", stage: "alone" }, "sw")).toBe("Zamu yako!");
+    expect(stageCaption({ kind: "review" }, "en")).toBe("Your turn!");
+    expect(stageCaption({ kind: "baseline" }, "sw")).toBe("Soma kwa sauti");
+    expect(stageCaption(null, "sw")).toBe("");
+  });
+});
+
+describe("sound friends", () => {
+  it("gives the five vowels five different friends, always the same for the same sound", () => {
+    const vowels = ["v-a", "v-e", "v-i", "v-o", "v-u"];
+    expect(new Set(vowels.map(friendFor)).size).toBe(5);
+    expect(friendFor("v-a")).toBe(friendFor("v-a"));
+    vowels.forEach((v) => expect(SOUND_FRIENDS).toContain(friendFor(v)));
+  });
+  it("never fails on an unknown item", () => {
+    expect(SOUND_FRIENDS).toContain(friendFor("nope"));
+  });
+});

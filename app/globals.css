@@ -292,3 +292,81 @@ body {
 .bg-emoji-a { animation: bg-float-a 4.2s ease-in-out infinite; }
 .bg-emoji-b { animation: bg-float-b 5.1s ease-in-out infinite; }
 .bg-emoji-c { animation: bg-float-c 3.8s ease-in-out infinite; }
+
+/* ── Reading screen: Ticha on one side, the lesson on the other ───────────────
+   Narrow (phone): stacked. Wide (tablet / laptop): two columns; data-side="right"
+   puts Ticha on the right. */
+.rs-root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  background: linear-gradient(160deg, #A4C4F8 0%, #D4B4F8 50%, #F8B4D4 100%);
+  font-family: 'Nunito', sans-serif;
+  overflow-x: hidden;
+}
+.rs-ticha {
+  padding: 14px 16px 26px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.rs-stage {
+  position: relative;
+  background: white;
+  border-radius: 28px 28px 0 0;
+  margin-top: -18px;
+  padding: 20px 18px 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .rs-root { grid-template-columns: 5fr 6fr; grid-template-rows: 1fr; }
+  .rs-root[data-side="right"] { grid-template-columns: 6fr 5fr; }
+  .rs-root[data-side="right"] .rs-ticha { order: 2; }
+  .rs-ticha { justify-content: center; padding: 24px; }
+  .rs-stage { border-radius: 32px; margin: 22px; justify-content: center; padding: 28px; }
+}
+
+/* Gentle rings around Ticha: small, so they stay on her side of the screen */
+@keyframes rs-ring { 0% { transform: translate(-50%,-50%) scale(0.92); opacity: 0.5; } 100% { transform: translate(-50%,-50%) scale(1.22); opacity: 0; } }
+.rs-ring { position: absolute; top: 50%; left: 50%; border-radius: 50%; animation: rs-ring 1.8s ease-out infinite; }
+.rs-ring:nth-child(2) { animation-delay: 0.6s; }
+.rs-ticha { overflow: hidden; }
+
+.rs-caption { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: clamp(22px, 3.2vw, 36px); color: #1E3A5F; margin: 0; text-align: center; }
+.rs-card {
+  width: 100%; max-width: 520px; min-height: clamp(150px, 26vh, 260px);
+  border-radius: 28px; border: 4px solid #FDE68A; background: #FFFBEB;
+  box-shadow: 0 8px 0 #FCD34D;
+  display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px;
+  cursor: default; position: relative;
+}
+.rs-card[data-tap="true"] { cursor: pointer; }
+.rs-card[data-tap="true"]:active { transform: translateY(3px); box-shadow: 0 5px 0 #FCD34D; }
+.rs-glyph { font-family: 'Baloo 2', cursive; font-weight: 800; line-height: 1; }
+
+/* Stage animations: sound waves while Ticha models, two mics for "together", a bounce for play */
+@keyframes rs-wave { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+.rs-waves { display: flex; align-items: center; gap: 6px; height: 44px; }
+.rs-waves span { width: 8px; height: 100%; border-radius: 6px; background: #6366F1; animation: rs-wave 0.9s ease-in-out infinite; }
+.rs-waves span:nth-child(2) { animation-delay: 0.12s; } .rs-waves span:nth-child(3) { animation-delay: 0.24s; }
+.rs-waves span:nth-child(4) { animation-delay: 0.36s; } .rs-waves span:nth-child(5) { animation-delay: 0.48s; }
+@keyframes rs-bounce { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-14px) rotate(-2deg); } 60% { transform: translateY(0) rotate(2deg); } }
+.rs-bounce { animation: rs-bounce 1s ease-in-out infinite; }
+@keyframes rs-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.rs-pulse { animation: rs-pulse 1.1s ease-in-out infinite; }
+
+/* A correct answer: a burst of stars over the card */
+@keyframes rs-burst { 0% { opacity: 0; transform: scale(0.4) translateY(10px); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6) translateY(-40px); } }
+.rs-burst { position: absolute; top: -6px; left: 50%; margin-left: -60px; width: 120px; text-align: center; font-size: 34px; pointer-events: none; animation: rs-burst 1.3s ease-out forwards; }
+
+/* Ticha's sound book: one friendly sticker per sound the child got right */
+@keyframes rs-pop { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.rs-book { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 520px; }
+.rs-sticker { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 72px; border-radius: 18px; background: #F0FDF4; border: 3px solid #86EFAC; animation: rs-pop 0.5s ease-out; }
+.rs-sticker b { font-family: 'Baloo 2', cursive; font-size: 18px; color: #166534; line-height: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-waves span, .rs-bounce, .rs-pulse, .rs-burst, .rs-sticker, .rs-ring { animation: none; }
+}
+
+
+
