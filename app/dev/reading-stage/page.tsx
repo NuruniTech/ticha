@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Preview from "./Preview";
 
@@ -5,5 +6,5 @@ import Preview from "./Preview";
 // at tablet and phone sizes without running a live lesson. 404 outside development.
 export default function Page() {
   if (process.env.NODE_ENV !== "development") notFound();
-  return <Preview />;
+  return <Suspense><Preview /></Suspense>;
 }

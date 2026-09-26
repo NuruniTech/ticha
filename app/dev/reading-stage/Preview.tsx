@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ReadingScreen from "@/components/ReadingScreen";
 import { getItem } from "@/lib/reading/curriculum";
 import type { ReadingCard } from "@/hooks/useReadingLesson";
@@ -15,18 +16,11 @@ const STAGES: { id: string; kind: ReadingCard["kind"]; stage?: ReadingCard["stag
 ];
 
 export default function Preview() {
-  const [stageId, setStageId] = useState("model");
-  const [item, setItem] = useState("s-ba");
-  const [side, setSide] = useState<"left" | "right">("left");
-  const [language, setLanguage] = useState<"sw" | "en">("sw");
-  // Read the query after mount so the first client render matches the server's.
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    if (q.get("stage")) setStageId(q.get("stage")!);
-    if (q.get("item")) setItem(q.get("item")!);
-    if (q.get("side") === "right") setSide("right");
-    if (q.get("lang") === "en") setLanguage("en");
-  }, []);
+  const params = useSearchParams();
+  const [stageId, setStageId] = useState(params.get("stage") ?? "model");
+  const [item, setItem] = useState(params.get("item") ?? "s-ba");
+  const side = params.get("side") === "right" ? "right" : "left";
+  const language = params.get("lang") === "en" ? "en" : "sw";
   const [collected, setCollected] = useState<string[]>(["v-a", "v-e", "v-i"]);
   const [burst, setBurst] = useState(0);
   const [camera, setCamera] = useState(false);

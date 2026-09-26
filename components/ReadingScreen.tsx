@@ -46,7 +46,9 @@ export interface ReadingScreenProps {
   onEnd: () => void;
 }
 
-export default function ReadingScreen(p: ReadingScreenProps) {
+// videoRef is taken out of the props object on its own: passing a ref inside a bag of props makes
+// the React lint rules treat every prop read as a ref read during render.
+export default function ReadingScreen({ videoRef, ...p }: ReadingScreenProps) {
   const wide = useWide();
   const caption = stageCaption(p.card ? { kind: p.card.kind, stage: p.card.stage } : null, p.language);
   const stage = p.card?.stage;
@@ -73,7 +75,7 @@ export default function ReadingScreen(p: ReadingScreenProps) {
           </div>
           {p.isCameraOn && (
             <div style={{ position: "absolute", bottom: 8, right: -8, borderRadius: 10, overflow: "hidden", border: "3px solid #22C55E", zIndex: 2 }}>
-              <video ref={p.videoRef} autoPlay playsInline muted style={{ width: 72, height: 54, objectFit: "cover", display: "block" }} />
+              <video ref={videoRef} autoPlay playsInline muted style={{ width: 72, height: 54, objectFit: "cover", display: "block" }} />
             </div>
           )}
         </div>
