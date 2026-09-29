@@ -104,7 +104,8 @@ export function useReadingLesson(options: Options) {
   const needsRollRef = useRef(false);
   const warmupIndexRef = useRef(0);    // which friendly question we are on
   const warmupPlanRef = useRef<string[]>([]);
-  const warmedUpRef = useRef(false);   // the friendly chat happens once per lesson (not again after a reconnect)
+  const warmedUpRef = useRef(false);
+  const warmupDoneRef = useRef(false); // true once all WARMUP_TURNS have completed and the lesson has begun   // the friendly chat happens once per lesson (not again after a reconnect)
   const warmupRef = useRef(false);     // currently waiting for the child to answer the friendly question
   const togetherRef = useRef(false); // waiting for the child to say it WITH Ticha (unscored)
   const togetherTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -222,6 +223,7 @@ export function useReadingLesson(options: Options) {
         void (async () => { await sleep(STEP_GAP_MS); startWarmup(); })();
         return;
       }
+      warmupDoneRef.current = true;
     }
     void (async () => {
       await sleep(STEP_GAP_MS); // a breath before every step
@@ -430,11 +432,20 @@ export function useReadingLesson(options: Options) {
     expectingRef.current = false;
     togetherRef.current = false;
     warmupRef.current = false;
+    sendsSinceRollRef.current = 0;
+    needsRollRef.current = false;
+    // A drop mid-chat used to jump straight into the lesson and silently skip
+    // whatever was left of the friendly chat. Re-ask the current chat turn instead
+    // (the child may hear it twice if they had just answered, which is far better
+    // than the conversation vanishing).
+    if (!warmupDoneRef.current) {
+      optsRef.current.log("▶️ Resuming the friendly chat on the fresh session");
+      startWarmup();
+      return;
+    }
     const st = stateRef.current;
     if (!st || st.done) return;
     stateRef.current = { ...st, tries: 0, unscored: 0 };
-    sendsSinceRollRef.current = 0;
-    needsRollRef.current = false;
     optsRef.current.log("▶️ Resuming the lesson on the fresh session");
     void startStep();
   // eslint-disable-next-line react-hooks/exhaustive-deps
