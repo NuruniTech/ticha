@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { READING_ITEMS, getItem, isKnownItemId, VOWELS, CONSONANTS } from "@/lib/reading/curriculum";
 import { itemState, isMastered, type Attempt } from "@/lib/reading/mastery";
+import { judgeHeard } from "@/lib/reading/judge";
 import { planLesson } from "@/lib/reading/lesson";
 
 const a = (sessionId: string, outcome: Attempt["outcome"], at = 0): Attempt => ({ sessionId, outcome, at });
@@ -182,5 +183,25 @@ describe("countServerSessions", () => {
       .map((ms) => ({ phase: "practice", created_at: new Date(t + ms).toISOString() }));
     expect(countServerSessions(rows)).toBe(3);
     expect(countServerSessions([])).toBe(0);
+  });
+});
+
+describe("judgeHeard accepts the respelled pronunciation Ticha is told to use", () => {
+  it("does not mark a correctly respelled vowel wrong (the bug: 'eh' for target 'e')", () => {
+    expect(judgeHeard("v-e", "eh")).toBe("correct");
+    expect(judgeHeard("v-a", "ah")).toBe("correct");
+    expect(judgeHeard("v-o", "oh")).toBe("correct");
+  });
+  it("still accepts the raw spelling too", () => {
+    expect(judgeHeard("v-e", "e")).toBe("correct");
+  });
+  it("accepts a respelled syllable and word", () => {
+    expect(judgeHeard("s-me", "meh")).toBe("correct");
+    expect(judgeHeard("w-soma", "soh-mah")).toBe("correct");
+    expect(judgeHeard("w-soma", "sohmah")).toBe("correct");
+  });
+  it("still rejects a genuinely different sound", () => {
+    expect(judgeHeard("v-e", "oh")).toBe("incorrect");
+    expect(judgeHeard("s-ba", "pah")).toBe("incorrect");
   });
 });

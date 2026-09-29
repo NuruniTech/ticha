@@ -6,6 +6,7 @@
 // that with the target here. Strict on purpose: a wrong sound must not be praised.
 
 import { getItem } from "./curriculum";
+import { respellItem, respellUnit } from "./instructions";
 import type { AttemptOutcome } from "./mastery";
 
 // Things the model may write instead of leaving the field empty.
@@ -23,5 +24,13 @@ export function judgeHeard(itemId: string, heard: unknown): AttemptOutcome {
   if (NO_SPEECH.has(heard.trim().toLowerCase())) return "unscored";
   const h = normalizeSpeech(heard);
   if (!h) return "unscored";
-  return h === normalizeSpeech(item.text) ? "correct" : "incorrect";
+  // Ticha is told to SAY the respelling ("eh" for "e", "bah-do" for "bado"), and she
+  // reports what she heard using that same respelling, not the raw Swahili spelling.
+  // Accept either form, so a correctly pronounced answer is never marked wrong.
+  const targets = new Set([
+    normalizeSpeech(item.text),
+    normalizeSpeech(respellItem(itemId)),
+    normalizeSpeech(item.syllables.map(respellUnit).join("")),
+  ]);
+  return targets.has(h) ? "correct" : "incorrect";
 }
