@@ -149,6 +149,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // the reading lesson only; add &resample=1 to try it in the vocabulary tutor.
   // (Per the handover: never ship an unverified audio change to everyone.)
   const resampleFlagRef    = useRef(false);
+  // Gemini's own delivery controls (affective dialog: adapt tone to the child's own;
+  // proactive audio: allowed to stay silent on off-topic/irrelevant speech instead of
+  // answering every sound). Verified against the live API on 2026-09-29 over v1alpha
+  // with an ephemeral token — accepted, no setup rejection. Not yet confirmed by ear,
+  // so: on by default for the reading lesson (&affect=0 opts out), opt-in elsewhere
+  // (&affect=1) until someone has actually listened to it.
+  const affectFlagRef      = useRef<boolean | null>(null); // null = no explicit &affect= override
   // "Rolling" to a fresh Gemini session: the native-audio model gets slower and
   // stalls the longer one session runs (measured: replies 1.3s -> 6.8s -> 8.5s, then
   // a 45s silence), so between lesson steps we quietly open a new session and swap
@@ -277,6 +284,8 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       if (q.get("model") === "prev") liveModelRef.current = "gemini-2.5-flash-native-audio-preview-09-2025";
       if (q.get("vad") === "low") vadProfileRef.current = "low";
       if (q.get("resample") === "1") resampleFlagRef.current = true;
+      if (q.get("affect") === "0") affectFlagRef.current = false;
+      else if (q.get("affect") === "1") affectFlagRef.current = true;
       if (q.get("side") === "right") setReadingSide("right");
       // Client-driven turns are the default (server VAD stalled ~20 s per reply).
       // &turn=server restores Google's automatic detection for comparison.
@@ -883,7 +892,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
-      setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
+      setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  affect=${(affectFlagRef.current ?? isReading) ? "on" : "off"}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       log(`CONFIG ${liveModelRef.current} | ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}`);
       playCtxRef.current = playCtx;
       resamplerRef.current = null; // new context, new rate: start a fresh stream
@@ -1060,6 +1069,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 },
               }],
             }],
+          } : {}),
+          ...((affectFlagRef.current ?? isReading) ? {
+            // If enabled, the model will detect emotions and adapt its responses.
+            enableAffectiveDialog: true,
+            // Lets the model stay silent on off-topic or irrelevant input instead of
+            // forcing a reply to everything it hears.
+            proactivity: { proactiveAudio: true },
           } : {}),
           realtimeInputConfig: {
             automaticActivityDetection: manualTurnRef.current ? { disabled: true } : {
