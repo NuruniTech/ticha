@@ -337,9 +337,15 @@ export function useReadingLesson(options: Options) {
       optsRef.current.log("⚠️ Report arrived before the child spoke — ignored");
       return "[APP] The child has not spoken yet. Stay completely silent and wait for them to answer. Do not call report_attempt until they have spoken.";
     }
-    const outcome: AttemptOutcome = step ? judgeHeard(step.itemId, heard) : "unscored";
+    // A stray call outside a scored step (e.g. mid friendly-chat) is thrown away by
+    // finishAttempt below; say so up front rather than printing a misleading verdict.
+    if (!step || !expectingRef.current) {
+      optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" — not currently expecting an answer, ignored`);
+      return finishAttempt("unscored") ?? "[APP] Ignored. Wait quietly for the next [APP] message.";
+    }
+    const outcome: AttemptOutcome = judgeHeard(step.itemId, heard);
     // Debug log only (never stored or sent anywhere): shows why an attempt was scored as it was.
-    optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" for "${step ? getItem(step.itemId)!.text : "?"}" → ${outcome}`);
+    optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" for "${getItem(step.itemId)!.text}" → ${outcome}`);
     return finishAttempt(outcome) ?? "[APP] Ignored. Wait quietly for the next [APP] message.";
   }, [finishAttempt]);
 
