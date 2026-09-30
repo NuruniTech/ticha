@@ -27,17 +27,41 @@ describe("check forms are easiest first", () => {
 });
 
 describe("buildSteps", () => {
-  it("orders check, review, teach, mixed and marks first appearances", () => {
+  it("weaves review in ahead of each new sound instead of front-loading it, and marks first appearances", () => {
     const steps = buildSteps({ plan, check: { phase: "baseline", items: ["s-ba"] } });
-    // each new item is taught in three stages: model, together, alone
-    // ...and a little game follows every second new item
+    // review["v-a"] appears right before the FIRST new sound, not all review before all teaching;
+    // each new item is taught in three stages: model, together, alone (+ play on the 2nd)
     expect(steps.map((s) => s.kind)).toEqual(["baseline", "review", "teach", "teach", "teach", "teach", "teach", "teach", "teach", "mixed", "mixed", "mixed"]);
+    expect(steps.filter((s) => s.kind === "review").map((s) => s.itemId)).toEqual(["v-a"]);
+    expect(steps.indexOf(steps.find((s) => s.kind === "review")!)).toBeLessThan(steps.indexOf(steps.find((s) => s.kind === "teach")!));
     expect(steps.filter((s) => s.kind === "teach").map((s) => `${s.itemId}:${s.stage}`)).toEqual([
       "v-e:model", "v-e:together", "v-e:alone", "v-i:model", "v-i:together", "v-i:alone", "v-i:play",
     ]);
     expect(steps.find((s) => s.itemId === "v-e" && s.stage === "model")!.first).toBe(true);
     expect(steps.find((s) => s.itemId === "v-e" && s.stage === "alone")!.first).toBe(false);
     expect(steps.find((s) => s.itemId === "v-e" && s.kind === "mixed")!.first).toBe(false);
+  });
+
+  it("spreads several review items across several new sounds, one ahead of each", () => {
+    const manyPlan = { review: ["v-a", "v-o"], teach: ["v-e", "v-i"], mixed: [] };
+    const steps = buildSteps({ plan: manyPlan });
+    const order = steps.map((s) => (s.kind === "review" ? `review:${s.itemId}` : s.stage ? `${s.itemId}:${s.stage}` : s.kind));
+    expect(order).toEqual([
+      "review:v-a", "v-e:model", "v-e:together", "v-e:alone",
+      "review:v-o", "v-i:model", "v-i:together", "v-i:alone", "v-i:play",
+    ]);
+  });
+
+  it("appends any leftover review after the last new sound if there is more review than teaching", () => {
+    const steps = buildSteps({ plan: { review: ["v-a", "v-o", "v-u"], teach: ["v-e"], mixed: [] } });
+    expect(steps.filter((s) => s.kind === "review").map((s) => s.itemId)).toEqual(["v-a", "v-o", "v-u"]);
+    expect(steps[0]).toMatchObject({ kind: "review", itemId: "v-a" });
+    expect(steps.at(-1)).toMatchObject({ kind: "review", itemId: "v-u" });
+  });
+
+  it("still reviews plainly (all up front) when there is nothing new to teach", () => {
+    const steps = buildSteps({ plan: { review: ["v-a", "v-o"], teach: [], mixed: ["v-a"] } });
+    expect(steps.map((s) => s.kind)).toEqual(["review", "review", "mixed"]);
   });
 });
 
@@ -249,8 +273,8 @@ describe("instructions", () => {
 
   it("welcomes each new part of the lesson aloud, but not on a retry", () => {
     const start = { ...model, phaseStart: true };
-    expect(promptInstruction(start, { isRetry: false, clipPlayed: true, clipExpected: true })).toMatch(/new magic sound together/);
-    expect(promptInstruction({ ...alone, phaseStart: true }, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/new magic sound together/);
+    expect(promptInstruction(start, { isRetry: false, clipPlayed: true, clipExpected: true })).toMatch(/new sound together/);
+    expect(promptInstruction({ ...alone, phaseStart: true }, { isRetry: true, clipPlayed: true, clipExpected: true })).not.toMatch(/new sound together/);
     expect(promptInstruction({ ...check, phaseStart: true }, { isRetry: false, clipPlayed: false, clipExpected: false })).toMatch(/fine not to know some/);
   });
 
@@ -424,7 +448,7 @@ describe("a less robotic lesson", () => {
     expect(w[0]).toMatch(/how they are feeling today/);
     expect(w[1]).toMatch(/React to what the child just said/);
     expect(w[1]).toMatch(/favourite animal/);
-    expect(w[2]).toMatch(/magic sounds/);
+    expect(w[2]).toMatch(/sauti za kufurahisha/);
     expect(w[2]).toMatch(/ask if they are ready/);
     w.forEach((line) => {
       expect(line).toMatch(/Do NOT teach anything/);
@@ -484,6 +508,47 @@ describe("greeting", () => {
     const g = greetingInstruction("Amani");
     expect(g).toMatch(/Amani/);
     expect(g).toMatch(/Do NOT mention lessons or reading yet/);
+  });
+});
+
+describe("safe wording for fun sounds — never let the model translate it itself", () => {
+  it("gives the exact safe Swahili phrase instead of asking the model to translate magic/fun", () => {
+    const firstTeach = { itemId: "s-ba", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: true };
+    const teachIntro = promptInstruction(firstTeach, { isRetry: false, clipPlayed: true, clipExpected: true });
+    const warmup3 = warmupInstructions(() => 0)[2];
+    for (const text of [teachIntro, warmup3]) {
+      expect(text).toMatch(/sauti za kufurahisha/);
+      expect(text.toLowerCase()).not.toMatch(/magic/);
+      expect(text.toLowerCase()).toMatch(/kichawi/); // named only to forbid it
+      expect(text).toMatch(/never|do not|do NOT/i);
+    }
+  });
+
+  it("also forbids the witchcraft word once, globally, in Ticha's standing prompt", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/kichawi/);
+    expect(p).toMatch(/witchcraft/i);
+    expect(p).toMatch(/Never say the word "kichawi"/);
+  });
+});
+
+describe("celebration close and a proud, specific goodbye", () => {
+  it("frames the final mixed round as a celebration, not a drill", () => {
+    const firstMixed = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: true };
+    const intro = promptInstruction(firstMixed, { isRetry: false, clipPlayed: false, clipExpected: false });
+    expect(intro).toMatch(/celebration/);
+  });
+
+  it("names the sounds learned and says Ticha is proud of the child for each one", () => {
+    const bye = feedbackInstruction({ itemId: "v-a", kind: "mixed", first: false, phaseStart: false }, "correct", { action: "end", movedOn: false }, ["a", "e", "i"]);
+    expect(bye).toMatch(/proud of them/);
+    expect(bye).toMatch(/a, e, i/);
+    expect(bye).toMatch(/tutaonana/);
+  });
+
+  it("still says it is proud of the child even with nothing specific to list", () => {
+    const bye = feedbackInstruction({ itemId: "v-a", kind: "mixed", first: false, phaseStart: false }, "correct", { action: "end", movedOn: false }, []);
+    expect(bye).toMatch(/proud of them/);
   });
 });
 

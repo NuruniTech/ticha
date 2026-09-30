@@ -12,7 +12,6 @@ import type { Advance } from "./conductor";
 import type { AttemptOutcome } from "./mastery";
 
 const kindLabel = (kind: string) => (kind === "vowel" ? "letter" : kind);
-const spoken = (itemId: string) => getItem(itemId)!.syllables.join("-");
 
 // Used if a lesson somehow has nothing left to practise, so it ends kindly instead of hanging.
 export const nothingLeftInstruction =
@@ -26,8 +25,8 @@ const PHASE_INTRO: Record<StepKind, string> = {
   baseline:   "tell the child you will first play a little game to see what they already know, and that it is fine not to know some",
   checkpoint: "tell the child you will first play a little game to see how much they have learned, and that it is fine not to know some",
   review:     "tell the child you will now remember things they learned before",
-  teach:      "react with excitement to whatever the child just said, then tell them you will now meet a new magic sound together",
-  mixed:      "tell the child you will now practise everything together",
+  teach:      'react with excitement to whatever the child just said, then tell them you will now meet a new sound together. Use the exact Swahili words "sauti za kufurahisha" for "fun sounds" — never translate "fun" or "magic" yourself, and never use the word "kichawi" or anything related to witchcraft.',
+  mixed:      "tell the child, with excitement, that now you will play everything you learned today all together, like a little celebration",
 };
 
 // Swahili sounds, spelled out for the model.
@@ -74,7 +73,7 @@ export function warmupInstructions(rng: () => number = Math.random): string[] {
   return [
     `[APP] In ONE short, friendly Swahili sentence ask the child how they are feeling today. ${tail}`,
     `[APP] React to what the child just said in ONE warm sentence, so they know you really heard them (you may laugh a little). Then ask ONE simple, fun question: ${q}. ${tail}`,
-    `[APP] React to their answer with real delight (for example make the animal's sound, or say something playful about it). Then say in ONE or TWO short sentences that today the two of you will play with magic sounds, and ask if they are ready. ${tail}`,
+    `[APP] React to their answer with real delight (for example make the animal's sound, or say something playful about it). Then say in ONE or TWO short sentences that today the two of you will play with "sauti za kufurahisha" (say these exact Swahili words for "fun sounds" — do NOT translate "magic" or "fun" any other way, and never say "kichawi" or anything related to witchcraft), and ask if they are ready. ${tail}`,
   ];
 }
 
@@ -155,8 +154,10 @@ export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlay
 
 export function feedbackInstruction(step: Step, outcome: AttemptOutcome, advance: Advance, learned: string[] = [], rng: () => number = Math.random): string {
   if (advance.action === "end") {
-    const list = learned.length ? ` Mention what they practised today: ${learned.join(", ")}.` : "";
-    return `[APP] The lesson is over.${list} In TWO short Swahili sentences, praise the child for their work today and say goodbye, including the word "tutaonana".`;
+    const list = learned.length
+      ? ` Name these specific sounds they learned today and say you are proud of them for each one: ${learned.join(", ")}.`
+      : " Say you are proud of them for practising today.";
+    return `[APP] The lesson is over.${list} In TWO or THREE short Swahili sentences, be warm and specific about what they did well today, then say goodbye, including the word "tutaonana".`;
   }
   if (isCheckStep(step)) {
     if (advance.action === "next" && advance.discontinued) {

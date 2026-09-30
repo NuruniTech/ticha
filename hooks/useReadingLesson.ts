@@ -112,6 +112,11 @@ export function useReadingLesson(options: Options) {
   const promptSentAtRef = useRef(0);
   const reportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True silence on a scored step (the child never even triggers the mic's speech
+  // detection) previously had NO timeout at all — the lesson would just hang. Two
+  // gentle check-ins, then the attempt counts as unscored and the lesson moves on.
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceNudgesRef = useRef(0);
   const summaryRef = useRef({ attempts: 0, correct: 0, incorrect: 0, unscored: 0, check_attempts: 0, movedOn: 0, autoUnscored: 0 });
 
   // Every message we send to Ticha starts a new model turn, so count them.
@@ -124,7 +129,8 @@ export function useReadingLesson(options: Options) {
     if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
     if (togetherTimerRef.current) clearTimeout(togetherTimerRef.current);
-    reportTimerRef.current = fallbackTimerRef.current = togetherTimerRef.current = null;
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    reportTimerRef.current = fallbackTimerRef.current = togetherTimerRef.current = silenceTimerRef.current = null;
   };
   useEffect(() => clearTimers, []);
 
@@ -291,10 +297,33 @@ export function useReadingLesson(options: Options) {
     expectingRef.current = true;
     spokeSincePromptRef.current = false;
     promptSentAtRef.current = Date.now();
+    silenceNudgesRef.current = 0;
+    armSilenceCheckIn();
     send(instruction);
-  // proceed/armFallback are stable, refs-only helpers
+  // proceed/armFallback/armSilenceCheckIn are stable, refs-only helpers
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The child never triggers the mic's speech detection at all (as opposed to
+  // speaking but Ticha never reporting, which onChildTurnEnded/NO_REPORT_MS below
+  // already covers). Check in gently once, then once more, then give up kindly.
+  const SILENCE_CHECKIN_MS = 12_000;
+  const armSilenceCheckIn = () => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = setTimeout(() => {
+      if (!expectingRef.current || spokeSincePromptRef.current) return; // resolved or the child did speak
+      silenceNudgesRef.current += 1;
+      if (silenceNudgesRef.current >= 2) {
+        optsRef.current.log("⚠️ Child stayed silent — counted as unscored");
+        const text = finishAttempt("unscored");
+        if (text) send(text);
+        return;
+      }
+      optsRef.current.log("⚠️ Child has not spoken — sending a gentle check-in");
+      send("[APP] The child has been quiet for a little while. In ONE short, warm Swahili sentence check in gently (for example ask if they are still there, or say there is no hurry), then in ONE more short sentence repeat the invitation to answer. Then stay silent and listen.");
+      armSilenceCheckIn();
+    }, SILENCE_CHECKIN_MS);
+  };
 
   // Records the verdict and returns the instruction Ticha should follow next,
   // or null when no attempt was being waited for (ignored: a stray or duplicate report).
@@ -304,6 +333,7 @@ export function useReadingLesson(options: Options) {
     if (!st || !step || !expectingRef.current) return null;
     expectingRef.current = false;
     if (reportTimerRef.current) { clearTimeout(reportTimerRef.current); reportTimerRef.current = null; }
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
 
     saveAttempt(step.itemId, outcome, step.kind, Date.now() - promptSentAtRef.current);
     const { state, advance } = applyVerdict(st, outcome);

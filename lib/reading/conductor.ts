@@ -57,8 +57,12 @@ export function buildSteps(opts: { check?: { phase: "baseline" | "checkpoint"; i
     seen.add(itemId);
   };
   if (opts.check) opts.check.items.forEach((id) => add(id, opts.check!.phase));
-  opts.plan.review.forEach((id) => add(id, "review"));
+  // Weave review in AMONG the new sounds — one review item ahead of each new one —
+  // instead of front-loading all of it before any teaching, so the lesson reads as
+  // one flowing conversation rather than "review phase, then teach phase."
+  let reviewIndex = 0;
   opts.plan.teach.forEach((id, i) => {
+    if (reviewIndex < opts.plan.review.length) add(opts.plan.review[reviewIndex++], "review");
     add(id, "teach", "model");
     add(id, "teach", "together");
     add(id, "teach", "alone");
@@ -66,6 +70,7 @@ export function buildSteps(opts: { check?: { phase: "baseline" | "checkpoint"; i
     // drill feel like a classroom, and playing with a sound is also practice.
     if ((i + 1) % PLAY_EVERY === 0) add(id, "teach", "play");
   });
+  for (; reviewIndex < opts.plan.review.length; reviewIndex++) add(opts.plan.review[reviewIndex], "review");
   opts.plan.mixed.forEach((id) => add(id, "mixed"));
   return steps;
 }
