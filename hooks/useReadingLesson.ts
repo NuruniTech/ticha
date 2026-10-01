@@ -371,12 +371,12 @@ export function useReadingLesson(options: Options) {
     // finishAttempt below; say so up front rather than printing a misleading verdict.
     if (!step || !expectingRef.current) {
       optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" — not currently expecting an answer, ignored`);
-      return finishAttempt("unscored") ?? "[APP] Ignored. Wait quietly for the next [APP] message.";
+      return finishAttempt("unscored") ?? "[APP] Ignored — do NOT speak. Stay completely silent until the next [APP] message.";
     }
     const outcome: AttemptOutcome = judgeHeard(step.itemId, heard);
     // Debug log only (never stored or sent anywhere): shows why an attempt was scored as it was.
     optsRef.current.log(`👂 heard "${typeof heard === "string" ? heard : ""}" for "${getItem(step.itemId)!.text}" → ${outcome}`);
-    return finishAttempt(outcome) ?? "[APP] Ignored. Wait quietly for the next [APP] message.";
+    return finishAttempt(outcome) ?? "[APP] Ignored — do NOT speak. Stay completely silent until the next [APP] message.";
   }, [finishAttempt]);
 
   const begin = useCallback(() => {
@@ -416,6 +416,18 @@ export function useReadingLesson(options: Options) {
   }, [startStep]);
 
   /** The child stopped speaking. If Ticha never reports, count it as unscored. */
+  // The child has just STARTED speaking (VAD activityStart), before we know how long
+  // for. The silence check-in only has to wonder whether the child has spoken at all
+  // since the prompt, not whether they have finished — so cancel it the instant they
+  // begin, rather than waiting for them to stop. Without this, the check-in could fire
+  // literally mid-answer (seen on a device log: it fired at the 12s mark while the
+  // child was still talking, so Ticha started a "are you still there?" line on top of
+  // the answer she was about to score — two of her own turns colliding).
+  const onChildTurnStarted = useCallback(() => {
+    spokeSincePromptRef.current = true;
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+  }, []);
+
   const onChildTurnEnded = useCallback(() => {
     // The child joined in while Ticha was still modelling the item: count that as
     // "we do" (they are saying it with her), so go straight on once she has replied.
@@ -489,5 +501,5 @@ export function useReadingLesson(options: Options) {
 
   const summary = useCallback(() => ({ ...summaryRef.current }), []);
 
-  return { card, collected, celebrateKey, prepare, giveConsent, begin, handleToolCall, onModelAudio, onInterrupted, onTurnComplete, onChildTurnEnded, replay, resume, summary };
+  return { card, collected, celebrateKey, prepare, giveConsent, begin, handleToolCall, onModelAudio, onInterrupted, onTurnComplete, onChildTurnStarted, onChildTurnEnded, replay, resume, summary };
 }

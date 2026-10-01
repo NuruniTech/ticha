@@ -971,6 +971,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               logRef.current?.("⚡ Barge-in (client VAD) — Ticha cut off");
             }
             sessionRef.current?.sendRealtimeInput({ activityStart: {} });
+            readingApiRef.current?.onChildTurnStarted();
             vad.speaking = true;
             vad.startedAt = vad.lastLoud = now;
             vad.turnPeak = rms;
