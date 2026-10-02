@@ -11,6 +11,8 @@ import { getCourse, resolveWords, type GameWord } from "@/lib/languages";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import { getLevel, nextLevelXp } from "@/lib/levels";
+import { isCategoryUnlocked, isCategoryMastered, type ReadingCategory } from "@/lib/reading/categories";
+import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
 
 const GAMES = [
   { id: "animals",   labelEn: "Animals",    labelSw: "Wanyama",   emoji: "🦁", bg: "#FF8C00", shadow: "rgba(255,140,0,0.35)"   },
@@ -61,9 +63,9 @@ export default function ChildPage() {
   const [child,         setChild]         = useState<Child | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [game,          setGame]          = useState("numbers");
-  // Swahili reading is still in testing: hidden unless ?reading=1 has been opened
-  // on this device (remembered), so field testers of the vocabulary tutor never see it.
-  const [showReading,   setShowReading]   = useState(false);
+  // Reading progress, keyed by curriculum item id, practice attempts only (checks
+  // measure — they don't count toward mastery). Drives the Vowels/Consonants tiles.
+  const [readingAttempts, setReadingAttempts] = useState<Record<string, Attempt[]>>({});
   const [completedGames, setCompletedGames] = useState<Set<string>>(new Set());
   const [view,          setView]          = useState<View>("dashboard");
   const [lockedTapped,  setLockedTapped]  = useState<string | null>(null);
@@ -130,12 +132,19 @@ export default function ChildPage() {
 
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      const [{ data: sessions }, { count: sessionCount }, { data: sibs }, { data: gameSessions }] = await Promise.all([
+      const [{ data: sessions }, { count: sessionCount }, { data: sibs }, { data: gameSessions }, { data: readingRows }] = await Promise.all([
         supabase.from("sessions").select("xp_earned").eq("child_id", childId).gte("created_at", todayStart.toISOString()),
         supabase.from("sessions").select("id", { count: "exact", head: true }).eq("child_id", childId),
         supabase.from("children").select("id, name, avatar, xp").eq("parent_id", user.id).order("xp", { ascending: false }),
         supabase.from("sessions").select("game, xp_earned, duration_seconds").eq("child_id", childId),
+        supabase.from("reading_attempts").select("item_id, outcome, phase, session_id, created_at").eq("child_id", childId).limit(5000),
       ]);
+      const byItem: Record<string, Attempt[]> = {};
+      for (const r of (readingRows ?? []) as { item_id: string; outcome: string; phase: string; session_id: string; created_at: string }[]) {
+        if (r.phase !== "practice") continue; // checks measure; only practice builds mastery (see hooks/useReadingLesson.ts)
+        (byItem[r.item_id] ??= []).push({ sessionId: r.session_id, outcome: r.outcome as AttemptOutcome, at: Date.parse(r.created_at) });
+      }
+      setReadingAttempts(byItem);
       setSiblings((sibs || []).filter(s => s.id !== childId));
       const earned = (sessions || []).reduce((s: number, r: { xp_earned?: number }) => s + (r.xp_earned || 0), 0);
       setTodayStars(earned);
@@ -168,21 +177,8 @@ export default function ChildPage() {
 
   // Mount-only init: async data fetch + quiz-cooldown check (reads
   // localStorage, so it can't run during render without breaking hydration).
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData(); checkQuizCooldown(); }, [loadData]);
-
-  useEffect(() => {
-    try {
-      const q = new URLSearchParams(window.location.search).get("reading");
-      if (q === "0") localStorage.removeItem("ticha_reading");
-      else if (q === "1") localStorage.setItem("ticha_reading", "1");
-      // localStorage only exists in the browser, so this is read after mount.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShowReading(localStorage.getItem("ticha_reading") === "1");
-    } catch {
-      setShowReading(new URLSearchParams(window.location.search).get("reading") === "1");
-    }
-  }, []);
 
   async function startSession() {
     if (!child || isStarting || !gameUnlocked(game, completedGames)) return;
@@ -478,19 +474,76 @@ export default function ChildPage() {
               );
             })}
 
-            {showReading && child && (
-              <button
-                onClick={() => {
-                  const p = new URLSearchParams({
-                    name: child.name, lang: "sw", game: "reading", childId: child.id,
-                    ...(child.age ? { age: String(child.age) } : {}),
-                  });
-                  router.push(`/session?${p.toString()}`);
-                }}
-                style={{ width: "100%", padding: "14px", marginBottom: "12px", background: "#4B8BF5", border: "none", borderRadius: "16px", color: "white", fontSize: "17px", fontWeight: 800, fontFamily: "'Baloo 2', cursive", cursor: "pointer", boxShadow: "0 5px 0 #2F6FD8" }}
-              >
-                📖 {lang === "sw" ? "Jifunze kusoma Kiswahili (jaribio)" : "Learn to read Swahili (beta)"}
-              </button>
+            {/* ── Learn to Read (Swahili) — a child picks Vowels or Consonants, like a game topic. ── */}
+            {child && (
+              <div style={{ marginBottom: "22px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+                  <span style={{ fontSize: "16px" }}>📖</span>
+                  <span style={{ fontFamily: "'Baloo 2', cursive", fontSize: "13px", fontWeight: 800, color: "#1E3A8A" }}>
+                    {lang === "sw" ? "Jifunze Kusoma" : "Learn to Read"}
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  {([
+                    { id: "vowels" as ReadingCategory, labelEn: "Vowels", labelSw: "Irabu", emoji: "🔤", bg: "#4B8BF5", shadow: "rgba(75,139,245,0.35)" },
+                    { id: "consonants" as ReadingCategory, labelEn: "Consonants", labelSw: "Konsonanti", emoji: "🔡", bg: "#0EA5E9", shadow: "rgba(14,165,233,0.35)" },
+                  ]).map((c) => {
+                    const unlocked = isCategoryUnlocked(c.id, readingAttempts);
+                    const mastered = isCategoryMastered(c.id, readingAttempts);
+                    const tapKey = `reading-${c.id}`;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          if (!unlocked) {
+                            setLockedTapped(tapKey);
+                            if (lockedHintTimer.current) clearTimeout(lockedHintTimer.current);
+                            lockedHintTimer.current = setTimeout(() => setLockedTapped(null), 2500);
+                            return;
+                          }
+                          const p = new URLSearchParams({
+                            name: child.name, lang: "sw", game: `reading-${c.id}`, childId: child.id,
+                            ...(child.age ? { age: String(child.age) } : {}),
+                          });
+                          router.push(`/session?${p.toString()}`);
+                        }}
+                        style={{
+                          background: c.bg, borderRadius: "20px", padding: "20px 12px 16px", border: "3px solid transparent",
+                          cursor: unlocked ? "pointer" : "not-allowed",
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+                          boxShadow: unlocked ? `0 4px 12px ${c.shadow}` : "none",
+                          filter: unlocked ? "none" : "grayscale(1)", opacity: unlocked ? 1 : 0.72,
+                          position: "relative", transition: "all 0.18s ease",
+                        }}
+                      >
+                        <span style={{ fontSize: "40px", lineHeight: 1 }}>{c.emoji}</span>
+                        <div style={{ textAlign: "center" }}>
+                          <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: "15px", fontWeight: 800, color: "white", margin: 0, lineHeight: 1.2 }}>
+                            {lang === "sw" ? c.labelSw : c.labelEn}
+                          </p>
+                          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.8)", margin: 0 }}>
+                            {lang === "sw" ? c.labelEn : c.labelSw}
+                          </p>
+                        </div>
+                        {mastered && unlocked && (
+                          <div style={{ position: "absolute", top: "10px", right: "10px", width: "22px", height: "22px", background: "#22C55E", borderRadius: "50%", border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "white", fontWeight: 900 }}>✓</div>
+                        )}
+                        {!unlocked && lockedTapped !== tapKey && (
+                          <div style={{ position: "absolute", top: "10px", right: "10px", width: "24px", height: "24px", background: "rgba(0,0,0,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>🔒</div>
+                        )}
+                        {!unlocked && lockedTapped === tapKey && (
+                          <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.82)", borderRadius: "17px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px", gap: "6px" }}>
+                            <span style={{ fontSize: "20px" }}>🔒</span>
+                            <p style={{ fontSize: "11px", fontWeight: 800, color: "white", textAlign: "center", margin: 0, lineHeight: 1.4, fontFamily: "'Nunito', sans-serif" }}>
+                              {lang === "sw" ? "Maliza Irabu kwanza" : "Master Vowels first"}
+                            </p>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
             <button
