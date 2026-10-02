@@ -13,6 +13,7 @@ import { getSystemPrompt, getWordBatch, getLessonLevel } from "@/lib/lessonPromp
 import { getReadingSystemPrompt } from "@/lib/reading/prompt";
 import { StreamResampler } from "@/lib/audio/resample";
 import { useReadingLesson } from "@/hooks/useReadingLesson";
+import type { ReadingCategory } from "@/lib/reading/categories";
 import ReadingCard from "./ReadingCard";
 import ReadingScreen from "./ReadingScreen";
 import { getAnimatedUrl, getFluentUrl } from "@/lib/fluentEmoji";
@@ -122,10 +123,13 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const revealClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Words fixed for this session
-  // Reading mode (game=reading): the app steers a Swahili early-reading lesson and
-  // Ticha reports each attempt via a function call. Every branch below is gated on
-  // this flag, so the vocabulary tutor is unchanged.
-  const isReading = game === "reading";
+  // Reading mode (game="reading-vowels" or "reading-consonants"): the app steers a
+  // Swahili early-reading lesson and Ticha reports each attempt via a function
+  // call. Every branch below is gated on isReading, so the vocabulary tutor is
+  // unchanged. The category is a real, explicit choice (like picking Animals vs
+  // Colors), not inferred from age — see lib/reading/categories.ts.
+  const isReading = game.startsWith("reading-");
+  const readingCategory: ReadingCategory = game === "reading-consonants" ? "consonants" : "vowels";
   const lessonWords = useMemo(() => (isReading ? [] : getWordBatch(game, childXp, childAge)), [isReading, game, childXp, childAge]);
   const [showConsent, setShowConsent] = useState(false);
   const [readingSide, setReadingSide] = useState<"left" | "right">("left"); // which side Ticha is on (&side=right)
@@ -469,7 +473,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const reading = useReadingLesson({
     childId,
     childName,
-    childAge,
+    category: readingCategory,
     sendToModel: (text) => {
       sessionRef.current?.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true });
     },

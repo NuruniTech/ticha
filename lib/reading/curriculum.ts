@@ -5,8 +5,15 @@
 //
 // ⚠ PROPOSAL, NOT FINAL: the consonant order and the word list below were
 // chosen by the developer and must be reviewed by a fluent Swahili speaker
-// (and ideally checked against the Tanzanian Standard 1 KKK syllabus) before
-// children use them. Changing an entry means re-recording its audio.
+// before children use them at scale. Changing an entry means re-recording its
+// audio. The letter SET itself is verified: Swahili has 18 single-letter
+// consonants and 9 digraph sounds taught as their own letters (b, d, f, g, h,
+// j, k, l, m, n, p, r, s, t, v, w, y, z; ch, dh, gh, kh, ng, ng', ny, sh, th —
+// https://remedialcorner.com/blog/the-kiswahili-alphabet-a-beginners-guide-to-vowels-and-consonants/).
+// The ORDER below keeps the original 8 first (they already have curated words
+// attached), then the rest of the single letters, then the digraphs, which are
+// more complex sound combinations and conventionally taught after the base set.
+// That ordering is a reasonable default, not a researched one — reorder freely.
 
 export type ReadingItemKind = "vowel" | "syllable" | "word";
 
@@ -22,7 +29,11 @@ export interface ReadingItem {
 }
 
 export const VOWELS = ["a", "e", "i", "o", "u"] as const;
-export const CONSONANTS = ["b", "m", "t", "k", "n", "l", "s", "d"] as const;
+export const CONSONANTS = [
+  "b", "m", "t", "k", "n", "l", "s", "d",       // original 8 (already have curated words)
+  "f", "g", "h", "j", "p", "r", "v", "w", "y", "z", // the rest of the single letters
+  "ch", "sh", "ny", "ng", "ng'", "dh", "gh", "kh", "th", // digraph sounds
+] as const;
 
 // Every word is spelled only from syllables/vowels taught above (enforced by tests).
 const WORDS: { text: string; syllables: string[]; gloss: string }[] = [

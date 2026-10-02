@@ -7,10 +7,17 @@ import { planLesson } from "@/lib/reading/lesson";
 const a = (sessionId: string, outcome: Attempt["outcome"], at = 0): Attempt => ({ sessionId, outcome, at });
 
 describe("curriculum", () => {
-  it("has the v1 shape: 5 vowels, 8 consonants x 5 vowels, and words", () => {
+  it("has the v1 shape: 5 vowels, CONSONANTS.length x 5 vowels as syllables, and words", () => {
     expect(READING_ITEMS.filter((i) => i.kind === "vowel")).toHaveLength(VOWELS.length);
     expect(READING_ITEMS.filter((i) => i.kind === "syllable")).toHaveLength(CONSONANTS.length * VOWELS.length);
     expect(READING_ITEMS.filter((i) => i.kind === "word").length).toBeGreaterThanOrEqual(15);
+  });
+
+  it("covers the full verified Swahili consonant set — 18 single letters + 9 digraph sounds", () => {
+    // https://remedialcorner.com/blog/the-kiswahili-alphabet-a-beginners-guide-to-vowels-and-consonants/
+    const singleLetters = ["b", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "y", "z"];
+    const digraphs = ["ch", "dh", "gh", "kh", "ng", "ng'", "ny", "sh", "th"];
+    expect(new Set(CONSONANTS)).toEqual(new Set([...singleLetters, ...digraphs]));
   });
 
   it("has unique ids and a contiguous step order", () => {

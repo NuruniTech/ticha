@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
-import { decideCheck } from "@/lib/reading/checks";
-import { CHECK_FORMS, isKnownItemId } from "@/lib/reading/curriculum";
+import { decideCheckForCategory } from "@/lib/reading/checks";
+import { CHECK_FORMS, isKnownItemId, getItem as getItemTop } from "@/lib/reading/curriculum";
 import { greetingInstruction, shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS, respellUnit, respellItem, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
 import { SESSION_GAP_MS } from "@/lib/reading/validate";
 
@@ -186,38 +186,60 @@ describe("the app judges what Ticha heard", () => {
   });
 });
 
-describe("decideCheck", () => {
+describe("decideCheckForCategory: consonants (reuses the curated forms, vowel entries dropped)", () => {
   const T0 = Date.parse("2026-10-01T09:00:00Z");
   const row = (item_id: string, phase: string, ms: number) => ({ item_id, outcome: "correct", phase, created_at: new Date(T0 + ms).toISOString() });
-  const sessionsOfPractice = (n: number) => Array.from({ length: n }, (_, i) => row("v-a", "practice", i * (SESSION_GAP_MS + 60_000)));
+  const sessionsOfPractice = (n: number) => Array.from({ length: n }, (_, i) => row("s-ba", "practice", i * (SESSION_GAP_MS + 60_000)));
+  const formA = CHECK_FORMS.A.filter((id) => getItemTop(id)!.kind !== "vowel");
+  const formB = CHECK_FORMS.B.filter((id) => getItemTop(id)!.kind !== "vowel");
 
-  it("starts a new child on the baseline (form A)", () => {
-    expect(decideCheck([])).toEqual({ phase: "baseline", items: [...CHECK_FORMS.A] });
+  it("drops the vowel entries from each curated form (vowels are proven mastered to even get here)", () => {
+    expect(formA.every((id) => getItemTop(id)!.kind !== "vowel")).toBe(true);
+    expect(formA.length).toBe(CHECK_FORMS.A.length - 2);
+  });
+
+  it("starts a new child on the baseline", () => {
+    expect(decideCheckForCategory("consonants", [])).toEqual({ phase: "baseline", items: formA });
   });
 
   it("resumes a part-finished baseline with only the missing items", () => {
-    const rows = CHECK_FORMS.A.slice(0, 4).map((id) => row(id, "baseline", 0));
-    expect(decideCheck(rows)!.items).toEqual([...CHECK_FORMS.A.slice(4)]);
+    const rows = formA.slice(0, 4).map((id) => row(id, "baseline", 0));
+    expect(decideCheckForCategory("consonants", rows)!.items).toEqual(formA.slice(4));
   });
 
   it("does not repeat a finished baseline before any practice", () => {
-    expect(decideCheck(CHECK_FORMS.A.map((id) => row(id, "baseline", 0)))).toBeNull();
+    expect(decideCheckForCategory("consonants", formA.map((id) => row(id, "baseline", 0)))).toBeNull();
   });
 
   it("is not due until 5 practice sessions have passed", () => {
-    expect(decideCheck(sessionsOfPractice(4))).toBeNull();
-    expect(decideCheck(sessionsOfPractice(5))).toEqual({ phase: "checkpoint", items: [...CHECK_FORMS.B] });
+    expect(decideCheckForCategory("consonants", sessionsOfPractice(4))).toBeNull();
+    expect(decideCheckForCategory("consonants", sessionsOfPractice(5))).toEqual({ phase: "checkpoint", items: formB });
   });
 
   it("is next due 5 sessions after a completed checkpoint", () => {
-    const done = CHECK_FORMS.B.map((id) => row(id, "checkpoint", 0));
-    expect(decideCheck([...sessionsOfPractice(9), ...done])).toBeNull();
-    expect(decideCheck([...sessionsOfPractice(10), ...done])!.phase).toBe("checkpoint");
+    const done = formB.map((id) => row(id, "checkpoint", 0));
+    expect(decideCheckForCategory("consonants", [...sessionsOfPractice(9), ...done])).toBeNull();
+    expect(decideCheckForCategory("consonants", [...sessionsOfPractice(10), ...done])!.phase).toBe("checkpoint");
   });
 
   it("resumes a part-finished checkpoint", () => {
-    const partial = CHECK_FORMS.B.slice(0, 3).map((id) => row(id, "checkpoint", 0));
-    expect(decideCheck([...sessionsOfPractice(5), ...partial])!.items).toEqual([...CHECK_FORMS.B.slice(3)]);
+    const partial = formB.slice(0, 3).map((id) => row(id, "checkpoint", 0));
+    expect(decideCheckForCategory("consonants", [...sessionsOfPractice(5), ...partial])!.items).toEqual(formB.slice(3));
+  });
+});
+
+describe("decideCheckForCategory: vowels (only 5 items — same set used before and after)", () => {
+  const VOWEL_IDS = ["v-a", "v-e", "v-i", "v-o", "v-u"];
+  const T0 = Date.parse("2026-10-01T09:00:00Z");
+  const row = (item_id: string, phase: string, ms: number) => ({ item_id, outcome: "correct", phase, created_at: new Date(T0 + ms).toISOString() });
+
+  it("baselines on all 5 vowels for a brand-new child", () => {
+    expect(decideCheckForCategory("vowels", [])).toEqual({ phase: "baseline", items: VOWEL_IDS });
+  });
+
+  it("checkpoints on all 5 vowels again after 5 practice sessions", () => {
+    const sessions = Array.from({ length: 5 }, (_, i) => row("v-a", "practice", i * (SESSION_GAP_MS + 60_000)));
+    expect(decideCheckForCategory("vowels", sessions)).toEqual({ phase: "checkpoint", items: VOWEL_IDS });
   });
 });
 
@@ -317,83 +339,78 @@ describe("reading system prompt", () => {
   });
 });
 
-import { readingTrack, trackKinds, effectiveTrack, EARLY_TRACK_MAX_AGE } from "@/lib/reading/track";
+import { CATEGORY_KINDS, isCategoryUnlocked, isCategoryMastered, isReadingCategory } from "@/lib/reading/categories";
 import { planLesson } from "@/lib/reading/lesson";
-import { decideCheckForTrack } from "@/lib/reading/checks";
 import { READING_ITEMS, getItem } from "@/lib/reading/curriculum";
 
-describe("reading tracks by age", () => {
+describe("reading categories (a child picks Vowels or Consonants, like a game topic)", () => {
   const mastered = (n = 0) => [
     { sessionId: "s1", outcome: "correct" as const, at: n + 1 },
     { sessionId: "s1", outcome: "correct" as const, at: n + 2 },
     { sessionId: "s2", outcome: "correct" as const, at: n + 3 },
   ];
+  const allVowelsMastered = () => {
+    const attempts: Record<string, ReturnType<typeof mastered>> = {};
+    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i, idx) => { attempts[i.id] = mastered(idx * 10); });
+    return attempts;
+  };
 
-  it("gives ages 4 and under the early track, 5+ or unknown the full track", () => {
-    expect(readingTrack(3)).toBe("early");
-    expect(readingTrack(EARLY_TRACK_MAX_AGE)).toBe("early");
-    expect(readingTrack(5)).toBe("full");
-    expect(readingTrack(7)).toBe("full");
-    expect(readingTrack(undefined)).toBe("full");
-    expect(readingTrack(null)).toBe("full");
-    expect(readingTrack(NaN)).toBe("full");
+  it("Vowels is always unlocked; Consonants is locked until every vowel is mastered", () => {
+    expect(isCategoryUnlocked("vowels", {})).toBe(true);
+    expect(isCategoryUnlocked("consonants", {})).toBe(false);
+    expect(isCategoryUnlocked("consonants", allVowelsMastered())).toBe(true);
   });
 
-  it("limits the early track to the five vowels", () => {
-    expect(trackKinds("early")).toEqual(["vowel"]);
-    const plan = planLesson({}, { kinds: trackKinds("early") });
+  it("stays locked if even one vowel is still unmastered — a child one vowel short does not get syllables", () => {
+    const attempts = allVowelsMastered();
+    delete attempts["v-u"]; // one vowel never attempted
+    expect(isCategoryUnlocked("consonants", attempts)).toBe(false);
+  });
+
+  it("limits the Vowels category to the five vowels only — nothing else, ever", () => {
+    expect(CATEGORY_KINDS.vowels).toEqual(["vowel"]);
+    const plan = planLesson({}, { kinds: CATEGORY_KINDS.vowels });
     expect(plan.teach).toEqual(["v-a", "v-e", "v-i", "v-o", "v-u"]);
   });
 
-  it("never offers syllables or words to the early track, even when every vowel is mastered", () => {
-    const all: Record<string, ReturnType<typeof mastered>> = {};
-    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i, idx) => { all[i.id] = mastered(idx * 10); });
-    const plan = planLesson(all, { kinds: trackKinds("early") });
+  it("never offers syllables or words inside the Vowels category, even once every vowel is mastered", () => {
+    const plan = planLesson(allVowelsMastered(), { kinds: CATEGORY_KINDS.vowels });
     expect(plan.teach).toEqual([]);
     [...plan.review, ...plan.teach, ...plan.mixed].forEach((id) => expect(getItem(id)!.kind).toBe("vowel"));
   });
 
-  it("keeps syllables in the full track and gives the early track no check", () => {
-    const vowels: Record<string, ReturnType<typeof mastered>> = {};
-    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i, idx) => { vowels[i.id] = mastered(idx * 10); });
-    expect(planLesson(vowels, { kinds: trackKinds("full") }).teach[0]).toBe("s-ba");
-    expect(decideCheckForTrack("early", [])).toBeNull();
-    expect(decideCheckForTrack("full", [])!.phase).toBe("baseline");
+  // This is the exact bug a real test session found: by lesson 2, a child who had
+  // only ONE attempt per vowel (not yet mastered) was already being taught brand
+  // new syllables. The Consonants category's own `kinds` filter is irrelevant
+  // here — THIS is the gate that must hold regardless of which category a lesson
+  // asks to run, which is why isCategoryUnlocked exists as a separate check the
+  // app enforces before it ever offers the Consonants tile.
+  it("regression: a child with vowels merely attempted (not mastered) does not unlock Consonants", () => {
+    const oneAttemptEach: Record<string, ReturnType<typeof mastered>> = {};
+    READING_ITEMS.filter((i) => i.kind === "vowel").forEach((i) => { oneAttemptEach[i.id] = [{ sessionId: "s1", outcome: "correct", at: 1 }]; });
+    expect(isCategoryUnlocked("consonants", oneAttemptEach)).toBe(false);
+  });
+
+  it("offers syllables inside Consonants once it is actually unlocked", () => {
+    expect(planLesson(allVowelsMastered(), { kinds: CATEGORY_KINDS.consonants }).teach[0]).toBe("s-ba");
+  });
+
+  it("isCategoryMastered is true only once every item of that category's kinds is mastered", () => {
+    expect(isCategoryMastered("vowels", {})).toBe(false);
+    expect(isCategoryMastered("vowels", allVowelsMastered())).toBe(true);
+  });
+
+  it("isReadingCategory recognises only the real category ids", () => {
+    expect(isReadingCategory("vowels")).toBe(true);
+    expect(isReadingCategory("consonants")).toBe(true);
+    expect(isReadingCategory("sentences")).toBe(false);
+    expect(isReadingCategory("")).toBe(false);
   });
 });
 
 describe("empty lesson", () => {
   it("says goodbye with the closing word so the app can end the session", () => {
     expect(nothingLeftInstruction).toMatch(/tutaonana/);
-  });
-});
-
-describe("age is a starting point, not a ceiling", () => {
-  const m = (base: number) => [
-    { sessionId: "s1", outcome: "correct" as const, at: base + 1 },
-    { sessionId: "s1", outcome: "correct" as const, at: base + 2 },
-    { sessionId: "s2", outcome: "correct" as const, at: base + 3 },
-  ];
-  const vowelIds = ["v-a", "v-e", "v-i", "v-o", "v-u"];
-  const masteredVowels = (n: number) => Object.fromEntries(vowelIds.slice(0, n).map((id, i) => [id, m(i * 10)]));
-
-  it("starts a young child on the early track", () => {
-    expect(effectiveTrack(3, {})).toBe("early");
-    expect(effectiveTrack(4, masteredVowels(4))).toBe("early"); // one vowel still to master
-  });
-
-  it("moves a young child to the full track once all five vowels are mastered", () => {
-    expect(effectiveTrack(3, masteredVowels(5))).toBe("full");
-  });
-
-  it("never holds back an older child or one with no age", () => {
-    expect(effectiveTrack(6, {})).toBe("full");
-    expect(effectiveTrack(undefined, {})).toBe("full");
-  });
-
-  it("then offers syllables to the child who has moved on", () => {
-    const track = effectiveTrack(3, masteredVowels(5));
-    expect(planLesson(masteredVowels(5), { kinds: trackKinds(track) }).teach[0]).toBe("s-ba");
   });
 });
 

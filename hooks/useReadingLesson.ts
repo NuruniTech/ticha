@@ -6,8 +6,8 @@ import { getItem, type ReadingItem } from "@/lib/reading/curriculum";
 import { planLesson } from "@/lib/reading/lesson";
 import { judgeHeard } from "@/lib/reading/judge";
 import type { Attempt, AttemptOutcome } from "@/lib/reading/mastery";
-import { decideCheckForTrack, type StoredRow } from "@/lib/reading/checks";
-import { effectiveTrack, trackKinds } from "@/lib/reading/track";
+import { decideCheckForCategory, type StoredRow } from "@/lib/reading/checks";
+import { CATEGORY_KINDS, type ReadingCategory } from "@/lib/reading/categories";
 import {
   buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isCheckStep, isGuided,
   type ConductorState, type StepKind, type Stage,
@@ -36,7 +36,7 @@ export interface ReadingCard {
 interface Options {
   childId: string | null;
   childName: string;
-  childAge?: number;
+  category: ReadingCategory;
   sendToModel: (text: string) => void;
   playClip: (url: string) => Promise<boolean>; // false when the recording is unavailable
   roll?: () => Promise<boolean>;                // swap in a fresh Gemini session; false if it failed
@@ -156,16 +156,16 @@ export function useReadingLesson(options: Options) {
       (byItem[r.item_id] ??= []).push({ sessionId: r.session_id, outcome: r.outcome as AttemptOutcome, at: Date.parse(r.created_at) });
     }
 
-    const track = effectiveTrack(optsRef.current.childAge, byItem);
-    const check = decideCheckForTrack(track, stored);
-    const steps = buildSteps({ plan: planLesson(byItem, { kinds: trackKinds(track) }), check: check ?? undefined });
+    const category = optsRef.current.category;
+    const check = decideCheckForCategory(category, stored);
+    const steps = buildSteps({ plan: planLesson(byItem, { kinds: CATEGORY_KINDS[category] }), check: check ?? undefined });
     stateRef.current = startConductor(steps);
     sessionIdRef.current = newSessionId();
     setCollected([]);
     setCelebrateKey(0);
     pendingRef.current = null;
     expectingRef.current = false;
-    log(`📖 Reading lesson ready (${track} track): ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
+    log(`📖 Reading lesson ready (${category}): ${steps.length} steps${check ? `, starting with ${check.phase}` : ""}`);
     return { ok: true };
   }, []);
 
