@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildSteps, startConductor, applyVerdict, advanceGuided, currentStep, isGuided, MAX_TRIES, DISCONTINUE_AFTER, type ConductorState } from "@/lib/reading/conductor";
 import { decideCheckForCategory } from "@/lib/reading/checks";
 import { CHECK_FORMS, isKnownItemId, getItem as getItemTop } from "@/lib/reading/curriculum";
-import { greetingInstruction, shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS, respellUnit, respellItem, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
+import { greetingInstruction, shouldPlayClip, promptInstruction, feedbackInstruction, nothingLeftInstruction, warmupInstructions, WARMUP_TURNS, PRAISES, VOWEL_SOUND } from "@/lib/reading/instructions";
 import { SESSION_GAP_MS } from "@/lib/reading/validate";
 
 const plan = { review: ["v-a"], teach: ["v-e", "v-i"], mixed: ["v-i", "v-e", "v-a"] };
@@ -261,36 +261,33 @@ describe("instructions", () => {
     expect(shouldPlayClip(review, true)).toBe(true);
   });
 
-  it("modelling blends the sounds and does not ask the child to answer or report", () => {
+  it("modelling says the real spelling (no fabricated respelling) and does not ask the child to answer or report", () => {
     const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(p).toMatch(/one at a time \("b", then "ah"\)/);
-    expect(p).toMatch(/respelled here as "bah"/);
-    expect(p).toMatch(/Do NOT ask the child to say it yet/);
-    expect(p).toMatch(/Do NOT call report_attempt/);
+    expect(p).toMatch(/blend them into "ba"/);
+    expect(p).toMatch(/do not ask them to answer yet/);
+    expect(p).not.toMatch(/report_attempt/); // not mentioned at all here — the standing prompt already covers it
     const word = promptInstruction({ ...model, itemId: "w-mama" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(word).toMatch(/each syllable slowly/);
-    expect(word).toMatch(/respelled here as "mah-mah"/);
+    expect(word).toMatch(/Say each part slowly/);
+    expect(word).toMatch(/whole word "mama"/);
     const vowel = promptInstruction({ ...model, itemId: "v-a" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(vowel).toMatch(/sound "ah" once, slowly/);
+    expect(vowel).toMatch(/Say the vowel "a" once, slowly/);
   });
 
   it("saying together invites the child to join and is not scored", () => {
     const p = promptInstruction(together, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(p).toMatch(/together with you/);
-    expect(p).toMatch(/Do NOT call report_attempt for this step/);
-    expect(p).not.toMatch(/listen. When the child answers, call report_attempt/);
+    expect(p).toMatch(/invite them to say it with you/);
+    expect(p).not.toMatch(/report_attempt/);
   });
 
-  it("the alone step tells the child it is their turn and asks Ticha to listen and report", () => {
+  it("the alone step tells the child it is their turn", () => {
     const p = promptInstruction(alone, { isRetry: false, clipPlayed: false, clipExpected: false });
     expect(p).toMatch(/their turn to say it alone/);
-    expect(p).toMatch(/call report_attempt with exactly what you heard/);
   });
 
   it("forbids hinting during a check and stays silent about right/wrong", () => {
     const p = promptInstruction(check, { isRetry: false, clipPlayed: false, clipExpected: false });
-    expect(p).toMatch(/Do NOT say it/);
-    expect(feedbackInstruction(check, "incorrect", { action: "next", movedOn: false })).toMatch(/Do NOT say whether/);
+    expect(p).toMatch(/do not say it or hint at it/);
+    expect(feedbackInstruction(check, "incorrect", { action: "next", movedOn: false })).toMatch(/Do not say whether/);
   });
 
   it("welcomes each new part of the lesson aloud, but not on a retry", () => {
@@ -309,11 +306,11 @@ describe("instructions", () => {
   it("closes a stopped check kindly without saying anything was wrong", () => {
     const t = feedbackInstruction(check, "incorrect", { action: "next", movedOn: false, discontinued: true });
     expect(t).toMatch(/game is finished/);
-    expect(t).toMatch(/Do NOT say whether/);
+    expect(t).toMatch(/Do not say whether/);
   });
 
-  it("makes Ticha say the sound herself only when a recording was expected but missing", () => {
-    expect(promptInstruction(model, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say the sound "bah" clearly yourself/);
+  it("makes Ticha say the sound herself (the real spelling) only when a recording was expected but missing", () => {
+    expect(promptInstruction(model, { isRetry: false, clipPlayed: false, clipExpected: true })).toMatch(/Say "ba" clearly yourself/);
     expect(promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true })).not.toMatch(/clearly yourself/);
   });
 
@@ -414,47 +411,37 @@ describe("empty lesson", () => {
   });
 });
 
-describe("pronunciation (Ticha read the vowel e as the English letter name, which sounds like Swahili i)", () => {
+describe("pronunciation (real Swahili spelling, no fabricated respellings to read aloud)", () => {
   const model = { itemId: "v-e", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: false };
 
-  it("respells Swahili units so the model cannot read them as English letter names", () => {
-    expect(respellUnit("e")).toBe("eh");
-    expect(respellUnit("i")).toBe("ee");
-    expect(respellUnit("ba")).toBe("bah");
-    expect(respellUnit("me")).toBe("meh");
-    expect(respellUnit("so")).toBe("soh");
-    expect(respellUnit("ku")).toBe("koo");
-    expect(respellItem("w-soma")).toBe("soh-mah");
-    expect(respellItem("w-nane")).toBe("nah-neh");
-  });
-
-  it("gives every vowel an unambiguous sound", () => {
+  it("gives every vowel a clear Swahili sound, anchored to a real word, never a made-up spelling", () => {
     expect(Object.keys(VOWEL_SOUND).sort()).toEqual(["a", "e", "i", "o", "u"]);
     expect(VOWEL_SOUND.e).toMatch(/eh/);
     expect(VOWEL_SOUND.e).toMatch(/pesa/);
+    expect(VOWEL_SOUND.e).toMatch(/never the English letter name/);
   });
 
-  it("asks for the respelling, not the letter, when modelling the vowel e", () => {
+  it("tells Ticha to say the REAL spelling, with a parenthetical pronunciation reminder — no invented word to read", () => {
     const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(p).toMatch(/Say the sound "eh" once, slowly/);
-    expect(p).toMatch(/exactly as respelled here: "eh"/);
-    expect(p).toMatch(/never the English letter name/);
+    expect(p).toMatch(/Say the vowel "e" once, slowly/);
+    expect(p).toMatch(/\(Say "e" the Swahili way — "eh"/);
+    expect(p).not.toMatch(/"eh"\)/); // no fabricated respelling anywhere, including the clip-play line
   });
 
-  it("covers the vowels inside syllables and words too", () => {
+  it("covers the vowels inside syllables and words too, always using the real spelling", () => {
     const syl = promptInstruction({ ...model, itemId: "s-me" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(syl).toMatch(/respelled here as "meh"/);
-    expect(syl).toMatch(/The vowel "e" is "eh"/);
+    expect(syl).toMatch(/blend them into "me"/);
+    expect(syl).toMatch(/"e" the Swahili way — "eh"/);
     const word = promptInstruction({ ...model, itemId: "w-nane" }, { isRetry: false, clipPlayed: true, clipExpected: true });
-    expect(word).toMatch(/"nah-neh"/);
-    expect(word).toMatch(/The vowel "a" is "ah"/);
+    expect(word).toMatch(/whole word "nane"/);
+    expect(word).toMatch(/"a" the Swahili way — "ah"/);
   });
 
-  it("puts the same rules in Ticha's standing prompt", () => {
+  it("puts the same rules in Ticha's standing prompt, without the old 'say this respelling' instruction", () => {
     const p = getReadingSystemPrompt("Amani");
     expect(p).toMatch(/NEVER said "ee"/);
-    expect(p).toMatch(/say EXACTLY that/);
-    expect(p).toMatch(/Never say English letter names/);
+    expect(p).not.toMatch(/say EXACTLY that/);
+    expect(p).toMatch(/exactly as it is spelled/);
   });
 });
 
@@ -463,15 +450,15 @@ describe("a less robotic lesson", () => {
     const w = warmupInstructions(() => 0);
     expect(w).toHaveLength(WARMUP_TURNS);
     expect(w[0]).toMatch(/how they are feeling today/);
-    expect(w[1]).toMatch(/React to what the child just said/);
+    expect(w[1]).toMatch(/React warmly to what they just said/);
     expect(w[1]).toMatch(/favourite animal/);
     expect(w[2]).toMatch(/sauti za kufurahisha/);
     expect(w[2]).toMatch(/ask if they are ready/);
-    w.forEach((line) => {
-      expect(line).toMatch(/Do NOT teach anything/);
-      expect(line).toMatch(/Do NOT call report_attempt/);
-      expect(line).toMatch(/stay silent and listen/);
-    });
+    // Kept short: the standing prompt already says to stay silent until spoken to
+    // and never call report_attempt outside a scored step, so these turns don't
+    // repeat those rules — they just end by saying to listen.
+    w.forEach((line) => expect(line).toMatch(/listen/));
+    expect(w[0]).toMatch(/not a lesson yet/);
   });
 
   it("asks a different fun question each time", () => {
@@ -499,10 +486,10 @@ describe("a less robotic lesson", () => {
     expect(isGuided(play)).toBe(true);
     expect(shouldPlayClip(play, false)).toBe(true);
     const p = promptInstruction(play, { isRetry: false, clipPlayed: true, clipExpected: true }, () => 0);
-    expect(p).toMatch(/tiny playful game with the sound "ah"/);
+    expect(p).toMatch(/playful moment with "a"/);
     expect(p).toMatch(/mouse voice/);
-    expect(p).toMatch(/let the child join in/);
-    expect(p).toMatch(/Do NOT call report_attempt/);
+    expect(p).toMatch(/let them join in/);
+    expect(p).not.toMatch(/report_attempt/); // relies on the standing prompt; not repeated per turn
     expect(promptInstruction(play, { isRetry: false, clipPlayed: true, clipExpected: true }, () => 0.99)).toMatch(/clap/);
   });
 
@@ -524,7 +511,7 @@ describe("greeting", () => {
   it("meets a friend first: no mention of lessons yet", () => {
     const g = greetingInstruction("Amani");
     expect(g).toMatch(/Amani/);
-    expect(g).toMatch(/Do NOT mention lessons or reading yet/);
+    expect(g).toMatch(/Do not mention lessons or reading yet/);
   });
 });
 
