@@ -152,9 +152,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   // Gemini's own delivery controls (affective dialog: adapt tone to the child's own;
   // proactive audio: allowed to stay silent on off-topic/irrelevant speech instead of
   // answering every sound). Verified against the live API on 2026-09-29 over v1alpha
-  // with an ephemeral token — accepted, no setup rejection. Not yet confirmed by ear,
-  // so: on by default for the reading lesson (&affect=0 opts out), opt-in elsewhere
-  // (&affect=1) until someone has actually listened to it.
+  // with an ephemeral token — accepted, no setup rejection. But a device log on
+  // 2026-10-02 showed Ticha's own replies being cut off and restarted several times,
+  // some with NO child speech anywhere nearby — proactiveAudio explicitly lets the
+  // model decide not to finish or not to respond at all, and that matches. Turned
+  // back OFF by default everywhere (&affect=1 opts in for an A/B) until it is
+  // confirmed, with a real comparison log, that it is not the cause.
   const affectFlagRef      = useRef<boolean | null>(null); // null = no explicit &affect= override
   // "Rolling" to a fresh Gemini session: the native-audio model gets slower and
   // stalls the longer one session runs (measured: replies 1.3s -> 6.8s -> 8.5s, then
@@ -892,7 +895,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       audioChunkCountRef.current = 0;
       micSendCountRef.current    = 0;
       log(`🔈 playCtx ${playCtx.sampleRate}Hz state=${playCtx.state} | micCtx ${micCtx.sampleRate}Hz`);
-      setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  affect=${(affectFlagRef.current ?? isReading) ? "on" : "off"}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
+      setDebugHeader(`🤖 ${liveModelRef.current}  |  ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}  |  affect=${(affectFlagRef.current ?? false) ? "on" : "off"}  |  play ${playCtx.sampleRate}Hz  mic ${micCtx.sampleRate}Hz`);
       log(`CONFIG ${liveModelRef.current} | ${manualTurnRef.current ? "turn=CLIENT-VAD" : `vad=${vadProfileRef.current}`}`);
       playCtxRef.current = playCtx;
       resamplerRef.current = null; // new context, new rate: start a fresh stream
@@ -1071,7 +1074,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               }],
             }],
           } : {}),
-          ...((affectFlagRef.current ?? isReading) ? {
+          ...((affectFlagRef.current ?? false) ? {
             // If enabled, the model will detect emotions and adapt its responses.
             enableAffectiveDialog: true,
             // Lets the model stay silent on off-topic or irrelevant input instead of
