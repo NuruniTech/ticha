@@ -185,6 +185,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
   const pendingChildRef  = useRef("");
   const childTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const turnCompleteRef  = useRef(true);
+  // Dev-only: accumulates what Ticha is saying THIS turn, logged as one line at
+  // turnComplete (not per fragment, which would flood the log unreadably). Until
+  // now the debug log never captured the actual conversation, only event
+  // markers — so every diagnosis made from it was inferred, not seen.
+  const tichaUtteranceRef = useRef("");
   const starsRef         = useRef(0);
   const transcriptRef    = useRef<{ role: "child" | "ticha"; text: string }[]>([]);
   // Prevent double-save if both auto-end and manual End fire at the same time
@@ -1204,6 +1209,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             // ── Ticha transcript + XP + auto-complete detection ──
             const tichaText = msg.serverContent?.outputTranscription?.text;
             if (tichaText?.trim()) {
+              tichaUtteranceRef.current += tichaText;
               setTranscript((prev) => {
                 if (turnCompleteRef.current) {
                   turnCompleteRef.current = false;
@@ -1238,6 +1244,10 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               // A turnComplete arriving seconds before the audio actually runs
               // out is the signature of the known server-side truncation bug.
               turnCompleteAtRef.current = Date.now();
+              if (tichaUtteranceRef.current.trim()) {
+                log(`🗣️ Ticha: ${tichaUtteranceRef.current.trim()}`);
+                tichaUtteranceRef.current = "";
+              }
               if (isReading) readingApiRef.current?.onTurnComplete();
               log(`⏹ turnComplete — waiting for next reply…`);
               turnCompleteRef.current = true;
