@@ -14,6 +14,7 @@
 // hearing the child), it is not repeated in every single turn here.
 
 import { getItem } from "./curriculum";
+import { anchorFor } from "./anchors";
 import { isCheckStep, isGuided, type Step, type StepKind } from "./conductor";
 import type { Advance } from "./conductor";
 import type { AttemptOutcome } from "./mastery";
@@ -35,6 +36,12 @@ const PHASE_INTRO: Record<StepKind, string> = {
   teach:      'react with excitement to whatever the child just said, then tell them you will now meet a new sound together. Use the exact Swahili words "sauti za kufurahisha" for "fun sounds" — never translate "fun" or "magic" yourself, and never use the word "kichawi" or anything related to witchcraft.',
   mixed:      "tell the child, with excitement, that now you will play everything you learned today all together, like a little celebration",
 };
+
+// A chant closes the Vowels category specifically (see promptInstruction): sing
+// or chant the five vowels together in order, a-e-i-o-u, so the order becomes a
+// little song, not just a list — then the usual celebration line.
+const MIXED_VOWEL_CHANT_INTRO =
+  "first sing or chant the five vowels together with the child, in order, like a simple little song: a, e, i, o, u. Then, with excitement, tell the child that now you will play everything you learned today all together, like a little celebration";
 
 // Swahili vowel sounds. Ticha already knows Swahili — the real problem is a
 // BARE, isolated letter with no surrounding word, where the model can default
@@ -105,14 +112,23 @@ function blendingLine(itemId: string): string {
 export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean }, rng: () => number = Math.random): string {
   const item = getItem(step.itemId)!;
   const what = `${kindLabel(item.kind)} "${item.text}"`;
-  const intro = step.phaseStart && !opts.isRetry ? `First, in one short Swahili sentence, ${PHASE_INTRO[step.kind]}. ` : "";
+  // Every item in an all-vowels lesson is kind "vowel" by construction (the
+  // Vowels category contains nothing else — see categories.ts), so the current
+  // item alone is enough to tell whether this mixed round is vowels-only,
+  // without threading the category through every call site.
+  const phaseText = step.kind === "mixed" && item.kind === "vowel" ? MIXED_VOWEL_CHANT_INTRO : PHASE_INTRO[step.kind];
+  const intro = step.phaseStart && !opts.isRetry ? `First, in one short Swahili sentence, ${phaseText}. ` : "";
   const playClip = !isCheckStep(step) && opts.clipExpected && !opts.clipPlayed
     ? `Say "${item.text}" clearly yourself, once.${pronunciationNote(step.itemId)} `
     : "";
   const head = `[APP] ${intro}${playClip}The child now sees the ${what}.`;
 
   if (step.stage === "model") {
-    return `${head} In one short Swahili sentence, say this is "${item.text}". ${blendingLine(step.itemId)} Then stop and stay silent — do not ask them to answer yet.`;
+    const anchor = anchorFor(step.itemId);
+    // "Anchor with a word": show the vowel doing real work in a word the child
+    // already knows, not just said in isolation.
+    const anchorLine = anchor ? ` For example, it is the first sound in "${anchor.word}".` : "";
+    return `${head} In one short Swahili sentence, say this is "${item.text}".${anchorLine} ${blendingLine(step.itemId)} Then stop and stay silent — do not ask them to answer yet.`;
   }
   if (step.stage === "together") {
     return `${head} In one short Swahili sentence, invite them to say it with you, then say it yourself once, slowly.${pronunciationNote(step.itemId)} After they join in, give one short, warm word of praise.`;

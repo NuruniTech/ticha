@@ -583,3 +583,48 @@ describe("sound friends", () => {
     expect(SOUND_FRIENDS).toContain(friendFor("nope"));
   });
 });
+
+import { VOWEL_ANCHORS, anchorFor } from "@/lib/reading/anchors";
+
+describe("anchor words (isolate the sound, then anchor it in a real word)", () => {
+  it("has a real, concrete anchor word for every vowel", () => {
+    expect(Object.keys(VOWEL_ANCHORS).sort()).toEqual(["a", "e", "i", "o", "u"]);
+    for (const v of Object.keys(VOWEL_ANCHORS)) {
+      expect(VOWEL_ANCHORS[v].word[0]).toBe(v); // the anchor word genuinely starts with its vowel
+      expect(VOWEL_ANCHORS[v].emoji.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("resolves an anchor only for vowel items, not syllables or words", () => {
+    expect(anchorFor("v-a")!.word).toBe("asali");
+    expect(anchorFor("s-ba")).toBeNull();
+    expect(anchorFor("w-mama")).toBeNull();
+  });
+
+  it("mentions the anchor word while modelling a vowel, and says nothing extra for a syllable", () => {
+    const model = { itemId: "v-a", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: false };
+    const p = promptInstruction(model, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(p).toMatch(/first sound in "asali"/);
+    const syl = promptInstruction({ ...model, itemId: "s-ba" }, { isRetry: false, clipPlayed: true, clipExpected: true });
+    expect(syl).not.toMatch(/first sound in/);
+  });
+
+  it("chants the five vowels in order to open the closing round of an all-vowels lesson, but not a mixed consonants round", () => {
+    const firstMixedVowel = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: true };
+    const vowelChant = promptInstruction(firstMixedVowel, { isRetry: false, clipPlayed: false, clipExpected: false });
+    expect(vowelChant).toMatch(/sing or chant the five vowels/);
+    expect(vowelChant).toMatch(/a, e, i, o, u/);
+    expect(vowelChant).toMatch(/celebration/); // still ends with the usual celebration framing
+
+    const firstMixedConsonant = { itemId: "s-ba", kind: "mixed" as const, first: false, phaseStart: true };
+    const consonantMixed = promptInstruction(firstMixedConsonant, { isRetry: false, clipPlayed: false, clipExpected: false });
+    expect(consonantMixed).not.toMatch(/chant/);
+    expect(consonantMixed).toMatch(/celebration/);
+  });
+
+  it("does not chant on a retry, even mid-way through an all-vowels mixed round", () => {
+    const retry = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: true };
+    const p = promptInstruction(retry, { isRetry: true, clipPlayed: false, clipExpected: false });
+    expect(p).not.toMatch(/chant/);
+  });
+});

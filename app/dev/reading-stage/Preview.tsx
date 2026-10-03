@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import ReadingScreen from "@/components/ReadingScreen";
 import { getItem } from "@/lib/reading/curriculum";
 import type { ReadingCard } from "@/hooks/useReadingLesson";
@@ -15,12 +14,18 @@ const STAGES: { id: string; kind: ReadingCard["kind"]; stage?: ReadingCard["stag
   { id: "check", kind: "baseline", avatar: "listening", listening: true },
 ];
 
+// Reads straight from the browser's URL — see app/session/page.tsx for why:
+// Next's useSearchParams() was observed unpopulated on a fresh navigation here.
+function readParam(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  return new URLSearchParams(window.location.search).get(name) ?? fallback;
+}
+
 export default function Preview() {
-  const params = useSearchParams();
-  const [stageId, setStageId] = useState(params.get("stage") ?? "model");
-  const [item, setItem] = useState(params.get("item") ?? "s-ba");
-  const side = params.get("side") === "right" ? "right" : "left";
-  const language = params.get("lang") === "en" ? "en" : "sw";
+  const [stageId, setStageId] = useState(() => readParam("stage", "model"));
+  const [item, setItem] = useState(() => readParam("item", "s-ba"));
+  const [side] = useState<"left" | "right">(() => (readParam("side", "left") === "right" ? "right" : "left"));
+  const [language] = useState(() => (readParam("lang", "sw") === "en" ? "en" : "sw"));
   const [collected, setCollected] = useState<string[]>(["v-a", "v-e", "v-i"]);
   const [burst, setBurst] = useState(0);
   const [camera, setCamera] = useState(false);

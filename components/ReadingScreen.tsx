@@ -5,6 +5,7 @@ import TichaAvatar, { type AvatarState } from "./TichaAvatar";
 import type { ReadingCard } from "@/hooks/useReadingLesson";
 import { stageCaption } from "@/lib/reading/captions";
 import { friendFor } from "@/lib/reading/friends";
+import { anchorFor } from "@/lib/reading/anchors";
 import { getItem } from "@/lib/reading/curriculum";
 
 // The reading lesson screen. Ticha sits on one side; whatever she is teaching
@@ -116,6 +117,14 @@ export default function ReadingScreen({ videoRef, ...p }: ReadingScreenProps) {
               {p.card.canReplay && <span style={{ fontSize: wide ? 34 : 24, marginLeft: 10 }} aria-hidden>🔊</span>}
             </button>
             {p.celebrateKey > 0 && <div key={p.celebrateKey} className="rs-burst" aria-hidden>⭐✨⭐</div>}
+          </div>
+        )}
+
+        {/* "Anchor with a word": while Ticha models a vowel, show it doing real work in a word the child knows */}
+        {stage === "model" && anchorFor(p.card?.item.id ?? "") && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: wide ? 16 : 14, color: "#6B7280", fontWeight: 700 }}>
+            <span style={{ fontSize: wide ? 30 : 24 }}>{anchorFor(p.card!.item.id)!.emoji}</span>
+            <span>{anchorFor(p.card!.item.id)!.word}</span>
           </div>
         )}
 
