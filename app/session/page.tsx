@@ -1,46 +1,27 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import VoiceSession from "@/components/VoiceSession";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useLanguage } from "@/context/LanguageContext";
 import { T } from "@/lib/translations";
 import TichaAvatar from "@/components/TichaAvatar";
 
-// Read straight from the browser's own URL rather than Next's useSearchParams()
-// hook. Verified directly against this dev setup: on a fresh navigation (not a
-// same-page client transition), useSearchParams() can still be unpopulated on
-// first render, so a fallback like `|| "animals"` silently wins and the wrong
-// lesson launches — exactly how a reading category tile ended up opening the
-// vocabulary tutor instead. window.location.search is the browser's actual,
-// already-correct address bar; it cannot be behind the hook's own timing.
-function readSessionParams() {
-  if (typeof window === "undefined") {
-    // Build-time / server render: no real URL to read yet. The real client
-    // render (see the lazy useState initializer below) re-runs this in the
-    // browser, where window exists, before anything is shown to a user.
-    return { name: "Friend", sessionLang: "sw", game: "animals", childId: null, childAge: undefined, childXp: 0, prevSessions: 0 };
-  }
-  const p = new URLSearchParams(window.location.search);
-  return {
-    name:         p.get("name")    || "Friend",
-    sessionLang:  p.get("lang")    || "sw",
-    game:         p.get("game")    || "animals",
-    childId:      p.get("childId") || null,
-    childAge:     p.get("age")  ? parseInt(p.get("age")!)  : undefined,
-    childXp:      p.get("xp")   ? parseInt(p.get("xp")!)  : 0,
-    prevSessions: p.get("prev") ? parseInt(p.get("prev")!) : 0,
-  };
-}
-
 function SessionContent() {
+  const params   = useSearchParams();
   const router   = useRouter();
   const isOnline = useOnlineStatus();
   const { lang } = useLanguage();
   const t        = T[lang].offline;
 
-  const [{ name, sessionLang, game, childId, childAge, childXp, prevSessions }] = useState(readSessionParams);
+  const name        = params.get("name")    || "Friend";
+  const sessionLang = params.get("lang")    || "sw";
+  const game        = params.get("game")    || "animals";
+  const childId     = params.get("childId") || null;
+  const childAge    = params.get("age")  ? parseInt(params.get("age")!)  : undefined;
+  const childXp     = params.get("xp")   ? parseInt(params.get("xp")!)  : 0;
+  const prevSessions= params.get("prev") ? parseInt(params.get("prev")!) : 0;
 
   // ── Offline wall ───────────────────────────────────────────────────────────
   if (!isOnline) {
@@ -83,7 +64,11 @@ function SessionContent() {
   }
 
   return (
+    // key forces a full remount whenever the child or the game/category changes —
+    // not just a prop update — so no mic, audio or lesson state from a previous
+    // session can ever carry over into a different one navigated to afterwards.
     <VoiceSession
+      key={`${childId ?? "anon"}:${game}`}
       childName={name}
       language={sessionLang}
       game={game}
