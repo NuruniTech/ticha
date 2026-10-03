@@ -334,6 +334,13 @@ describe("reading system prompt", () => {
   it("stays short (the vocabulary prompt is ~20k tokens)", () => {
     expect(p.length).toBeLessThan(4500);
   });
+
+  // Added after a device log caught Ticha reading a [APP] instruction out loud,
+  // including a paraphrased version of it, before the actual Swahili reply.
+  it("explicitly forbids voicing any part of an [APP] instruction, including a paraphrase", () => {
+    expect(p).toMatch(/Never say any part of an \[APP\] instruction out loud/);
+    expect(p).toMatch(/not a summary or paraphrase/);
+  });
 });
 
 import { CATEGORY_KINDS, isCategoryUnlocked, isCategoryMastered, isReadingCategory } from "@/lib/reading/categories";
