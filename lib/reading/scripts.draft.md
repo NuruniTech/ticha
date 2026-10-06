@@ -58,12 +58,17 @@ Anchor words confirmed: a=asali (honey), e=embe (mango), i=ini (liver), o=oga
 - o → "Hii ni o. Ni sauti ya kwanza katika neno 'oga'. Sikiliza: ooo."
 - u → "Hii ni u. Ni sauti ya kwanza katika neno 'uji'. Sikiliza: uuu."
 
-**teach_together_{vowel}** *(fixed, one per vowel — invites the child to say it along)*
-- a → "Twende pamoja: aaa."
-- e → "Twende pamoja: eee."
-- i → "Twende pamoja: iii."
-- o → "Twende pamoja: ooo."
-- u → "Twende pamoja: uuu."
+**together_intro** *(fixed, ONE shared line, not vowel-specific — invites the child and checks readiness before any timing starts)*
+> Tuseme pamoja. Nahesabu mpaka tatu, alafu tuseme pamoja. Uko tayari?
+
+*(the app then waits for the child to respond at all — any answer or a short timeout — same as the existing together-stage handling, not a parsed "yes"; this is what gives the child a real moment to be heard before the countdown, which plain "let's say it together, [vowel]" never did)*
+
+**together_count_{vowel}** *(fixed, one per vowel — the actual synchronised moment: a counted cue for exactly when to join in, replacing the old "Twende pamoja" which gave the child no signal for WHEN to speak along)*
+- a → "Moja, mbili, tatu... aaa!"
+- e → "Moja, mbili, tatu... eee!"
+- i → "Moja, mbili, tatu... iii!"
+- o → "Moja, mbili, tatu... ooo!"
+- u → "Moja, mbili, tatu... uuu!"
 
 **teach_alone** *(fixed, ONE shared line reused for every vowel — the screen shows which vowel, so the audio doesn't need to repeat it)*
 > Sasa ni zamu yako. Jaribu kusema peke yako.

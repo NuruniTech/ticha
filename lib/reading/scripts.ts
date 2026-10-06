@@ -73,16 +73,27 @@ const ANCHOR_SENTENCE: Record<string, string> = {
   o: "Hii ni o. Ni sauti ya kwanza katika neno 'oga'. Sikiliza: ooo.",
   u: "Hii ni u. Ni sauti ya kwanza katika neno 'uji'. Sikiliza: uuu.",
 };
-const TOGETHER_SENTENCE: Record<string, string> = {
-  a: "Twende pamoja: aaa.",
-  e: "Twende pamoja: eee.",
-  i: "Twende pamoja: iii.",
-  o: "Twende pamoja: ooo.",
-  u: "Twende pamoja: uuu.",
+// "Tuseme pamoja" (let's say it together) replaces an earlier "Twende pamoja"
+// (let's go together) — clearer for a child, and "say" matches the action.
+// The together moment is now two beats, not one: an intro that invites the
+// child and checks they're ready (giving them a chance to answer before
+// anything is timed), then a counted "moja, mbili, tatu... {vowel}!" so the
+// child has an actual cue for WHEN to join in, rather than being expected to
+// somehow speak in sync with no signal for when "together" starts.
+export const TOGETHER_INTRO: ScriptEntry = {
+  id: "together_intro",
+  text: "Tuseme pamoja. Nahesabu mpaka tatu, alafu tuseme pamoja. Uko tayari?",
+};
+const COUNT_SENTENCE: Record<string, string> = {
+  a: "Moja, mbili, tatu... aaa!",
+  e: "Moja, mbili, tatu... eee!",
+  i: "Moja, mbili, tatu... iii!",
+  o: "Moja, mbili, tatu... ooo!",
+  u: "Moja, mbili, tatu... uuu!",
 };
 export const VOWELS = ["a", "e", "i", "o", "u"] as const;
 export const teachModel = (vowel: string): ScriptEntry => ({ id: `teach_model_${vowel}`, text: ANCHOR_SENTENCE[vowel] });
-export const teachTogether = (vowel: string): ScriptEntry => ({ id: `teach_together_${vowel}`, text: TOGETHER_SENTENCE[vowel] });
+export const togetherCount = (vowel: string): ScriptEntry => ({ id: `together_count_${vowel}`, text: COUNT_SENTENCE[vowel] });
 
 // Shared across every vowel — the screen shows which one, so the audio stays generic.
 export const TEACH_ALONE: ScriptEntry = { id: "teach_alone", text: "Sasa ni zamu yako. Jaribu kusema peke yako." };
@@ -146,7 +157,8 @@ const FIXED_BY_ID: Record<string, string> = Object.fromEntries(
   ].map((e) => [e.id, e.text])
 );
 for (const g of WARMUP_FEELING_REACTIONS) g.variants.forEach((text, i) => { FIXED_BY_ID[`${g.id}_${i + 1}`] = text; });
-for (const v of VOWELS) { FIXED_BY_ID[teachModel(v).id] = teachModel(v).text; FIXED_BY_ID[teachTogether(v).id] = teachTogether(v).text; }
+FIXED_BY_ID[TOGETHER_INTRO.id] = TOGETHER_INTRO.text;
+for (const v of VOWELS) { FIXED_BY_ID[teachModel(v).id] = teachModel(v).text; FIXED_BY_ID[togetherCount(v).id] = togetherCount(v).text; }
 
 /** Finds which reaction group (if any) a child's transcribed answer matches, for the feeling warmup turn. */
 export function matchFeelingReaction(heard: string): { groupId: string; variants: string[] } | null {
@@ -189,7 +201,8 @@ export function allFixedEntries(): ScriptEntry[] {
     READY_CHECK,
     CLASS_INTRO,
     ...VOWELS.map(teachModel),
-    ...VOWELS.map(teachTogether),
+    TOGETHER_INTRO,
+    ...VOWELS.map(togetherCount),
     TEACH_ALONE,
     ...TEACH_PLAY,
     ...PRAISE,

@@ -76,6 +76,41 @@ function decodePcm16(base64: string): Float32Array<ArrayBuffer> {
   return f32;
 }
 
+// Reading mode has no live session left to stream the child's mic to — it
+// buffers the frames captured during one VAD-detected turn (see clientVad's
+// isReading branch) and, once the turn ends, wraps them as a real WAV file
+// (a 44-byte RIFF/WAVE header in front of 16-bit PCM samples) for one-shot
+// transcription via /api/reading-listen. 16 kHz mono, matching the mic's own
+// capture rate — no resampling needed.
+function framesToWav(frames: Float32Array[], sampleRate = 16000): ArrayBuffer {
+  const total = frames.reduce((n, f) => n + f.length, 0);
+  const buf = new ArrayBuffer(44 + total * 2);
+  const view = new DataView(buf);
+  const writeStr = (offset: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i)); };
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + total * 2, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);        // fmt chunk size
+  view.setUint16(20, 1, true);         // PCM
+  view.setUint16(22, 1, true);         // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // byte rate (16-bit mono)
+  view.setUint16(32, 2, true);         // block align
+  view.setUint16(34, 16, true);        // bits per sample
+  writeStr(36, "data");
+  view.setUint32(40, total * 2, true);
+  let offset = 44;
+  for (const f of frames) {
+    for (let i = 0; i < f.length; i++) {
+      const s = Math.max(-1, Math.min(1, f[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      offset += 2;
+    }
+  }
+  return buf;
+}
+
 
 type Status = "idle" | "connecting" | "reconnecting" | "listening" | "speaking" | "error";
 
@@ -475,15 +510,41 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     }
   }, []);
 
+  // Speaks one scripted line: the pre-generated static file if it exists
+  // (the default — zero generation latency, same playback path as the
+  // pronunciation clips above), falling back to on-the-fly TTS via
+  // /api/reading-speak for the two name-dependent lines (which can never be
+  // pre-generated) and for any line that's missing or still pending review.
+  // The blob URL from a fallback call is never cached in recordingCacheRef —
+  // it's a one-off ArrayBuffer per call, not a stable fetchable URL.
+  const speakLine = useCallback(async (lineId: string, opts?: { name?: string; word?: string }): Promise<boolean> => {
+    const alwaysFallback = lineId === "greeting" || lineId === "lesson_end" || lineId === "warmup_q_reaction_word";
+    if (!alwaysFallback) {
+      const played = await playRecording(`/audio/reading-script/${lineId}.mp3`);
+      if (played) return true;
+      log(`🔇 no narration file for ${lineId} — falling back to live TTS`);
+    }
+    try {
+      const res = await fetch("/api/reading-speak", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineId, ...opts }),
+      });
+      if (!res.ok) return false;
+      const blobUrl = URL.createObjectURL(await res.blob());
+      const ok = await playRecording(blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000); // after it's surely finished playing
+      return ok;
+    } catch {
+      return false;
+    }
+  }, [playRecording, log]);
+
   const reading = useReadingLesson({
     childId,
     childName,
     category: readingCategory,
-    sendToModel: (text) => {
-      sessionRef.current?.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true });
-    },
+    speak: speakLine,
     playClip: playRecording,
-    roll: () => liveRollRef.current?.() ?? Promise.resolve(false),
     onCorrect: () => awardStars(10),
     log,
   });
@@ -946,10 +1007,17 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       // Gemini with activityStart / activityEnd. No tapping.
       const SILENCE_END_MS = 900;   // quiet this long = child finished
       const MAX_TURN_MS    = 15000; // safety: never hold a turn open forever
-      const vad = { turnPeak: 0, peak: 0, peakLogAt: 0, floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[] };
+      const vad = { turnPeak: 0, peak: 0, peakLogAt: 0, floor: 0.01, speaking: false, loud: 0, lastLoud: 0, startedAt: 0, preroll: [] as Float32Array[], readingFrames: [] as Float32Array[] };
       const sendMic = (f: Float32Array) => {
         sessionRef.current?.sendRealtimeInput({ audio: { data: encodePcm16Base64(f), mimeType: "audio/pcm;rate=16000" } });
         micSendCountRef.current += 1;
+      };
+      // Reading mode has no live session to stream to — it buffers the turn's
+      // frames instead, wrapped as a WAV and sent for one-shot transcription
+      // once the turn ends (see the activityEnd handling below).
+      const captureFrame = (f: Float32Array) => {
+        if (isReading) { vad.readingFrames.push(f); micSendCountRef.current += 1; return; }
+        sendMic(f);
       };
       const clientVad = (f: Float32Array) => {
         const now = Date.now();
@@ -997,26 +1065,50 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               diagRef.current.bargeIns += 1;
               logRef.current?.("⚡ Barge-in (client VAD) — Ticha cut off");
             }
-            sessionRef.current?.sendRealtimeInput({ activityStart: {} });
+            // Reading mode no longer uses Gemini Live's own turn detection — it
+            // keeps the connection open (full removal is a separate, carefully
+            // tested follow-up) but never signals it, since nothing reads the
+            // response anymore. Real listening is the WAV-capture-and-transcribe
+            // path below, triggered on activityEnd.
+            if (!isReading) sessionRef.current?.sendRealtimeInput({ activityStart: {} });
             readingApiRef.current?.onChildTurnStarted();
             vad.speaking = true;
             vad.startedAt = vad.lastLoud = now;
             vad.turnPeak = rms;
             diagRef.current.turns += 1;
             diagRef.current.maxFloor = Math.max(diagRef.current.maxFloor, vad.floor);
-            vad.preroll.forEach(sendMic);
+            vad.readingFrames = [];
+            vad.preroll.forEach(captureFrame);
             vad.preroll = [];
             sendFrameRef.current?.();
             logRef.current?.(`🎙️ activityStart rms=${rms.toFixed(3)} thresh=${thresh.toFixed(3)} floor=${vad.floor.toFixed(3)}`);
           }
         } else {
-          sendMic(f);
+          captureFrame(f);
           vad.turnPeak = Math.max(vad.turnPeak, rms);
           if (loud) vad.lastLoud = now;
           if (now - vad.lastLoud >= SILENCE_END_MS || now - vad.startedAt >= MAX_TURN_MS) {
             sendFrameRef.current?.(); // what the child is showing at the end of their turn
-            sessionRef.current?.sendRealtimeInput({ activityEnd: {} });
-            readingApiRef.current?.onChildTurnEnded();
+            if (isReading) {
+              // The child's whole turn, captured locally (never streamed) — wrap
+              // as a real WAV and transcribe once. This is the entire "listening"
+              // mechanism for reading mode now: no live session, no function
+              // call, no waiting on a second party's own turn-taking.
+              const frames = vad.readingFrames;
+              vad.readingFrames = [];
+              void (async () => {
+                try {
+                  const wav = framesToWav(frames);
+                  const res = await fetch("/api/reading-listen", { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: wav });
+                  const { heard } = res.ok ? await res.json() : { heard: "" };
+                  readingApiRef.current?.onChildUtterance(heard ?? "");
+                } catch {
+                  readingApiRef.current?.onChildUtterance("");
+                }
+              })();
+            } else {
+              sessionRef.current?.sendRealtimeInput({ activityEnd: {} });
+            }
             vad.speaking = false;
             vad.loud = 0;
             const endedAt = Date.now();
@@ -1188,21 +1280,17 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
 
           onmessage: (msg: LiveServerMessage) => {
             if (retired) return;
-            // ── Reading mode: Ticha reports an attempt via function call ──
-            if (isReading && msg.toolCall?.functionCalls?.length) {
-              const responses = msg.toolCall.functionCalls.map((fc) => ({
-                id: fc.id,
-                name: fc.name,
-                response: { output: fc.name === "report_attempt" ? readingApiRef.current?.handleToolCall(fc.args) ?? "" : "Unknown function." },
-              }));
-              sessionRef.current?.sendToolResponse({ functionResponses: responses });
-            }
+            // Reading mode no longer uses report_attempt or anything else from this
+            // connection (see the scripted-TTS speak/listen path above) — it just
+            // sits open and unused for now. Full removal of the Live connection for
+            // reading mode is a separate, carefully tested follow-up; this onmessage
+            // handler's reading-specific branches are retired here since the hook no
+            // longer has the methods they called.
 
             // ── Barge-in: Gemini detected the child speaking during Ticha's turn ──
             // Cancel all queued audio nodes instantly so playback stops mid-sentence,
             // then reset the play head so the next Ticha response starts cleanly.
             if (msg.serverContent?.interrupted) {
-              if (isReading) readingApiRef.current?.onInterrupted();
               scheduledNodesRef.current.forEach((n) => { try { n.stop(); } catch { /* already ended */ } });
               scheduledNodesRef.current = [];
               playHeadRef.current = playCtxRef.current?.currentTime ?? 0;
@@ -1216,7 +1304,6 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             const parts = msg.serverContent?.modelTurn?.parts ?? [];
             for (const part of parts) {
               if (part.inlineData?.data) {
-                if (isReading) readingApiRef.current?.onModelAudio();
                 scheduleAudioChunk(decodePcm16(part.inlineData.data));
               }
             }
@@ -1263,7 +1350,6 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
                 log(`🗣️ Ticha: ${tichaUtteranceRef.current.trim()}`);
                 tichaUtteranceRef.current = "";
               }
-              if (isReading) readingApiRef.current?.onTurnComplete();
               log(`⏹ turnComplete — waiting for next reply…`);
               turnCompleteRef.current = true;
               // If the lesson goodbye was already detected, start the drain timer NOW —

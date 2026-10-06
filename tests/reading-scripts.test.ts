@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { allFixedEntries, GREETING, LESSON_END, VOWELS, teachModel, teachTogether, WARMUP_ANIMAL_WORDS, WARMUP_FOOD_WORDS, WARMUP_COLOUR_WORDS, resolveLineText, matchFeelingReaction, matchFunWord } from "@/lib/reading/scripts";
+import { allFixedEntries, GREETING, LESSON_END, VOWELS, teachModel, togetherCount, WARMUP_ANIMAL_WORDS, WARMUP_FOOD_WORDS, WARMUP_COLOUR_WORDS, resolveLineText, matchFeelingReaction, matchFunWord } from "@/lib/reading/scripts";
 
 describe("scripted lines: well-formed before spending TTS generation on them", () => {
   it("has no duplicate ids", () => {
@@ -20,10 +20,11 @@ describe("scripted lines: well-formed before spending TTS generation on them", (
     expect(LESSON_END("Neema")).toMatch(/Neema/);
   });
 
-  it("has a model and together line for all five vowels, each mentioning that vowel's anchor sound", () => {
+  it("has a model line and a counted together line for all five vowels, each mentioning that vowel's sound", () => {
     for (const v of VOWELS) {
       expect(teachModel(v).text).toMatch(new RegExp(v));
-      expect(teachTogether(v).text).toMatch(new RegExp(v));
+      expect(togetherCount(v).text).toMatch(new RegExp(v));
+      expect(togetherCount(v).text).toMatch(/moja, mbili, tatu/i); // the count-in is always there
     }
   });
 
