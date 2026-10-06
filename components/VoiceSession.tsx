@@ -527,7 +527,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     try {
       const res = await fetch("/api/reading-speak", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lineId, ...opts }),
+        body: JSON.stringify({ lineId, childId, ...opts }),
       });
       if (!res.ok) return false;
       const blobUrl = URL.createObjectURL(await res.blob());
@@ -537,7 +537,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     } catch {
       return false;
     }
-  }, [playRecording, log]);
+  }, [playRecording, log, childId]);
 
   const reading = useReadingLesson({
     childId,
@@ -1099,7 +1099,7 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
               void (async () => {
                 try {
                   const wav = framesToWav(frames);
-                  const res = await fetch("/api/reading-listen", { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: wav });
+                  const res = await fetch(`/api/reading-listen?childId=${encodeURIComponent(childId ?? "")}`, { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: wav });
                   const { heard } = res.ok ? await res.json() : { heard: "" };
                   readingApiRef.current?.onChildUtterance(heard ?? "");
                 } catch {

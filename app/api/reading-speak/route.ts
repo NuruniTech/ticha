@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { resolveLineText } from "@/lib/reading/scripts";
-import { serviceClient } from "@/lib/apiAuth";
+import { getAuthedUser, getOwnedChild, serviceClient } from "@/lib/apiAuth";
 
 // On-the-fly TTS for the scripted reading tutor. This is the FALLBACK path,
 // not the default: almost every line is pre-generated offline, reviewed, and
@@ -17,6 +17,13 @@ import { serviceClient } from "@/lib/apiAuth";
 // paid TTS call from being usable as an arbitrary free-text generator at the
 // app's expense, same spirit as /api/gemini-key never handing out the real key.
 //
+// Auth mirrors /api/reading-attempt and /api/reading-listen: a signed-in
+// parent, child ownership checked through RLS, reading consent required.
+// Reading mode has no anonymous demo path (prepare() already requires a real
+// childId and consent before a lesson can start), so there is no legitimate
+// unauthenticated caller here, and the rate limit is keyed on the verified
+// childId rather than a client-asserted IP header.
+//
 // Returns the raw WAV bytes Gemini TTS produces — playable directly by the
 // browser's Web Audio API, no server-side ffmpeg needed for this path (that
 // stays local-only, for the offline pre-generation pipeline).
@@ -25,28 +32,41 @@ const RATE_LIMIT = 30; // generous: a lesson needs at most a handful of these pe
 const RATE_WINDOW_SEC = 60;
 const VOICE = "Kore";
 
-async function isRateLimited(id: string): Promise<boolean> {
+async function isRateLimited(childId: string): Promise<boolean> {
   try {
     const { data, error } = await serviceClient().rpc("check_rate_limit", {
-      p_id: `reading-speak:${id}`,
+      p_id: `reading-speak:${childId}`,
       p_limit: RATE_LIMIT,
       p_window_seconds: RATE_WINDOW_SEC,
     });
     if (error) throw error;
     return data === true;
   } catch (err) {
-    console.error("Rate limit check failed for reading-speak", id, "-", err);
-    return false; // fail open — a missing line would otherwise silently break a lesson
+    console.error("Rate limit check failed for reading-speak", childId, "-", err);
+    // Fail open only after auth + ownership + consent are already verified
+    // below — same precedent as reading-attempt, not an open fail-open.
+    return false;
   }
 }
 
 export async function POST(req: NextRequest) {
+  const { user, supabase: userClient } = await getAuthedUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
-  const { lineId, name, word } = (body as { lineId?: unknown; name?: unknown; word?: unknown }) ?? {};
+  const { lineId, name, word, childId } = (body as { lineId?: unknown; name?: unknown; word?: unknown; childId?: unknown }) ?? {};
   if (typeof lineId !== "string" || lineId.length === 0 || lineId.length > 64) {
     return NextResponse.json({ error: "Bad lineId" }, { status: 400 });
   }
+  if (typeof childId !== "string" || childId.length === 0) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+
+  const child = await getOwnedChild(userClient, childId);
+  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const { data: consent } = await userClient
+    .from("children").select("reading_consent_at").eq("id", childId).single();
+  if (!consent?.reading_consent_at) return NextResponse.json({ error: "Consent required" }, { status: 403 });
 
   const text = resolveLineText(lineId, {
     name: typeof name === "string" ? name.slice(0, 64) : undefined,
@@ -54,9 +74,7 @@ export async function POST(req: NextRequest) {
   });
   if (!text) return NextResponse.json({ error: "Unknown line" }, { status: 400 });
 
-  const headerStore = req.headers;
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() || headerStore.get("x-real-ip") || "unknown";
-  if (await isRateLimited(`ip:${ip}`)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (await isRateLimited(childId)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
