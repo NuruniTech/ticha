@@ -122,6 +122,61 @@ export const MIXED_INTRO: ScriptEntry = {
   text: "Twende pamoja: a, e, i, o, u! Sasa tutacheza na vyote tulivyojifunza leo, kama sherehe ndogo!",
 };
 
+// ── Resolving a line id back to text (server-side: pipeline generation AND the
+// on-the-fly fallback API route both call this, so there is exactly one place
+// that knows how to turn an id into words) ──────────────────────────────────
+
+const FIXED_BY_ID: Record<string, string> = Object.fromEntries(
+  [
+    WARMUP_FEELING,
+    WARMUP_FEELING_FALLBACK,
+    ...WARMUP_QUESTIONS,
+    WARMUP_QUESTION_REACTION_FALLBACK,
+    READY_CHECK,
+    CLASS_INTRO,
+    TEACH_ALONE,
+    ...TEACH_PLAY,
+    ...PRAISE,
+    ...RETRY_INCORRECT,
+    RETRY_UNSCORED,
+    MOVED_ON_AFTER_MISS,
+    CHECK_NEUTRAL,
+    CHECK_DISCONTINUE,
+    MIXED_INTRO,
+  ].map((e) => [e.id, e.text])
+);
+for (const g of WARMUP_FEELING_REACTIONS) g.variants.forEach((text, i) => { FIXED_BY_ID[`${g.id}_${i + 1}`] = text; });
+for (const v of VOWELS) { FIXED_BY_ID[teachModel(v).id] = teachModel(v).text; FIXED_BY_ID[teachTogether(v).id] = teachTogether(v).text; }
+
+/** Finds which reaction group (if any) a child's transcribed answer matches, for the feeling warmup turn. */
+export function matchFeelingReaction(heard: string): { groupId: string; variants: string[] } | null {
+  const h = heard.toLowerCase();
+  const group = WARMUP_FEELING_REACTIONS.find((g) => g.keywords.some((k) => h.includes(k)));
+  return group ? { groupId: group.id, variants: group.variants } : null;
+}
+
+export type FunCategory = "animal" | "food" | "colour";
+const CATEGORY_WORDS: Record<FunCategory, string[]> = { animal: WARMUP_ANIMAL_WORDS, food: WARMUP_FOOD_WORDS, colour: WARMUP_COLOUR_WORDS };
+
+/** Finds which known word (if any) a child's answer contains, for the fun-question warmup turn. */
+export function matchFunWord(category: FunCategory, heard: string): string | null {
+  const h = heard.toLowerCase();
+  return CATEGORY_WORDS[category].find((w) => h.includes(w)) ?? null;
+}
+
+/**
+ * Resolves any line id to its exact text. `name` is required for the two
+ * name-dependent ids; `word` is required for the on-the-fly reaction-template
+ * id (`warmup_q_reaction_word`). Returns null for an unknown id — callers
+ * must treat that as a bug, never silently fall back to arbitrary text.
+ */
+export function resolveLineText(id: string, opts: { name?: string; word?: string } = {}): string | null {
+  if (id === "greeting") return opts.name ? GREETING(opts.name) : null;
+  if (id === "lesson_end") return opts.name ? LESSON_END(opts.name) : null;
+  if (id === "warmup_q_reaction_word") return opts.word ? WARMUP_QUESTION_REACTION_TEMPLATE(opts.word) : null;
+  return FIXED_BY_ID[id] ?? null;
+}
+
 // ── Every FIXED entry, for the generation/verification pipeline ────────────
 // (name-dependent GREETING/LESSON_END deliberately excluded — never pre-generated)
 export function allFixedEntries(): ScriptEntry[] {
