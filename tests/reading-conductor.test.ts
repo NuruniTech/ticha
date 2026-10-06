@@ -512,6 +512,25 @@ describe("prompt: only report after the child has spoken", () => {
     expect(p).toMatch(/ONLY AFTER you have actually heard the child speak/);
     expect(p).toMatch(/wait silently/);
   });
+
+  // A real device log showed Ticha calling report_attempt repeatedly during
+  // modelling/together/play turns — unscored moments where the child joining
+  // in is expected and welcome, not an answer. The standing prompt never said
+  // report_attempt was for the "alone" moment specifically.
+  it("limits report_attempt to the child's own turn, not modelling/together/play", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/Only call report_attempt when an \[APP\] message has just asked the child to try it ALONE/);
+    expect(p).toMatch(/not a scored answer/);
+  });
+
+  // Same log also caught Ticha saying "Let me check" in English before her
+  // reply — not present anywhere in our own instructions, so this is the
+  // model's own tool-call reasoning leaking into speech.
+  it("forbids narrating its own process, e.g. \"let me check\"", () => {
+    const p = getReadingSystemPrompt("Amani");
+    expect(p).toMatch(/let me check/i);
+    expect(p).toMatch(/Never narrate your own process/);
+  });
 });
 
 describe("greeting", () => {
@@ -519,6 +538,16 @@ describe("greeting", () => {
     const g = greetingInstruction("Amani");
     expect(g).toMatch(/Amani/);
     expect(g).toMatch(/Do not mention lessons or reading yet/);
+  });
+
+  // A real device log caught Ticha ad-libbing "Habari zako?" here, which the
+  // child started answering before the app's own warmup question (which asks
+  // exactly that) was even sent — the overlap made the state machine drop the
+  // child's answer and skip the whole friendly chat. The greeting must not
+  // invite a reply at all, so there is nothing for the child to answer yet.
+  it("does not ask the child anything — that is the warmup's job, not the greeting's", () => {
+    const g = greetingInstruction("Amani");
+    expect(g).toMatch(/Do not ask them anything/);
   });
 });
 
@@ -633,5 +662,27 @@ describe("anchor words (isolate the sound, then anchor it in a real word)", () =
     const retry = { itemId: "v-a", kind: "mixed" as const, first: false, phaseStart: true };
     const p = promptInstruction(retry, { isRetry: true, clipPlayed: false, clipExpected: false });
     expect(p).not.toMatch(/chant/);
+  });
+
+  // Teaching should open like a real class: meet the whole set of five sound
+  // friends together, THEN get to know each one. Without this the lesson used
+  // to introduce "a" with no sense that four more friends were coming.
+  it("previews all five vowels together before teaching the very first one", () => {
+    const firstTeach = { itemId: "v-a", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: true };
+    const p = promptInstruction(firstTeach, { isRetry: false, clipPlayed: true, clipExpected: true, isFirstTeach: true });
+    expect(p).toMatch(/five special sound friends/);
+    expect(p).toMatch(/a, e, i, o, u/);
+  });
+
+  it("does not repeat the five-vowel preview for the second vowel taught", () => {
+    const secondTeach = { itemId: "v-e", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: true };
+    const p = promptInstruction(secondTeach, { isRetry: false, clipPlayed: true, clipExpected: true, isFirstTeach: false });
+    expect(p).not.toMatch(/five special sound friends/);
+  });
+
+  it("does not preview vowels when teaching a consonant", () => {
+    const firstTeach = { itemId: "s-ba", kind: "teach" as const, stage: "model" as const, first: true, phaseStart: true };
+    const p = promptInstruction(firstTeach, { isRetry: false, clipPlayed: true, clipExpected: true, isFirstTeach: true });
+    expect(p).not.toMatch(/five special sound friends/);
   });
 });

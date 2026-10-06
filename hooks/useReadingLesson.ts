@@ -272,7 +272,12 @@ export function useReadingLesson(options: Options) {
     const clipPlayed = clipExpected ? await optsRef.current.playClip(item.audio) : false;
     if (clipExpected && !clipPlayed) optsRef.current.log(`🔇 no recording for ${item.id} — Ticha says it instead`);
 
-    const instruction = promptInstruction(step, { isRetry, clipPlayed, clipExpected });
+    // True only for the very first "teach" step in the whole lesson (not every
+    // new item's model step — review items woven in before a later vowel would
+    // otherwise also look like a fresh phase start). Lets vowels get a one-time
+    // "meet all five sound friends" preview before individual teaching begins.
+    const isFirstTeach = step.kind === "teach" && st.steps.findIndex((s) => s.kind === "teach") === st.index;
+    const instruction = promptInstruction(step, { isRetry, clipPlayed, clipExpected, isFirstTeach });
 
     // Guided steps ("I do" / "we do") are not scored: nothing is reported.
     if (isGuided(step)) {

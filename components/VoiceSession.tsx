@@ -835,6 +835,16 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
     // Reset per-session guards
     sessionSavedRef.current    = false;
     lessonCompleteRef.current  = false;
+    // Captured now, not read later: onopen (below) clears isReconnectRef.current
+    // to false the moment the socket connects — by the time the 200ms opening
+    // trigger fires, the flag would already read false either way. A real
+    // recording caught this: reconnectSession (the heavier fallback used when a
+    // roll fails, or after 3 drops in a minute) tore down and called
+    // startSession, which always called readingApi.begin() — re-greeting from
+    // the top mid-lesson, four times in one 2.5-minute session, each time the
+    // child re-answering "how are you" not understanding why. resume() picks
+    // the lesson back up at its current step instead.
+    const wasReconnect = isReconnectRef.current;
 
     try {
       setStatus("connecting");
@@ -844,7 +854,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       devLogRef.current(undefined, true); // fresh file for this session (dev only)
       log("Starting session...");
 
-      if (isReading) {
+      // Skip on a reconnect: prepare() rebuilds the whole lesson plan from
+      // Supabase and starts the conductor back at step 0, discarding exactly
+      // where this sitting was — the hook's own state already survived the
+      // drop untouched (only the socket/audio were torn down), and rebuilding
+      // the plan would also mint a fresh session_id mid-lesson.
+      if (isReading && !wasReconnect) {
         const prep = await readingApiRef.current!.prepare();
         if ("needsConsent" in prep) { setStatus("idle"); setShowConsent(true); return; }
         if ("error" in prep) throw new Error(prep.error);
@@ -1290,7 +1305,12 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
           onerror: (e: unknown) => {
             if (retired) return;
             const msg = e instanceof Error ? e.message : JSON.stringify(e);
-            console.error("[Ticha] Gemini onerror:", msg);
+            // console.warn, not .error: onclose (next) almost always auto-recovers from
+            // this (roll to a fresh session, or reconnect). Next.js's dev-mode error
+            // overlay triggers on console.error and covers the whole screen, which hid
+            // the on-screen debug panel during a real test and made a handled drop look
+            // like a crash. The ❌ line in log() below still records it either way.
+            console.warn("[Ticha] Gemini onerror:", msg);
             log(`⚠️ Error: ${msg}`);
             // onclose always fires after onerror on a WebSocket — reconnect logic lives there.
             // Do NOT set status="error" here to avoid a flash before onclose decides what to do.
@@ -1301,7 +1321,9 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
             const ev = e as CloseEvent;
             const isNormal = ev?.code === 1000 || ev?.code === undefined;
             if (!isNormal) {
-              console.error("[Ticha] Gemini onclose — unexpected code:", ev?.code, "reason:", ev?.reason);
+              // console.warn, not .error — see the matching comment on onerror above.
+              // The auto-recovery below runs regardless; this is not a dead end.
+              console.warn("[Ticha] Gemini onclose — unexpected code:", ev?.code, "reason:", ev?.reason);
             }
             diagRef.current.closes.push(`${ev?.code ?? "none"}`);
             log(`${isNormal ? "✅" : "❌"} Closed: code=${ev?.code} reason="${ev?.reason}"`);
@@ -1380,7 +1402,11 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
         ? `Habari Ticha! Mimi ni ${childName} na niko tayari kujifunza!`
         : `Hello Ticha! I am ${childName} and I am ready to learn!`;
       setTimeout(() => {
-        if (isReading) { readingApiRef.current?.begin(); return; }
+        if (isReading) {
+          if (wasReconnect) readingApiRef.current?.resume();
+          else readingApiRef.current?.begin();
+          return;
+        }
         sessionRef.current?.sendClientContent({
           turns: [{ role: "user", parts: [{ text: triggerText }] }],
           turnComplete: true,

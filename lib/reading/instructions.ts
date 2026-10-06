@@ -25,8 +25,15 @@ const kindLabel = (kind: string) => (kind === "vowel" ? "letter" : kind);
 export const nothingLeftInstruction =
   "[APP] There is nothing more to practise today. In two short Swahili sentences, praise the child for their work and say goodbye, including the word \"tutaonana\".";
 
+// Just the greeting, nothing more. In a real device log, Ticha extended it on
+// her own with "Habari zako?" (how are you) — a natural thing to add, except
+// the app's own friendly-chat script (see warmupInstructions below) asks that
+// exact question a moment later. The child started answering Ticha's version
+// before the app's own was even sent, and that overlap made the state machine
+// drop the child's reply and skip the whole friendly chat. Telling Ticha not
+// to ask anything here removes the overlap at its source.
 export const greetingInstruction = (childName: string) =>
-  `[APP] Greet ${childName} warmly by name in one short, happy Swahili sentence — you are Ticha and you are glad to see them. Do not mention lessons or reading yet: you are just meeting a friend. Then stay silent until the next [APP] message.`;
+  `[APP] Greet ${childName} warmly by name in one short, happy Swahili sentence — you are Ticha and you are glad to see them. Do not mention lessons or reading yet: you are just meeting a friend. Do not ask them anything yet — no question of any kind; that comes next. Then stay silent until the next [APP] message.`;
 
 // One spoken sentence that introduces each new part of the lesson.
 const PHASE_INTRO: Record<StepKind, string> = {
@@ -42,6 +49,14 @@ const PHASE_INTRO: Record<StepKind, string> = {
 // little song, not just a list — then the usual celebration line.
 const MIXED_VOWEL_CHANT_INTRO =
   "first sing or chant the five vowels together with the child, in order, like a simple little song: a, e, i, o, u. Then, with excitement, tell the child that now you will play everything you learned today all together, like a little celebration";
+
+// Said once, before the very first vowel is taught: a short "here is the whole
+// set" preview, so the child meets all five sound friends as a group before
+// getting to know each one individually — matching how a real class opens
+// ("today we'll meet five special friends") rather than introducing sounds
+// one at a time with no sense of the whole picture.
+const VOWEL_CLASS_INTRO =
+  "first, with warm excitement, tell the child that today you will meet five special sound friends together: a, e, i, o, u. Say you will get to know each one, one at a time, starting with this one";
 
 // Swahili vowel sounds. Ticha already knows Swahili — the real problem is a
 // BARE, isolated letter with no surrounding word, where the model can default
@@ -109,14 +124,17 @@ function blendingLine(itemId: string): string {
   return `Say each part slowly (${item.syllables.join(", ")}), then the whole word "${item.text}".${pronunciationNote(itemId)}`;
 }
 
-export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean }, rng: () => number = Math.random): string {
+export function promptInstruction(step: Step, opts: { isRetry: boolean; clipPlayed: boolean; clipExpected: boolean; isFirstTeach?: boolean }, rng: () => number = Math.random): string {
   const item = getItem(step.itemId)!;
   const what = `${kindLabel(item.kind)} "${item.text}"`;
   // Every item in an all-vowels lesson is kind "vowel" by construction (the
   // Vowels category contains nothing else — see categories.ts), so the current
   // item alone is enough to tell whether this mixed round is vowels-only,
   // without threading the category through every call site.
-  const phaseText = step.kind === "mixed" && item.kind === "vowel" ? MIXED_VOWEL_CHANT_INTRO : PHASE_INTRO[step.kind];
+  const phaseText =
+    step.kind === "mixed" && item.kind === "vowel" ? MIXED_VOWEL_CHANT_INTRO
+    : step.kind === "teach" && item.kind === "vowel" && opts.isFirstTeach ? VOWEL_CLASS_INTRO
+    : PHASE_INTRO[step.kind];
   const intro = step.phaseStart && !opts.isRetry ? `First, in one short Swahili sentence, ${phaseText}. ` : "";
   const playClip = !isCheckStep(step) && opts.clipExpected && !opts.clipPlayed
     ? `Say "${item.text}" clearly yourself, once.${pronunciationNote(step.itemId)} `
