@@ -48,3 +48,4 @@ next-env.d.ts
 
 # dev-only session log written by /api/dev-log
 .debug/
+RECORDING_AUDIO/
