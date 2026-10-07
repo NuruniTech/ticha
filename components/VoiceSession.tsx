@@ -500,10 +500,25 @@ export default function VoiceSession({ childName: rawChildName, language, game, 
       src.start(startAt);
       playHeadRef.current = startAt + buf.duration;
       scheduledNodesRef.current.push(src);
-      src.addEventListener("ended", () => {
-        scheduledNodesRef.current = scheduledNodesRef.current.filter((n) => n !== src);
-      });
       setStatus("speaking");
+      // Reading mode's whole lesson flow is `await speak(...)`-sequenced on the
+      // assumption that this resolves once the audio has actually finished, not
+      // once it's merely scheduled — a real device test caught exactly what
+      // that mismatch causes: the lesson racing ahead while Ticha (or a
+      // recorded clip) is still mid-sentence, opening the listening window
+      // early, nudging the child to "say it again" while she's still talking,
+      // audio layers landing on top of each other. Wait for "ended" (with a
+      // generous fallback timer in case it never fires, e.g. a buffer source
+      // that gets stopped elsewhere) before resolving.
+      await new Promise<void>((resolve) => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; resolve(); };
+        src.addEventListener("ended", () => {
+          scheduledNodesRef.current = scheduledNodesRef.current.filter((n) => n !== src);
+          finish();
+        });
+        setTimeout(finish, (startAt - ctx.currentTime + buf.duration) * 1000 + 500);
+      });
       return true;
     } catch {
       return false;
