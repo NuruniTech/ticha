@@ -238,11 +238,6 @@ export function useReadingLesson(options: Options) {
     setCard({ item, index: st.index, total: st.steps.length, kind: step.kind, stage: step.stage, canReplay: !isCheckStep(step) });
     optsRef.current.log(`▶️ Step ${st.index + 1}/${st.steps.length}: ${step.kind}${step.stage ? "/" + step.stage : ""} ${item.id}${isRetry ? " (retry)" : ""}`);
 
-    // One-time class intro, vowels only, right before the very first vowel is taught.
-    if (step.kind === "teach" && item.kind === "vowel" && st.steps.findIndex((s) => s.kind === "teach") === st.index) {
-      await sleep(STEP_GAP_MS);
-      await speak(CLASS_INTRO.id);
-    }
     if (step.phaseStart && !isRetry && step.kind !== "teach") {
       await sleep(STEP_GAP_MS);
       if (step.kind === "baseline" || step.kind === "checkpoint") await speak(READY_CHECK.id); // reused: "let's play a little game" framing
@@ -311,6 +306,22 @@ export function useReadingLesson(options: Options) {
       await speak(outcome === "unscored" ? RETRY_UNSCORED.id : pick(RETRY_INCORRECT).id);
     } else if (advance.movedOn) {
       await speak(MOVED_ON_AFTER_MISS.id);
+      // A child who just missed a brand-new sound, even after retries,
+      // shouldn't be moved straight to introducing another one with zero
+      // extra practice — "make sure they've got it before moving on" was the
+      // agreed shape, and the retry loop alone doesn't deliver that once it's
+      // exhausted. One more "together" pass on the SAME sound, reusing the
+      // existing together-stage mechanic, before the next new vowel starts.
+      if (step.kind === "teach" && vowel) {
+        if (runTokenRef.current !== myToken) return;
+        await sleep(STEP_GAP_MS);
+        await speak("together_intro");
+        await awaitChildUtterance(TOGETHER_READY_WAIT_MS);
+        if (runTokenRef.current !== myToken) return;
+        await optsRef.current.playClip(item.audio);
+        await speak(togetherCount(vowel).id);
+        await awaitChildUtterance(TOGETHER_READY_WAIT_MS);
+      }
     } else {
       await speak(pick(PRAISE).id);
     }
@@ -324,6 +335,19 @@ export function useReadingLesson(options: Options) {
       await speak("greeting", { name: optsRef.current.childName });
       if (runTokenRef.current !== myToken) return;
       if (!warmupDoneRef.current) await runWarmup(myToken);
+      if (runTokenRef.current !== myToken) return;
+      // Class intro, once, before ANY vowel content — including a baseline
+      // check, which a real device test caught firing first: the "meet 5
+      // friends" line played in the middle of checking a vowel the child
+      // already knew, sounding like "taught something, then introduced the
+      // class" because that's exactly what was happening. Every step in a
+      // Vowels-category lesson is a vowel item, so this only needs to check
+      // whether today's plan teaches anything new at all.
+      const st = stateRef.current;
+      if (optsRef.current.category === "vowels" && st?.steps.some((s) => s.kind === "teach")) {
+        await sleep(STEP_GAP_MS);
+        await speak(CLASS_INTRO.id);
+      }
       if (runTokenRef.current !== myToken) return;
       await runStep(myToken);
     })();
