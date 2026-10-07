@@ -103,30 +103,41 @@ export default function ReadingScreen({ videoRef, ...p }: ReadingScreenProps) {
       <section className="rs-stage" aria-live="polite">
         {caption && <h2 className="rs-caption">{caption}</h2>}
 
-        {p.card && (
-          <div style={{ position: "relative", width: "100%", maxWidth: 520 }}>
-            <button
-              className={`rs-card ${stage === "play" ? "rs-bounce" : ""}`}
-              data-tap={p.card.canReplay}
-              onClick={p.card.canReplay ? p.onReplay : undefined}
-              aria-label={p.card.canReplay ? "Hear it again" : undefined}
-            >
-              {p.card.item.syllables.map((s, i) => (
-                <span key={i} className="rs-glyph" style={{ fontSize: glyphSize, color: GLYPH_COLORS[i % GLYPH_COLORS.length] }}>{s}</span>
-              ))}
-              {p.card.canReplay && <span style={{ fontSize: wide ? 34 : 24, marginLeft: 10 }} aria-hidden>🔊</span>}
-            </button>
-            {p.celebrateKey > 0 && <div key={p.celebrateKey} className="rs-burst" aria-hidden>⭐✨⭐</div>}
-          </div>
-        )}
-
-        {/* "Anchor with a word": while Ticha models a vowel, show it doing real work in a word the child knows */}
-        {stage === "model" && anchorFor(p.card?.item.id ?? "") && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: wide ? 16 : 14, color: "#6B7280", fontWeight: 700 }}>
-            <span style={{ fontSize: wide ? 30 : 24 }}>{anchorFor(p.card!.item.id)!.emoji}</span>
-            <span>{anchorFor(p.card!.item.id)!.word}</span>
-          </div>
-        )}
+        {p.card && (() => {
+          // "Anchor with a word": while Ticha models a vowel, the big display
+          // swaps from the letter to a real photo of the anchor word — same
+          // size and position the letter has every other moment, not a small
+          // side icon, per the founder's explicit "big display, exchangeable
+          // with the vowel, like the whiteboard" request. Reverts to the
+          // letter for every other stage.
+          const anchor = stage === "model" ? anchorFor(p.card.item.id) : null;
+          return (
+            <div style={{ position: "relative", width: "100%", maxWidth: 520 }}>
+              <button
+                className={`rs-card ${stage === "play" ? "rs-bounce" : ""}`}
+                data-tap={p.card.canReplay}
+                onClick={p.card.canReplay ? p.onReplay : undefined}
+                aria-label={p.card.canReplay ? "Hear it again" : undefined}
+              >
+                {anchor ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={anchor.image} alt={anchor.word} style={{ height: glyphSize, maxWidth: "100%", objectFit: "contain" }} />
+                ) : (
+                  p.card.item.syllables.map((s, i) => (
+                    <span key={i} className="rs-glyph" style={{ fontSize: glyphSize, color: GLYPH_COLORS[i % GLYPH_COLORS.length] }}>{s}</span>
+                  ))
+                )}
+                {p.card.canReplay && <span style={{ fontSize: wide ? 34 : 24, marginLeft: 10 }} aria-hidden>🔊</span>}
+              </button>
+              {anchor && (
+                <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: wide ? 16 : 14, color: "#6B7280", fontWeight: 700 }}>
+                  {p.card.item.text} — {anchor.word}
+                </p>
+              )}
+              {p.celebrateKey > 0 && <div key={p.celebrateKey} className="rs-burst" aria-hidden>⭐✨⭐</div>}
+            </div>
+          );
+        })()}
 
         {/* What to do right now, shown as well as said */}
         <div style={{ minHeight: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 18 }}>

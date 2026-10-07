@@ -69,8 +69,8 @@ export const CLASS_INTRO: ScriptEntry = {
 const ANCHOR_SENTENCE: Record<string, string> = {
   a: "Hii ni a. Ni sauti ya kwanza katika neno 'asali'. Sikiliza: aaa.",
   e: "Hii ni e. Ni sauti ya kwanza katika neno 'embe'. Sikiliza: eee.",
-  i: "Hii ni i. Ni sauti ya kwanza katika neno 'ini'. Sikiliza: iii.",
-  o: "Hii ni o. Ni sauti ya kwanza katika neno 'oga'. Sikiliza: ooo.",
+  i: "Hii ni i. Ni sauti ya kwanza katika neno 'inzi'. Sikiliza: iii.",
+  o: "Hii ni o. Ni sauti ya kwanza katika neno 'ona'. Sikiliza: ooo.",
   u: "Hii ni u. Ni sauti ya kwanza katika neno 'uji'. Sikiliza: uuu.",
 };
 // "Tuseme pamoja" (let's say it together) replaces an earlier "Twende pamoja"

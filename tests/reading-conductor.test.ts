@@ -627,7 +627,7 @@ describe("anchor words (isolate the sound, then anchor it in a real word)", () =
     expect(Object.keys(VOWEL_ANCHORS).sort()).toEqual(["a", "e", "i", "o", "u"]);
     for (const v of Object.keys(VOWEL_ANCHORS)) {
       expect(VOWEL_ANCHORS[v].word[0]).toBe(v); // the anchor word genuinely starts with its vowel
-      expect(VOWEL_ANCHORS[v].emoji.length).toBeGreaterThan(0);
+      expect(VOWEL_ANCHORS[v].image).toMatch(/^\/images\/reading-anchors\/.+\.webp$/);
     }
   });
 
